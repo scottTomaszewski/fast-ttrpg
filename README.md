@@ -18,6 +18,14 @@ FAIL for each target:
 
     uv run fastcombat check --n 1000
 
+Two checks are there for each hero. `needed:` plays the fight without
+that hero, and wants at least 20 points fewer wins. `kit:` keeps the hero
+in the fight but has them only auto-attack (the `auto` policy), and wants
+at least 10 points fewer wins. Taking a hero out also takes away their HP,
+so a hero whose abilities make the party weaker could still pass
+`needed:`; `kit:` catches that. The same fights (the same seeds) are
+played each time, so the numbers can be compared.
+
 `uv run fastcombat run --help` lists every option: which fight, which
 party (`--party warden,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.

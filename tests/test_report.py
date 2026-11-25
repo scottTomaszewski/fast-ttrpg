@@ -6,6 +6,7 @@ from fastcombat.numbers import load_numbers, load_fight
 from fastcombat.fight import run_fight
 from fastcombat.report import Summary, summarize, check_targets, format_summary, format_checks
 from fastcombat.cli import main
+from fastcombat.policies import AutoOnly
 
 N = load_numbers(GAME / "numbers.toml"); F = load_fight(GAME / "fights" / "ogre_warlord.toml")
 PARTY = ["warden", "rogue", "druid", "mage"]
@@ -22,10 +23,12 @@ def test_summary_adds_up():
 def test_checks_are_the_agreed_list():
     full = summarize([run_fight(N, F, PARTY, seed=i) for i in range(10)])
     without = {h: summarize([run_fight(N, F, [p for p in PARTY if p != h], seed=i) for i in range(10)]) for h in PARTY}
-    names = [c.name for c in check_targets(full, without)]
+    on_auto = {h: summarize([run_fight(N, F, PARTY, policies={h: AutoOnly()}, seed=i) for i in range(10)]) for h in PARTY}
+    names = [c.name for c in check_targets(full, without, on_auto)]
     assert names == ["length", "win_rate", "no_timeouts", "danger", "auto_share",
                      "resource:warden", "resource:rogue", "resource:druid", "resource:mage",
-                     "needed:warden", "needed:rogue", "needed:druid", "needed:mage"]
+                     "needed:warden", "needed:rogue", "needed:druid", "needed:mage",
+                     "kit:warden", "kit:rogue", "kit:druid", "kit:mage"]
 
 def test_run_prints_a_summary_and_takes_a_changed_number(capsys):
     assert main(["run", "--n", "5", *FILES, "--set", "abilities.meteor.cost=12"]) == 0
@@ -104,8 +107,8 @@ def good(**changes) -> Summary:
                 ended_full={h: 0.2 for h in heroes}, resource_curve={h: [] for h in heroes})
     return replace(s, **changes)
 
-def passed(full, without=None):
-    return {c.name: c.passed for c in check_targets(full, without or {})}
+def passed(full, without=None, on_auto=None):
+    return {c.name: c.passed for c in check_targets(full, without or {}, on_auto or {})}
 
 def test_a_summary_at_the_edges_of_every_target_passes():
     assert all(passed(good(), {"mage": good(win_rate=0.6)}).values())
@@ -113,6 +116,8 @@ def test_a_summary_at_the_edges_of_every_target_passes():
     assert all(passed(good(win_rate=0.7), {"mage": good(win_rate=0.5)}).values())
     assert all(passed(good(win_rate=0.9, auto_share=0.5)).values())
     assert all(passed(good(win_rate=0.7, auto_share=0.2)).values())
+    # the kit check: 0.7 - 0.6 is a hair under 0.1 to a computer; it still counts as 0.1
+    assert all(passed(good(win_rate=0.7), on_auto={"mage": good(win_rate=0.6)}).values())
 
 def test_each_target_can_fail():
     assert not passed(good(in_band=0.59))["length"]
@@ -125,6 +130,8 @@ def test_each_target_can_fail():
     assert not passed(good(starved={"warden": 0.5, "mage": 0.2}))["resource:warden"]
     assert not passed(good(ended_full={"warden": 0.2, "mage": 0.5}))["resource:mage"]
     assert not passed(good(), {"mage": good(win_rate=0.61)})["needed:mage"]
+    assert not passed(good(), on_auto={"mage": good(win_rate=0.71)})["kit:mage"]
+    assert not passed(good(), on_auto={"mage": good(win_rate=0.9)})["kit:mage"]   # a kit that hurts
 
 def test_the_printed_checks_say_pass_or_fail():
     text = format_checks(check_targets(good(win_rate=0.95), {}))
@@ -182,5 +189,17 @@ def test_check_removes_each_hero_in_turn_and_fails_on_a_missed_target(capsys):
     code = main(["check", "--n", "2", *FILES, "--party", "warden,rogue,rogue"])
     out = capsys.readouterr().out
     assert code == 1 and "FAIL" in out
-    for name in ("needed:warden", "needed:rogue", "needed:rogue2", "resource:rogue2"):
+    for name in ("needed:warden", "needed:rogue", "needed:rogue2", "resource:rogue2",
+                 "kit:warden", "kit:rogue", "kit:rogue2"):
         assert name in out
+
+def test_check_plays_each_hero_on_auto_and_writes_it_down(tmp_path, capsys):
+    out = tmp_path / "c.json"
+    main(["check", "--n", "2", *FILES, "--party", "warden,mage", "--json", str(out)])
+    data = json.loads(out.read_text())
+    assert set(data["on_auto"]) == {"warden", "mage"}
+    expected = summarize([run_fight(N, F, ["warden", "mage"], policies={"mage": AutoOnly()}, seed=i)
+                          for i in range(2)])
+    assert data["on_auto"]["mage"]["damage_share"] == expected.damage_share
+    names = [c["name"] for c in data["checks"]]
+    assert names[-2:] == ["kit:warden", "kit:mage"]

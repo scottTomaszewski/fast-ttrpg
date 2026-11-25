@@ -1,8 +1,9 @@
 """The `fastcombat` command: play many fights and say how they went.
 
     fastcombat run     plays the fights and prints a summary
-    fastcombat check   also plays them with each hero left out in turn,
-                       and checks everything against the design's targets
+    fastcombat check   also plays them with each hero left out in turn, and
+                       with each hero only auto-attacking in turn, and checks
+                       everything against the design's targets
 
 Both read the real game files (`game/numbers.toml` and `game/fights/`)
 unless told to read others. `--set` changes one number for one run, so an
@@ -40,19 +41,20 @@ class _Setup:
         self.policies = _policies(args.policy, self.ids)
         self.seeds = range(args.seed, args.seed + args.n)
 
-    def play(self, keep: list[int]) -> list[FightResult]:
+    def play(self, keep: list[int], auto: int | None = None) -> list[FightResult]:
         """Play every seed with only the heroes at the places in `keep`.
 
         A hero's id can change when another is left out (with two Rogues,
         leaving out "rogue" makes "rogue2" the new "rogue"), so each picked
-        policy follows its hero by place in the party, not by id.
+        policy follows its hero by place in the party, not by id. The hero
+        at the place `auto`, if one is given, plays the `auto` policy.
         """
         party = [self.party[i] for i in keep]
         ids = _hero_ids(self.numbers, self.fight, party)
         names = {
-            ids[k]: self.policies[self.ids[i]]
+            ids[k]: "auto" if i == auto else self.policies[self.ids[i]]
             for k, i in enumerate(keep)
-            if self.ids[i] in self.policies
+            if i == auto or self.ids[i] in self.policies
         }
         results = []
         for seed in self.seeds:
@@ -78,11 +80,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     without: dict[str, Summary] = {}
+    on_auto: dict[str, Summary] = {}
     for i, hero in enumerate(setup.ids):
         rest = [j for j in everyone if j != i]
         if rest:  # a party of one cannot be played without its only hero
             without[hero] = summarize(setup.play(rest))
-    checks = check_targets(full, without)
+    for i, hero in enumerate(setup.ids):
+        on_auto[hero] = summarize(setup.play(everyone, auto=i))
+    checks = check_targets(full, without, on_auto)
     print()
     print(format_checks(checks))
     _write_json(
@@ -90,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
         {
             "full": asdict(full),
             "without": {hero: asdict(s) for hero, s in without.items()},
+            "on_auto": {hero: asdict(s) for hero, s in on_auto.items()},
             "checks": [asdict(c) for c in checks],
         },
     )
@@ -146,8 +152,9 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "check",
         parents=[shared],
-        help="also play with each hero left out, and check the design's targets "
-        "(exits 0 only if every check passes)",
+        help="also play with each hero left out, and with each hero only "
+        "auto-attacking, and check the design's targets (exits 0 only if every "
+        "check passes)",
     )
     return parser
 

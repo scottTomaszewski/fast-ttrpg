@@ -24,6 +24,11 @@ AUTO_SHARE = (0.20, 0.50)  # auto-attacks' share of all hero damage
 STARVED_UNDER = 0.50  # no hero starved for this share of rounds or more
 ENDED_FULL_UNDER = 0.50  # no hero ends this share of fights or more up, with a full pool
 NEEDED_AT_LEAST = 0.20  # wins should drop at least this much without any one hero
+# Wins should also drop at least this much when any one hero only
+# auto-attacks. Taking a hero out also takes away their HP, so a hero whose
+# kit makes the party weaker can still pass the check above. This one keeps
+# the hero in the fight and takes away only their kit.
+KIT_AT_LEAST = 0.10
 
 # Win rates are counts divided by the number of fights, so one taken from
 # another can come out a hair under what it should be (0.7 - 0.5 is
@@ -109,11 +114,16 @@ def summarize(results: list[FightResult]) -> Summary:
     )
 
 
-def check_targets(full: Summary, without: dict[str, Summary]) -> list[Check]:
+def check_targets(
+    full: Summary, without: dict[str, Summary], on_auto: dict[str, Summary] | None = None
+) -> list[Check]:
     """Check the full party's summary against each target, in a fixed order.
 
     `without` holds, for each hero id, the summary of the party with that
-    hero taken out. It gives one `needed:` check each.
+    hero taken out. It gives one `needed:` check each. `on_auto` holds, for
+    each hero id, the summary of the same party with only that hero playing
+    the `auto` policy (it never uses an ability). It gives one `kit:` check
+    each.
     """
     low, high = WIN_RATE
     auto_low, auto_high = AUTO_SHARE
@@ -163,6 +173,16 @@ def check_targets(full: Summary, without: dict[str, Summary]) -> list[Check]:
                 drop >= NEEDED_AT_LEAST - _TINY,
                 f"wins {_pct(full.win_rate)} with, {_pct(other.win_rate)} without",
                 f"at least {_pct(NEEDED_AT_LEAST)} fewer wins without them",
+            )
+        )
+    for hero, other in (on_auto or {}).items():
+        drop = full.win_rate - other.win_rate
+        checks.append(
+            Check(
+                f"kit:{hero}",
+                drop >= KIT_AT_LEAST - _TINY,
+                f"wins {_pct(full.win_rate)} with the kit, {_pct(other.win_rate)} on auto",
+                f"at least {_pct(KIT_AT_LEAST)} fewer wins when they only auto-attack",
             )
         )
     return checks
