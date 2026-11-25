@@ -1,4 +1,5 @@
 import pytest
+from copy import deepcopy
 from dataclasses import replace
 from tests.helpers import state, enemy, GAME
 from fastcombat.combat import *
@@ -34,8 +35,35 @@ def test_going_down_and_bleeding_out():
     s = state(); m = s.heroes["mage"]
     damage_hero(s, m, 99, attacker=None)
     assert m.down and m.stacks["bleeding"].cards == 3
-    for _ in range(3): top_of_party_turn_cards(s)
+    for _ in range(3): end_of_party_turn_cards(s)
     assert m.out
+
+def test_one_bleeding_card_still_gives_the_party_one_turn_to_save_you():
+    s = state(); m = s.heroes["mage"]; m.wounds = 2
+    damage_hero(s, m, 99, attacker=None); assert m.stacks["bleeding"].cards == 1
+    top_of_party_turn_cards(s)
+    assert m.down and not m.out and m.stacks["bleeding"].cards == 1    # nobody has acted yet
+    end_of_party_turn_cards(s)
+    assert m.out and not m.down
+
+def test_a_hero_saved_after_two_turns_of_bleeding_is_up_with_one_wound():
+    s = state(); m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
+    end_of_party_turn_cards(s); end_of_party_turn_cards(s)
+    assert m.down and m.stacks["bleeding"].cards == 1
+    heal_hero(s, "druid", m, 5)
+    assert m.up and m.hp == 5 and m.wounds == 1 and "bleeding" not in m.stacks
+    end_of_party_turn_cards(s)
+    assert m.up and m.hp == 5 and m.wounds == 1                        # a hero who is up is untouched
+
+def test_getting_up_does_nothing_to_a_hero_who_is_not_down():
+    s = state(); m = s.heroes["mage"]; m.wounds = 3
+    damage_hero(s, m, 99, attacker=None); assert m.out
+    before = deepcopy(m)
+    get_up(s, m, 10)
+    assert m == before
+    r = s.heroes["rogue"]; before = deepcopy(r)
+    get_up(s, r, 10)
+    assert r == before                                                 # an up hero gets no wound
 
 def test_any_heal_gets_you_up_with_a_wound():
     s = state(); m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
@@ -127,8 +155,8 @@ def test_going_down_drops_everything_and_a_downed_hero_takes_no_more_hits():
     assert damage_hero(s, m, 99, attacker=None) == 28
     assert m.cast is None and "mage" not in s.marked and list(m.stacks) == ["bleeding"]
     assert s.tally.times_down["mage"] == 1 and s.tally.lowest_hp["mage"] == 0
-    top_of_party_turn_cards(s)
-    assert damage_hero(s, m, 99, attacker=None) == 0                     # the bleeding does not restart
+    end_of_party_turn_cards(s)
+    assert damage_hero(s, m, 99, attacker=None) == 0                    # the bleeding does not restart
     assert m.stacks["bleeding"].cards == 2 and s.tally.times_down["mage"] == 1
     damage_hero(s, r, 99, attacker=None); assert not r.hidden
 
@@ -141,10 +169,12 @@ def test_heal_cards_are_credited_to_the_druid_and_poison_hurts():
     add_stack(w2, "rejuvenation", 4, 4); top_of_party_turn_cards(s2)
     assert s2.tally.healing["warden"] == 4                               # no Druid: your own
 
-def test_poison_that_takes_you_down_does_not_also_take_a_bleeding_card():
+def test_poison_that_takes_you_down_costs_a_bleeding_card_only_at_the_end_of_the_turn():
     s = state(); m = s.heroes["mage"]; m.hp = 2; add_stack(m, "poison", 3, 2)
     top_of_party_turn_cards(s)
     assert m.down and m.stacks == {"bleeding": Stack(3)}
+    end_of_party_turn_cards(s)                                         # the others had that turn to act
+    assert m.down and m.stacks == {"bleeding": Stack(2)}
 
 def test_who_stands_where_and_which_squares_are_dangerous():
     s = state(party=("warden", "mage")); m = s.heroes["mage"]
@@ -152,7 +182,7 @@ def test_who_stands_where_and_which_squares_are_dangerous():
     damage_hero(s, m, 99, attacker=None); damage_enemy(s, "warden", g, 1)
     assert s.occupied() == {(3, 6), (1, 5), (8, 8)}                    # a downed hero still takes up a square
     assert [h.id for h in s.up_heroes()] == ["warden"] and s.living_enemies() == [w]
-    for _ in range(3): top_of_party_turn_cards(s)
+    for _ in range(3): end_of_party_turn_cards(s)
     assert m.out and not m.down and s.occupied() == {(3, 6), (8, 8)}
     assert heal_hero(s, "warden", m, 10) == 0 and m.out                 # nobody comes back from out
     w.announced = Announced("slam", "blast", 2, None, frozenset({(1, 1)}), (3, 6))

@@ -58,6 +58,8 @@ A round is a party turn, then a GM turn.
 1. **Top of turn.** Everyone at once: turn in one card from each stack you
    hold (a heal card heals you), regain mana or energy, and any cast that has
    finished now lands. **(call: the order is cards, then resource, then casts.)**
+   Bleeding cards are the exception: they come off at the end of the party
+   turn, after everyone has acted.
 2. **Move.** Everyone moves at the same time.
 3. **Act.** Everyone at once does one thing: roll an auto-attack, use an
    ability, or keep casting. An ability replaces the auto-attack.
@@ -164,8 +166,8 @@ cost), and a party that can cope without a healer. The mechanism below is
 the assistant's proposal. **(call)**
 
 - A hero at 0 HP is **down** and takes a stack of 3 Bleeding cards. One comes
-  off at the top of each party turn. When the stack is empty the hero is
-  **out** for the rest of the fight.
+  off at the end of each party turn, after everyone has acted. When the stack
+  is empty the hero is **out** for the rest of the fight.
 - **Getting someone up:** any heal does it. So does any hero standing next to
   them who spends their action to haul them up, which leaves them on a small
   amount of HP. No healer is needed.

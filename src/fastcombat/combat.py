@@ -113,7 +113,12 @@ def go_down(state: FightState, hero: Hero) -> None:
 
 
 def get_up(state: FightState, hero: Hero, hp: int) -> None:
-    """A downed `hero` gets up on `hp` HP (at most their max) and keeps a wound."""
+    """A downed `hero` gets up on `hp` HP (at most their max) and keeps a wound.
+
+    A hero who is not down (up, or out) is left as they are.
+    """
+    if not hero.down:
+        return
     hero.down = False
     hero.stacks.pop("bleeding", None)
     hero.wounds += 1
@@ -144,8 +149,9 @@ def top_of_party_turn_cards(state: FightState) -> None:
     Heal cards heal (the first Druid in the party gets the credit, or the
     hero if there is no Druid) and poison hurts. Then each stack the hero
     held when this began loses one card. A stack that went away in between,
-    because the hero went down or got up, does not. When the last Bleeding
-    card comes off, the hero is out.
+    because the hero went down or got up, does not. Bleeding cards are the
+    one exception: they come off at the end of the party turn instead, in
+    `end_of_party_turn_cards`.
     """
     druid = next((h for h in state.heroes.values() if h.cls == "druid"), None)
     for hero in state.heroes.values():
@@ -159,11 +165,25 @@ def top_of_party_turn_cards(state: FightState) -> None:
         if "poison" in hero.stacks:
             damage_hero(state, hero, hero.stacks["poison"].value, attacker=None)
         for name, stack in held.items():
-            if hero.stacks.get(name) is not stack:
+            if name == "bleeding" or hero.stacks.get(name) is not stack:
                 continue
             _take_a_card(hero, name)
-            if name == "bleeding" and name not in hero.stacks:
-                _bleed_out(hero)
+
+
+def end_of_party_turn_cards(state: FightState) -> None:
+    """Every hero who is down loses one Bleeding card, after everyone has acted.
+
+    This comes at the end of the party turn so that even a hero with one
+    card left gets a whole party turn in which someone can save them. When
+    the last card comes off, the hero is out. A hero who got up this turn
+    has no Bleeding cards and is left alone.
+    """
+    for hero in state.heroes.values():
+        if not hero.down:
+            continue
+        _take_a_card(hero, "bleeding")
+        if "bleeding" not in hero.stacks:
+            _bleed_out(hero)
 
 
 def _take_a_card(unit: Hero | Enemy, name: str) -> None:
