@@ -58,7 +58,7 @@ def test_the_summary_counts_from_the_tallies():
 def test_danger_and_down_and_ended_full():
     r = run_fight(N, F, PARTY, seed=1)
     calm = replace(r, tally=replace(r.tally, lowest_hp={h: 0.9 for h in PARTY}, times_down={h: 0 for h in PARTY}),
-                   end_resource={h: 0 for h in PARTY})
+                   end_resource={h: 0 for h in PARTY}, heroes_up=list(PARTY))
     low = replace(calm, tally=replace(calm.tally, lowest_hp={**calm.tally.lowest_hp, "mage": 0.25}))
     down = replace(calm, tally=replace(calm.tally, times_down={**calm.tally.times_down, "rogue": 2}),
                    end_resource={**calm.end_resource, "warden": r.pool["warden"]})
@@ -66,6 +66,25 @@ def test_danger_and_down_and_ended_full():
     assert s.danger_rate == 0.5
     assert s.down_rate == {"warden": 0, "rogue": 0.25, "druid": 0, "mage": 0}
     assert s.ended_full == {"warden": 0.25, "rogue": 0, "druid": 0, "mage": 0}
+
+def test_a_hero_who_is_not_up_at_the_end_did_not_end_full():
+    r = run_fight(N, F, PARTY, seed=1)
+    full = {h: r.pool[h] for h in PARTY}
+    up = replace(r, end_resource=full, heroes_up=list(PARTY))
+    fallen = replace(up, heroes_up=["warden", "rogue"])            # the druid is down, the mage is out
+    s = summarize([up, fallen])
+    assert s.ended_full == {"warden": 1, "rogue": 1, "druid": 0.5, "mage": 0.5}
+
+def test_a_fight_knows_who_is_up_at_the_end():
+    r = run_fight(N, F, PARTY, seed=1)
+    assert not r.won and r.heroes_up == []                          # the party lost: nobody is up
+    one_wolf = replace(F, spawns=[s for s in F.spawns if s.type == "wolf"][:1], boss_script=[])
+    won = run_fight(N, one_wolf, PARTY, seed=0)
+    assert won.won and won.heroes_up == PARTY                       # an easy win: everyone is still up
+
+def test_the_printed_summary_says_ended_full_means_up_and_full():
+    text = format_summary(summarize([run_fight(N, F, PARTY, seed=1)]))
+    assert "up and full" in text
 
 def test_a_fight_knows_each_heros_full_pool():
     r = run_fight(N, F, ["mage", "rogue", "rogue"], seed=0)

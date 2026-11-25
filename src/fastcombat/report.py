@@ -22,7 +22,7 @@ DANGER_HP = 0.25  # a hero at this share of max HP or less is in danger...
 DANGER_AT_LEAST = 0.50  # ...and that should happen in at least this share of fights
 AUTO_SHARE = (0.20, 0.50)  # auto-attacks' share of all hero damage
 STARVED_UNDER = 0.50  # no hero starved for this share of rounds or more
-ENDED_FULL_UNDER = 0.50  # no hero ends this share of fights or more at a full pool
+ENDED_FULL_UNDER = 0.50  # no hero ends this share of fights or more up, with a full pool
 NEEDED_AT_LEAST = 0.20  # wins should drop at least this much without any one hero
 
 # Win rates are counts divided by the number of fights, so one taken from
@@ -48,7 +48,7 @@ class Summary:
     damage_share: dict[str, float]  # each hero's part of all hero damage
     healing_share: dict[str, float]  # each hero's part of all healing
     starved: dict[str, float]  # mean share of rounds starved
-    ended_full: dict[str, float]  # share of fights ending at the full pool
+    ended_full: dict[str, float]  # share of fights ending up, with a full pool
     resource_curve: dict[str, list[float]]  # mean resource at each round
 
 
@@ -68,6 +68,10 @@ def summarize(results: list[FightResult]) -> Summary:
     Damage, healing and auto share are counted over all the fights put
     together, so a long fight counts for more than a short one. The
     resource curve at round 15 is the mean over the fights that got that far.
+
+    A hero "ended full" only if they were up at the end with a full pool. A
+    hero who is down or out gets no resource back, so a full pool then only
+    means they fell before spending it, not that they had too much.
     """
     if not results:
         raise ValueError("there are no fights to sum up")
@@ -100,7 +104,7 @@ def summarize(results: list[FightResult]) -> Summary:
         starved={
             h: sum(r.tally.starved_rounds[h] / r.rounds for r in results) / n for h in heroes
         },
-        ended_full={h: _share(results, lambda r: r.end_resource[h] == r.pool[h]) for h in heroes},
+        ended_full={h: _share(results, lambda r: _ended_full(r, h)) for h in heroes},
         resource_curve={h: _curve([r.tally.resource_by_round[h] for r in results]) for h in heroes},
     )
 
@@ -146,7 +150,8 @@ def check_targets(full: Summary, without: dict[str, Summary]) -> list[Check]:
             Check(
                 f"resource:{hero}",
                 starved < STARVED_UNDER and ended_full < ENDED_FULL_UNDER,
-                f"starved {_pct(starved)} of rounds, ended full {_pct(ended_full)} of fights",
+                f"starved {_pct(starved)} of rounds, "
+                f"ended up and full {_pct(ended_full)} of fights",
                 f"both under {_pct(STARVED_UNDER)}",
             )
         )
@@ -176,12 +181,12 @@ def format_summary(s: Summary) -> str:
         f"(down to {_whole_pct(DANGER_HP)} HP, or went down)",
         f"Auto-attack damage:     {_whole_pct(s.auto_share)} of all damage",
         "",
-        f"{'hero':<10}{'damage':>8}{'healing':>9}{'starved':>9}{'ended full':>12}{'went down':>11}",
+        f"{'hero':<10}{'damage':>8}{'healing':>9}{'starved':>9}{'up and full':>13}{'went down':>11}",
     ]
     for h in s.damage_share:
         lines.append(
             f"{h:<10}{_whole_pct(s.damage_share[h]):>8}{_whole_pct(s.healing_share[h]):>9}"
-            f"{_whole_pct(s.starved[h]):>9}{_whole_pct(s.ended_full[h]):>12}"
+            f"{_whole_pct(s.starved[h]):>9}{_whole_pct(s.ended_full[h]):>13}"
             f"{_whole_pct(s.down_rate[h]):>11}"
         )
     return "\n".join(lines)
@@ -204,6 +209,11 @@ def _share(results: list[FightResult], happened) -> float:
 def _part(amount: float, total: float) -> float:
     """`amount` as a share of `total`, or 0 when there is no total."""
     return amount / total if total else 0.0
+
+
+def _ended_full(r: FightResult, hero: str) -> bool:
+    """Was `hero` up at the end of this fight, with a full pool?"""
+    return hero in r.heroes_up and r.end_resource[hero] == r.pool[hero]
 
 
 def _in_danger(r: FightResult) -> bool:

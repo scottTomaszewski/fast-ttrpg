@@ -196,3 +196,74 @@ def test_mage_auto_attacks_fodder_and_firebolts_a_real_enemy():
     a = act(s, "mage"); assert (a.kind, a.target) == ("auto", "goblin1")
     enemy(s, "ogre", (11, 6))                                       # 10 away: in Firebolt's range
     a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "ogre1")
+
+
+# --- Before tuning: the heroes play sensibly -----------------------------------
+
+from fastcombat.abilities import use_ability
+
+def test_rogue_walks_to_her_ability_focus_not_to_fodder():
+    s = state(); r = s.heroes["rogue"]                              # at (2, 5), move 6
+    enemy(s, "goblin", (2, 10))                                     # the focus: 1 HP
+    w = enemy(s, "wolf", (8, 5))                                    # the ability focus: not fodder
+    dest = default_policy("rogue").move(s, r)
+    assert max(abs(dest[0] - w.pos[0]), abs(dest[1] - w.pos[1])) == 1
+    w.dead = True                                                   # no ability focus left
+    dest = default_policy("rogue").move(s, r)
+    assert max(abs(dest[0] - 2), abs(dest[1] - 10)) == 1            # so she goes for the goblin
+
+def test_rogue_waits_for_shadowstep_when_walking_is_too_short():
+    s = state(); r = s.heroes["rogue"]                              # at (2, 5), move 6, Shadowstep range 8
+    w = enemy(s, "wolf", (10, 5))                                   # 8 away: a walk ends 2 short
+    assert default_policy("rogue").move(s, r) == r.pos              # she stays...
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("shadowstep", "wolf1")   # ...and steps in
+    w.pos = (9, 5)                                                  # 7 away: she can walk next to it
+    assert default_policy("rogue").move(s, r) == (8, 5)
+    w.pos = (11, 5)                                                 # 9 away: out of Shadowstep's range
+    assert default_policy("rogue").move(s, r) != r.pos
+    w.pos = (10, 5); r.resource = 0                                 # in range, but she cannot pay
+    assert default_policy("rogue").move(s, r) != r.pos
+
+def mending_shaman(s, pos):
+    sh = enemy(s, "shaman", pos)
+    sh.announced = Announced("mend", "mend", s.round + 1, None, frozenset(), (0, 0), 25)
+    return sh
+
+def test_mage_does_not_disrupt_a_caster_that_is_already_stopped():
+    s = state(); enemy(s, "ogre", (11, 6))
+    sh1 = mending_shaman(s, (9, 5)); add_stack(sh1, "sheep", 4)     # a sheep's mend fizzles anyway
+    assert act(s, "mage").ability != "disrupt"
+    mending_shaman(s, (9, 7))                                       # this one is free
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "shaman2")
+
+def test_warden_does_not_disrupt_a_caster_that_is_already_stopped():
+    s = state(); sh = mending_shaman(s, (4, 6))                     # next to the Warden at (3, 6)
+    assert act(s, "warden").ability == "disrupt"
+    add_stack(sh, "sap", 2)
+    assert act(s, "warden").ability != "disrupt"
+
+def test_rogue_does_not_disrupt_or_cheap_shot_a_caster_that_is_already_stopped():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False
+    sh = mending_shaman(s, (3, 4))                                  # next to the Rogue at (2, 5)
+    assert act(s, "rogue").ability == "disrupt"
+    add_stack(sh, "stun", 1)
+    assert act(s, "rogue").ability not in ("disrupt", "cheap_shot")
+
+def test_two_mages_do_not_polymorph_the_same_enemy():
+    s = state(("mage", "mage")); enemy(s, "brute", (10, 7)); enemy(s, "wolf", (10, 3))
+    a = act(s, "mage"); assert (a.ability, a.target) == ("polymorph", "brute1")
+    use_ability(s, s.heroes["mage"], a)                             # her sheep is on its way
+    assert act(s, "mage2").ability != "polymorph"
+
+def test_two_mages_fall_so_fast_that_only_one_meteor_lands():
+    # Two Mages alone lose in 3 or 4 rounds. In round 1 "mage" (first by id)
+    # takes the Polymorph and "mage2" starts a Meteor, which lands in round 3.
+    # In round 2 "mage" starts her own Meteor, which would land in round 4:
+    # by then she is down. So one Mage doing no damage is the fight being
+    # short, not a Mage that cannot play. (Before the Polymorph fix, it was
+    # "mage2" who did nothing: both cast the same Polymorph in round 1.)
+    n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    for seed in range(3):
+        r = run_fight(n, f, ["mage", "mage"], seed=seed)
+        assert not r.won and r.rounds <= 4
+        assert r.tally.damage["mage"] == 0 and r.tally.damage["mage2"] > 0

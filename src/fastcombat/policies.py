@@ -30,8 +30,9 @@ Some rules use a word that means the same for every class:
   hero next to a downed ally they will haul up: that comes before where
   a class likes to stand.
 
-An ally is a hero who is not out. "Lowest" for allies means the lowest
-share of their max HP.
+An ally is a hero who is up (not down and not out), unless a rule says
+otherwise: "a downed ally" is one who is down. "Lowest" for allies means
+the lowest share of their max HP.
 """
 
 from typing import Protocol
@@ -123,7 +124,8 @@ class WardenPolicy(_ClassPolicy):
        maximum roll: Unbroken.
     3. A boss blast is announced and at least one ally stands in its area:
        Bulwark, against the blast coming from the boss's square.
-    4. An enemy next to me has an announced cast: Disrupt.
+    4. An enemy next to me has an announced cast and is not controlled (a
+       stunned, sapped or sheeped enemy's cast never lands): Disrupt.
     5. An ally (not a Warden) at half HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
     6. The boss has no Taunt cards: Challenge the boss.
@@ -166,8 +168,8 @@ class WardenPolicy(_ClassPolicy):
             if action := _ability(state, warden, "bulwark", pos=boss.pos):
                 return action
 
-        # 4. An enemy next to me has an announced cast: Disrupt.
-        casting = _first(e for e in _enemies_next_to(state, warden) if e.announced)
+        # 4. An enemy next to me has an announced cast and is not controlled: Disrupt.
+        casting = _first(_casting(_enemies_next_to(state, warden)))
         if casting is not None:
             if action := _ability(state, warden, "disrupt", casting.id):
                 return action
@@ -223,14 +225,19 @@ class WardenPolicy(_ClassPolicy):
 
 
 class RoguePolicy(_ClassPolicy):
-    """The Rogue. Move: next to the focus (a square also out of danger, if
-    possible). In round 1, while hidden, a shielded enemy that can be
-    reached this move comes first, so it can be sapped.
+    """The Rogue. Move: next to the focus her abilities aim at (not fodder),
+    or next to the normal focus if there is no such enemy; a square also out
+    of danger, if possible. In round 1, while hidden, a shielded enemy that
+    can be reached this move comes first, so it can be sapped. If walking
+    cannot take her next to the ability focus, but rule 9 can (it is farther
+    than her move, within Shadowstep's range, and Shadowstep can be used
+    now), she stays put and Shadowsteps in the act step.
 
     1. Haul up.
     2. Hidden, round 1, and a shielded enemy is next to me (or reachable
        next turn): Sap it, once it is next to me.
-    3. An enemy next to me has an announced cast: Disrupt, else Cheap Shot.
+    3. An enemy next to me has an announced cast and is not controlled:
+       Disrupt, else Cheap Shot.
     4. An enemy is pulled by me: Vanish.
     5. Hidden: Backstab the focus.
     6. Full combo points, and the focus is not the boss, or it is the boss
@@ -247,10 +254,16 @@ class RoguePolicy(_ClassPolicy):
         shielded = _shielded_to_sap(state, rogue)
         if shielded is not None:
             return _go(state, rogue, shielded.pos, reach=1)
-        focus = _focus(state, rogue)
-        if focus is None:
-            return _stay(state, rogue)
-        return _go(state, rogue, focus.pos, reach=1)
+        target = _ability_focus(state, rogue)
+        if target is None:
+            target = _focus(state, rogue)  # only fodder is left
+            if target is None:
+                return _stay(state, rogue)
+            return _go(state, rogue, target.pos, reach=1)
+        dest = _go(state, rogue, target.pos, reach=1)
+        if not adjacent(dest, target.pos) and _shadowstep(state, rogue, target):
+            return _stay(state, rogue)  # rule 9 takes her there in the act step
+        return dest
 
     def act(self, state: FightState, rogue: Hero) -> Action:
         focus = _ability_focus(state, rogue)  # for the abilities aimed at the focus
@@ -266,8 +279,9 @@ class RoguePolicy(_ClassPolicy):
             if action := _ability(state, rogue, "sap", shielded.id):
                 return action
 
-        # 3. An enemy next to me has an announced cast: Disrupt, else Cheap Shot.
-        casting = _first(e for e in _enemies_next_to(state, rogue) if e.announced)
+        # 3. An enemy next to me has an announced cast and is not controlled:
+        # Disrupt, else Cheap Shot.
+        casting = _first(_casting(_enemies_next_to(state, rogue)))
         if casting is not None:
             if action := _ability(state, rogue, "disrupt", casting.id):
                 return action
@@ -312,10 +326,8 @@ class RoguePolicy(_ClassPolicy):
         # 9. The focus is farther than my move, and within Shadowstep's range:
         # Shadowstep.
         if focus is not None:
-            gap = distance(rogue.pos, focus.pos)
-            if state.numbers.rules["hero_move"] < gap <= state.numbers.abilities["shadowstep"].range:
-                if action := _ability(state, rogue, "shadowstep", focus.id):
-                    return action
+            if action := _shadowstep(state, rogue, focus):
+                return action
 
         # 10. Auto-attack the focus if it is next to me (fodder too).
         return _auto(state, rogue, _focus(state, rogue)) or Action("none")
@@ -447,10 +459,12 @@ class MagePolicy(_ClassPolicy):
     1. Haul up.
     2. In the middle of a cast or a channel: continue.
     3. An enemy that is not controlled is next to me and not rooted: Frost Ring.
-    4. An enemy in range has an announced cast: Disrupt.
-    5. No enemy is a sheep, and at least two enemies are alive that are not
-       controlled, not a boss and not fodder: Polymorph the one of them with
-       the most HP that nobody is next to.
+    4. An enemy in range has an announced cast and is not controlled:
+       Disrupt.
+    5. No enemy is a sheep, no hero is in the middle of casting Polymorph
+       (another Mage's sheep is on its way), and at least two enemies are
+       alive that are not controlled, not a boss and not fodder: Polymorph
+       the one of them with the most HP that nobody is next to.
     6. Some square in range has four or more living enemies, and no hero,
        within Meteor's radius: Meteor on the square that covers the most.
     7. Round 5 or later, every hero is up, and no hero has Quicken cards:
@@ -490,18 +504,24 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "frost_ring"):
                 return action
 
-        # 4. An enemy in range has an announced cast: Disrupt.
-        for casting in sorted((e for e in enemies if e.announced), key=lambda e: e.id):
+        # 4. An enemy in range has an announced cast and is not controlled: Disrupt.
+        for casting in _casting(sorted(enemies, key=lambda e: e.id)):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 5. No sheep yet, and two or more enemies worth one: Polymorph.
+        # 5. No sheep yet, none on its way, and two or more enemies worth one:
+        # Polymorph.
         worth = [
             e
             for e in enemies
             if not e.controlled and e.spec.tier not in ("boss", "fodder")
         ]
-        if not any("sheep" in e.stacks for e in enemies) and len(worth) >= 2:
+        sheep_coming = any(
+            h.cast is not None and h.cast.ability == "polymorph"
+            for h in state.heroes.values()
+        )
+        no_sheep = not any("sheep" in e.stacks for e in enemies) and not sheep_coming
+        if no_sheep and len(worth) >= 2:
             alone = [
                 e
                 for e in worth
@@ -758,6 +778,27 @@ def _enemies_next_to(state: FightState, hero: Hero) -> list[Enemy]:
 def _loose(state: FightState, enemy: Enemy) -> bool:
     """Neither held by the Warden, nor taunted, nor controlled."""
     return not held(state, enemy) and "taunt" not in enemy.stacks and not enemy.controlled
+
+
+def _casting(enemies: list[Enemy]) -> list[Enemy]:
+    """The enemies in `enemies` worth a Disrupt: an announced cast, and not controlled.
+
+    A stunned, sapped or sheeped enemy loses its cast anyway (see
+    `enemy_ai.land_announced`), so a Disrupt on it would be wasted.
+    """
+    return [e for e in enemies if e.announced is not None and not e.controlled]
+
+
+def _shadowstep(state: FightState, rogue: Hero, focus: Enemy) -> Action | None:
+    """Rogue rule 9: Shadowstep to `focus` if it is farther than her move, within
+    Shadowstep's range, and Shadowstep can be used now. Otherwise None.
+
+    The move step asks this too, so she waits for it instead of walking.
+    """
+    gap = distance(rogue.pos, focus.pos)
+    if state.numbers.rules["hero_move"] < gap <= state.numbers.abilities["shadowstep"].range:
+        return _ability(state, rogue, "shadowstep", focus.id)
+    return None
 
 
 def _shielded_to_sap(state: FightState, rogue: Hero) -> Enemy | None:

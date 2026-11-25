@@ -32,6 +32,7 @@ class FightResult:
     rounds: int  # the number of the last round played
     party: list[str]  # the classes in the party, as given
     seed: int
+    heroes_up: list[str]  # ids of the heroes who were up at the end
     heroes_out: list[str]  # ids of the heroes who were out at the end
     tally: Tally
     end_resource: dict[str, int]  # each hero's resource at the end, by hero id
@@ -227,6 +228,7 @@ def _result(
         rounds=state.round,
         party=list(party),
         seed=seed,
+        heroes_up=[hero.id for hero in state.heroes.values() if hero.up],
         heroes_out=[hero.id for hero in state.heroes.values() if hero.out],
         tally=state.tally,
         end_resource={hero.id: hero.resource for hero in state.heroes.values()},
