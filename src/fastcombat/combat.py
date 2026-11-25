@@ -1,0 +1,179 @@
+"""Damage, healing, going down and getting up, and cards counting down.
+
+Every hit and every heal in the game goes through this file, so the tally of
+who did what is always right.
+"""
+
+from fastcombat.units import Enemy, FightState, Hero, Stack
+
+# Cards that heal their value at the top of each party turn.
+HEAL_STACKS = ("rejuvenation", "wild_growth")
+# Cards that end the moment the enemy takes any damage.
+BROKEN_BY_DAMAGE = ("sap", "sheep")
+
+
+def add_stack(unit: Hero | Enemy, name: str, cards: int, value: int = 0) -> None:
+    """Give `unit` a stack of cards, in place of any stack it had with that name."""
+    unit.stacks[name] = Stack(cards, value)
+
+
+def tick_stacks(unit: Hero | Enemy) -> None:
+    """One card comes off every stack. An empty stack is gone."""
+    for name in list(unit.stacks):
+        _take_a_card(unit, name)
+
+
+def damage_enemy(
+    state: FightState,
+    hero_id: str,
+    enemy: Enemy,
+    amount: int,
+    *,
+    auto: bool = False,
+    loud: bool = False,
+) -> int:
+    """`hero_id` hits `enemy` for `amount`. Gives back the HP really taken off.
+
+    `auto` means it was an auto-attack, for the tally. `loud` is taken now;
+    what a Loud hit does comes with the rules for who an enemy attacks.
+    """
+    if enemy.dead or amount < enemy.spec.shielded:
+        return 0
+    if enemy.spec.tier == "fodder" and amount >= 1:
+        done = enemy.hp  # any hit kills fodder
+    else:
+        done = min(amount, enemy.hp)
+    enemy.hp -= done
+    if enemy.hp <= 0:
+        enemy.dead = True
+    if done > 0:
+        for name in BROKEN_BY_DAMAGE:
+            enemy.stacks.pop(name, None)
+    state.tally.damage[hero_id] += done
+    if auto:
+        state.tally.auto_damage[hero_id] += done
+    return done
+
+
+def damage_hero(
+    state: FightState,
+    hero: Hero,
+    amount: int,
+    *,
+    attacker: Enemy | None,
+    blast: bool = False,
+) -> int:
+    """`hero` takes `amount` damage. Gives back the HP really lost.
+
+    `attacker` is the enemy whose attack it is, or None for damage no enemy
+    is attacking with right now, like poison. Guarded cards take their value
+    off any hit, and Bulwark takes its value off a blast. With an Unbroken
+    card the hero stops at 1 HP. Damage never breaks a cast.
+    """
+    if not hero.up:
+        return 0  # nobody hits a downed hero, and a hit must not restart the bleeding
+    taken = amount
+    if "guarded" in hero.stacks:
+        taken -= hero.stacks["guarded"].value
+    if blast and "bulwark" in hero.stacks:
+        taken -= hero.stacks["bulwark"].value
+    lowest = 1 if "unbroken" in hero.stacks else 0
+    taken = max(0, min(taken, hero.hp - lowest))
+    hero.hp -= taken
+
+    if attacker is not None and not blast and hero.cls == "warden":
+        pool = state.numbers.heroes[hero.cls].pool
+        grit = state.numbers.rules["grit_per_attack"]
+        hero.resource = min(pool, hero.resource + grit)
+
+    lowest_hp = state.tally.lowest_hp
+    lowest_hp[hero.id] = min(lowest_hp[hero.id], hero.hp / hero.max_hp)
+    if hero.hp == 0:
+        go_down(state, hero)
+    return taken
+
+
+def go_down(state: FightState, hero: Hero) -> None:
+    """`hero` is down: they lose their cast and all their cards, and start bleeding.
+
+    Each wound makes the Bleeding stack one card shorter. With no cards
+    left to give, the hero is out at once.
+    """
+    hero.down = True
+    hero.cast = None
+    state.marked.pop(hero.id, None)  # a blast they were casting will not land
+    hero.hidden = False
+    hero.stacks.clear()
+    state.tally.times_down[hero.id] += 1
+    cards = state.numbers.rules["bleeding_cards"] - hero.wounds
+    if cards > 0:
+        add_stack(hero, "bleeding", cards)
+    else:
+        _bleed_out(hero)
+
+
+def get_up(state: FightState, hero: Hero, hp: int) -> None:
+    """A downed `hero` gets up on `hp` HP (at most their max) and keeps a wound."""
+    hero.down = False
+    hero.stacks.pop("bleeding", None)
+    hero.wounds += 1
+    hero.hp = min(hp, hero.max_hp)
+
+
+def heal_hero(state: FightState, healer_id: str, target: Hero, amount: int) -> int:
+    """`healer_id` heals `target` by `amount`. Gives back the HP really healed.
+
+    Any heal gets a downed hero up, on `amount` HP. Nobody can heal a hero
+    who is out. Healing past max HP is not counted.
+    """
+    if target.out or amount <= 0:
+        return 0
+    if target.down:
+        get_up(state, target, amount)
+        healed = target.hp
+    else:
+        healed = min(amount, target.max_hp - target.hp)
+        target.hp += healed
+    state.tally.healing[healer_id] += healed
+    return healed
+
+
+def top_of_party_turn_cards(state: FightState) -> None:
+    """Every hero who is not out turns in one card from each stack they hold.
+
+    Heal cards heal (the first Druid in the party gets the credit, or the
+    hero if there is no Druid) and poison hurts. Then each stack the hero
+    held when this began loses one card. A stack that went away in between,
+    because the hero went down or got up, does not. When the last Bleeding
+    card comes off, the hero is out.
+    """
+    druid = next((h for h in state.heroes.values() if h.cls == "druid"), None)
+    for hero in state.heroes.values():
+        if hero.out:
+            continue
+        held = dict(hero.stacks)
+        healer_id = druid.id if druid else hero.id
+        for name in HEAL_STACKS:
+            if name in hero.stacks:
+                heal_hero(state, healer_id, hero, hero.stacks[name].value)
+        if "poison" in hero.stacks:
+            damage_hero(state, hero, hero.stacks["poison"].value, attacker=None)
+        for name, stack in held.items():
+            if hero.stacks.get(name) is not stack:
+                continue
+            _take_a_card(hero, name)
+            if name == "bleeding" and name not in hero.stacks:
+                _bleed_out(hero)
+
+
+def _take_a_card(unit: Hero | Enemy, name: str) -> None:
+    stack = unit.stacks[name]
+    stack.cards -= 1
+    if stack.cards <= 0:
+        del unit.stacks[name]
+
+
+def _bleed_out(hero: Hero) -> None:
+    """The hero is out for the rest of the fight. Out is not the same as down."""
+    hero.down = False
+    hero.out = True
