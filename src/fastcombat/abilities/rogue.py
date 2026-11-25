@@ -8,11 +8,11 @@ hit gives (`combo_per_hit`), and how many times bigger a Backstab from
 hiding is (`backstab_hidden_multiplier`).
 
 Three words used below. Hidden: the Rogue starts a fight hidden, and Vanish
-hides them again. Using any other ability gives them away, once it has
-happened (see `resolve`), so a rule that asks "is the Rogue hidden?" still
-sees the answer from before. Combo points: the Rogue gets them from
-auto-attacks that hit and from Backstab, and Eviscerate and Kidney Shot spend
-them all. A free square is one on the map where nobody stands; the Rogue's
+hides them again. Shadowstep does not give them away. Using any other
+ability does, once it has happened (see `resolve`), so a rule that asks "is
+the Rogue hidden?" still sees the answer from before. Combo points: the
+Rogue gets them from auto-attacks that hit and from Backstab, and Eviscerate
+and Kidney Shot spend them all. A free square is one on the map where nobody stands; the Rogue's
 own square counts as free.
 """
 
@@ -139,11 +139,16 @@ def _shadowstep_needs_a_free_square_by_the_enemy(
     return enemy is not None and _landing(state, rogue, enemy) is not None
 
 
+@keeps_hiding("shadowstep")
 @effect("shadowstep")
 def shadowstep(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> None:
-    """Appear on the free square next to the enemy that is closest to the Rogue."""
+    """Appear on the free square next to the enemy that is closest to the Rogue.
+
+    It does not give the Rogue away: if she was hidden, she still is, so she
+    can open with a Backstab from hiding or a Sap. If she was not, she is not.
+    """
     square = _landing(state, rogue, state.enemies[action.target])
     if square is not None:
         rogue.pos = square

@@ -221,7 +221,7 @@ Auto-attack hit: 1 combo point. Crit: 2. Maximum 5. **(call)**
 4. **Cheap Shot:** small stun. Instant, low energy, 1 round.
 5. **Sap:** takes one enemy out for several rounds; breaks on damage. Only
    from hiding (start of a fight, or right after Vanish).
-6. **Shadowstep:** appear next to an enemy within range.
+6. **Shadowstep:** appear next to an enemy within range. Does not end hiding.
 7. **Vanish:** cancel any pull on you and go into hiding. From hiding your
    next move is a hard opener or a Sap. **(call)** The opener is not a new
    button: a Backstab from hiding works on any enemy and does double damage.

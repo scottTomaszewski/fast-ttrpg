@@ -48,6 +48,15 @@ def test_shadowstep_lands_next_to_the_enemy():
     s = state(); enemy(s, "wolf", (9, 5)); use(s, "rogue", "shadowstep", "wolf1")
     assert s.heroes["rogue"].pos in {(8, 4), (8, 5), (8, 6)}
 
+def test_shadowstep_keeps_a_hidden_rogue_hidden_so_she_can_still_sap():
+    s = state(); r = s.heroes["rogue"]; w = enemy(s, "wolf", (9, 5))
+    assert use(s, "rogue", "shadowstep", "wolf1") and r.hidden
+    assert use(s, "rogue", "sap", "wolf1") and w.stacks["sap"].cards == 4
+
+def test_shadowstep_does_not_hide_a_rogue_who_was_not_hidden():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; enemy(s, "wolf", (9, 5))
+    assert use(s, "rogue", "shadowstep", "wolf1") and not r.hidden
+
 # --- When the Rogue's abilities say no, and the smaller rules ------------------
 
 AIMED = ("backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "shadowstep")
