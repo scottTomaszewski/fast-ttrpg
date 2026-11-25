@@ -72,10 +72,10 @@ cards = 1
 
 [abilities.intercede]
 hero = "warden"
-cost = 2
+cost = 4
 range = 6
 cards = 1
-value = 4              # damage taken off each hit on the guarded ally
+value = 4             # damage taken off each hit on the guarded ally
 
 [abilities.chain_hook]
 hero = "warden"
