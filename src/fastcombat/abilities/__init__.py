@@ -232,3 +232,4 @@ def _close_enough(hero: Hero, spec: AbilitySpec, square: Pos) -> bool:
 from . import warden  # noqa: F401
 from . import rogue  # noqa: F401
 from . import druid  # noqa: F401
+from . import mage, shared  # noqa: F401
