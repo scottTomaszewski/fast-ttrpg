@@ -1,0 +1,139 @@
+name = "Ogre Warlord"
+width = 16
+height = 12
+extra_starts = [[2, 7], [1, 6], [2, 6], [1, 8]]
+
+[hero_starts]
+warden = [3, 6]
+rogue = [2, 5]
+druid = [1, 7]
+mage = [1, 5]
+
+[enemy_types.ogre]
+tier = "boss"
+hp = 320
+dice = [2, 6]          # the boss rolls its melee hit
+bonus = 2
+move = 4
+prefers = "nearest"
+
+[enemy_types.shaman]   # stands back, poisons, and heals the boss unless stopped
+hp = 24
+damage = 3
+range = 8
+prefers = "random"
+poison_cards = 3
+poison_value = 2
+cast_first = 2
+cast_every = 4
+cast_heal = 25
+
+[enemy_types.wolf]     # runs past the tank
+hp = 16
+damage = 4
+move = 7
+prefers = "backline"
+
+[enemy_types.brute]    # Shielded: ignores hits below 5
+hp = 30
+damage = 6
+prefers = "nearest"
+shielded = 5
+
+[enemy_types.goblin]
+tier = "fodder"
+damage = 2
+move = 5
+prefers = "backline"
+
+[[spawns]]
+type = "ogre"
+pos = [11, 6]
+[[spawns]]
+type = "brute"
+pos = [10, 7]
+[[spawns]]
+type = "shaman"
+pos = [13, 3]
+[[spawns]]
+type = "shaman"
+pos = [13, 9]
+[[spawns]]
+type = "wolf"
+pos = [10, 3]
+[[spawns]]
+type = "wolf"
+pos = [10, 9]
+
+# two waves of six goblins on the far edge
+[[spawns]]
+type = "goblin"
+pos = [15, 3]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 4]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 5]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 6]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 7]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 8]
+round = 6
+[[spawns]]
+type = "goblin"
+pos = [15, 3]
+round = 12
+[[spawns]]
+type = "goblin"
+pos = [15, 4]
+round = 12
+[[spawns]]
+type = "goblin"
+pos = [15, 5]
+round = 12
+[[spawns]]
+type = "goblin"
+pos = [15, 6]
+round = 12
+[[spawns]]
+type = "goblin"
+pos = [15, 7]
+round = 12
+[[spawns]]
+type = "goblin"
+pos = [15, 8]
+round = 12
+
+# The boss announces at most one of these per turn; the first that is due wins.
+[[boss_script]]
+name = "ground_slam"   # announced blast around the boss
+kind = "blast"
+first = 3
+every = 4
+radius = 2
+dice = [3, 6]
+
+[[boss_script]]
+name = "skull_crusher" # announced heavy hit on whoever the boss is attacking
+kind = "heavy"
+first = 5
+every = 5
+dice = [6, 6]
+
+[[boss_script]]
+name = "boulder"       # not announced; thrown at a random hero not next to the boss
+kind = "throw"
+first = 2
+every = 2
+dice = [2, 6]

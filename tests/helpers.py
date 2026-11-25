@@ -12,7 +12,9 @@ class _ScriptedRolls:
     def randint(self, low: int, high: int) -> int:
         if not self.rolls:
             raise AssertionError("ran out of scripted rolls")
-        return self.rolls.pop(0)
+        value = self.rolls.pop(0)
+        assert low <= value <= high, f"scripted roll {value} cannot come up on a {low}-{high} die"
+        return value
 
 
 def scripted(*rolls: int) -> Dice:
