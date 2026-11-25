@@ -148,6 +148,23 @@ def nearest_free(square: Pos, taken: set[Pos], width: int, height: int) -> Pos |
     return None
 
 
+def free_next_to(
+    center: Pos, toward: Pos, taken: set[Pos], width: int, height: int
+) -> Pos | None:
+    """The free square next to `center` that is closest to `toward`.
+
+    This is for putting someone next to `center` without walking there, like
+    a leap or a pull. If several are just as close, the first in DIRECTIONS
+    wins. None when every square next to `center` is taken or off the map.
+    """
+    free = []
+    for dx, dy in DIRECTIONS:
+        square = (center[0] + dx, center[1] + dy)
+        if 0 <= square[0] < width and 0 <= square[1] < height and square not in taken:
+            free.append(square)
+    return min(free, key=lambda square: distance(square, toward), default=None)
+
+
 def _path_to(
     start: Pos,
     goal: Pos,

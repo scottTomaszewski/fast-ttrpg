@@ -1,4 +1,4 @@
-from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away, approach, nearest_free
+from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away, approach, nearest_free, free_next_to
 
 def test_diagonals_cost_one():
     assert distance((0, 0), (3, 2)) == 3
@@ -76,3 +76,9 @@ def test_nearest_free_is_the_square_itself_or_the_closest_one_left():
     ring = within((2, 2), 1, 5, 5)                                     # taken squares do not block the search
     assert distance(nearest_free((2, 2), ring, 5, 5), (2, 2)) == 2
     assert nearest_free((0, 0), within((0, 0), 1, 2, 2), 2, 2) is None   # the whole map is taken
+
+def test_free_next_to_is_the_free_square_in_the_ring_closest_to_a_spot():
+    assert free_next_to((3, 6), (8, 6), set(), 16, 12) == (4, 6)
+    assert free_next_to((3, 6), (8, 6), {(4, 6)}, 16, 12) == (4, 7)     # (4, 5) is just as close; the fixed order picks
+    assert free_next_to((3, 6), (3, 10), set(), 16, 12) == (3, 7)        # straight steps come before diagonal ones
+    assert free_next_to((0, 0), (5, 5), {(1, 0), (0, 1), (1, 1)}, 16, 12) is None   # the rest is off the map

@@ -219,3 +219,4 @@ def _close_enough(hero: Hero, spec: AbilitySpec, square: Pos) -> bool:
 # Each class file fills the tables at the top when it is imported. They are
 # imported here, at the very bottom, so that everything above is ready for
 # them. Later tasks add one line per class file below this comment.
+from . import warden  # noqa: F401
