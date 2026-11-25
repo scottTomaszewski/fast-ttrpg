@@ -1,0 +1,166 @@
+"""The Rogue's seven abilities. The Rogue strikes from the shadows, builds up
+combo points, and spends them on one big hit or a long stun.
+
+Each ability's numbers (what it costs, how far it reaches, its dice and how
+many cards it gives) are in the numbers file. The most combo points a Rogue
+can hold is `combo_max`, in the rules.
+
+Three words used below. Hidden: the Rogue starts a fight hidden, and Vanish
+hides them again. Using any other ability gives them away, once it has
+happened (see `resolve`), so a rule that asks "is the Rogue hidden?" still
+sees the answer from before. Combo points: the Rogue gets them from
+auto-attacks that hit and from Backstab, and Eviscerate and Kidney Shot spend
+them all. A free square is one on the map where nobody stands; the Rogue's
+own square counts as free.
+"""
+
+from fastcombat.abilities import Action, check, effect, keeps_hiding
+from fastcombat.combat import control, damage_enemy
+from fastcombat.grid import Pos, free_next_to
+from fastcombat.numbers import AbilitySpec
+from fastcombat.targeting import drop_pulls, held
+from fastcombat.units import Enemy, FightState, Hero
+
+
+@check("backstab")
+def _backstab_needs_an_enemy_busy_with_someone_else(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    """From hiding, any enemy will do. Otherwise it must be busy with someone else.
+
+    Busy means: it is going for another hero, the Warden is holding it, or
+    it has Taunt cards.
+    """
+    enemy = _enemy(state, action)
+    if enemy is None:
+        return False
+    if rogue.hidden:
+        return True
+    going_for_someone_else = enemy.target is not None and enemy.target != rogue.id
+    return going_for_someone_else or held(state, enemy) or "taunt" in enemy.stacks
+
+
+@effect("backstab")
+def backstab(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> None:
+    """Hit the enemy with the Backstab dice, and get a combo point.
+
+    From hiding the hit is twice as big.
+    """
+    amount = state.dice.roll_many(*spec.dice, spec.bonus)
+    if rogue.hidden:
+        amount *= 2
+    damage_enemy(state, rogue.id, state.enemies[action.target], amount, loud=spec.loud)
+    rogue.combo = min(state.numbers.rules["combo_max"], rogue.combo + 1)
+
+
+@check("eviscerate")
+def _eviscerate_needs_a_combo_point(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    return _enemy(state, action) is not None and rogue.combo >= 1
+
+
+@effect("eviscerate")
+def eviscerate(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> None:
+    """Spend every combo point on one hit: the Eviscerate dice once for each point."""
+    count, sides = spec.dice
+    amount = state.dice.roll_many(count * rogue.combo, sides)
+    damage_enemy(state, rogue.id, state.enemies[action.target], amount, loud=spec.loud)
+    rogue.combo = 0
+
+
+@check("kidney_shot")
+def _kidney_shot_needs_a_combo_point_and_no_boss(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    enemy = _enemy(state, action)
+    return enemy is not None and enemy.spec.tier != "boss" and rogue.combo >= 1
+
+
+@effect("kidney_shot")
+def kidney_shot(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> None:
+    """Spend every combo point on a stun.
+
+    With the most combo points a Rogue can hold, the stun lasts `alt` cards;
+    with fewer, `cards`.
+    """
+    full = rogue.combo == state.numbers.rules["combo_max"]
+    cards = spec.alt if full else spec.cards
+    control(state, state.enemies[action.target], "stun", cards)
+    rogue.combo = 0
+
+
+@check("cheap_shot")
+def _cheap_shot_needs_an_enemy(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    """Any enemy, a boss too: the stun does not stop a boss, but breaks its cast."""
+    return _enemy(state, action) is not None
+
+
+@effect("cheap_shot")
+def cheap_shot(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> None:
+    """A short stun on one enemy."""
+    control(state, state.enemies[action.target], "stun", spec.cards)
+
+
+@check("sap")
+def _sap_only_from_hiding_and_not_on_a_boss(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    enemy = _enemy(state, action)
+    return rogue.hidden and enemy is not None and enemy.spec.tier != "boss"
+
+
+@effect("sap")
+def sap(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> None:
+    """Knock one enemy out for a long time. It wakes the moment it takes any damage."""
+    control(state, state.enemies[action.target], "sap", spec.cards)
+
+
+@check("shadowstep")
+def _shadowstep_needs_a_free_square_by_the_enemy(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    enemy = _enemy(state, action)
+    return enemy is not None and _landing(state, rogue, enemy) is not None
+
+
+@effect("shadowstep")
+def shadowstep(
+    state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
+) -> None:
+    """Appear on the free square next to the enemy that is closest to the Rogue."""
+    square = _landing(state, rogue, state.enemies[action.target])
+    if square is not None:
+        rogue.pos = square
+
+
+@keeps_hiding("vanish")
+@effect("vanish")
+def vanish(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> None:
+    """Every enemy pulled by the Rogue lets go of them, and the Rogue hides."""
+    drop_pulls(state, rogue.id)
+    rogue.hidden = True
+
+
+def _enemy(state: FightState, action: Action) -> Enemy | None:
+    """The enemy `action` is aimed at, or None if it is not aimed at an enemy."""
+    return state.enemies.get(action.target) if action.target else None
+
+
+def _landing(state: FightState, rogue: Hero, enemy: Enemy) -> Pos | None:
+    """Where Shadowstep would put the Rogue.
+
+    None if no square next to the enemy is free.
+    """
+    taken = state.occupied() - {rogue.pos}
+    return free_next_to(
+        enemy.pos, rogue.pos, taken, state.fight.width, state.fight.height
+    )

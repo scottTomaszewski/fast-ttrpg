@@ -1,4 +1,4 @@
-"""Damage, healing, going down and getting up, and cards counting down.
+"""Damage, healing, going down and getting up, stuns, and cards counting down.
 
 Every hit and every heal in the game goes through this file, so the tally of
 who did what is always right.
@@ -17,6 +17,20 @@ BROKEN_BY_DAMAGE = ("sap", "sheep")
 def add_stack(unit: Hero | Enemy, name: str, cards: int, value: int = 0) -> None:
     """Give `unit` a stack of cards, in place of any stack it had with that name."""
     unit.stacks[name] = Stack(cards, value)
+
+
+def control(state: FightState, enemy: Enemy, name: str, cards: int) -> None:
+    """Stun, sap or sheep `enemy` for `cards` cards. `name` says which one.
+
+    While it has those cards, the enemy does nothing on its turn. A boss
+    never gets them: it cannot be stunned, sapped or sheeped. But a stun
+    breaks the cast an enemy has announced, and that goes for a boss too.
+    Every ability that stuns, saps or sheeps comes through here.
+    """
+    if name == "stun":
+        enemy.announced = None
+    if enemy.spec.tier != "boss":
+        add_stack(enemy, name, cards)
 
 
 def tick_stacks(unit: Hero | Enemy) -> None:

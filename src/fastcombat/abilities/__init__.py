@@ -220,3 +220,4 @@ def _close_enough(hero: Hero, spec: AbilitySpec, square: Pos) -> bool:
 # imported here, at the very bottom, so that everything above is ready for
 # them. Later tasks add one line per class file below this comment.
 from . import warden  # noqa: F401
+from . import rogue  # noqa: F401
