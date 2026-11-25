@@ -1,10 +1,8 @@
 import re
 import pytest
 from dataclasses import FrozenInstanceError, fields, replace
-from pathlib import Path
+from tests.helpers import GAME, REAL_GAME
 from fastcombat.numbers import load_numbers, load_fight, NumbersError
-
-GAME = Path(__file__).parent.parent / "game"
 
 def without(text, table, key):
     """The file's text with the `key = ...` line taken out of one [table]."""
@@ -16,7 +14,7 @@ def without(text, table, key):
     del lines[found[0]]
     return "".join(lines)
 
-def test_the_real_files_load():
+def test_the_frozen_files_load():
     n = load_numbers(GAME / "numbers.toml")
     f = load_fight(GAME / "fights" / "ogre_warlord.toml")
     assert n.heroes["mage"].pool == 30 and n.heroes["rogue"].regen == 3
@@ -26,6 +24,13 @@ def test_the_real_files_load():
     assert f.enemy_types["brute"].shielded == 5
     assert sum(1 for s in f.spawns if s.round == 6) == 6
     assert f.hero_starts["warden"] == (3, 6)
+
+def test_the_real_game_files_load():
+    # Only that they load: the real numbers are tuned, so no number is checked.
+    n = load_numbers(REAL_GAME / "numbers.toml")
+    f = load_fight(REAL_GAME / "fights" / "ogre_warlord.toml")
+    assert {"warden", "rogue", "druid", "mage"} <= set(n.heroes)
+    assert len(f.spawns) >= 1
 
 def test_an_override_changes_one_number():
     n = load_numbers(GAME / "numbers.toml", {"abilities.meteor.cost": 12})

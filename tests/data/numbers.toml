@@ -1,0 +1,233 @@
+# Frozen copy for the tests. The real game numbers are in game/ and may differ.
+# Every number in the game. The simulator reads this file, and the class
+# sheets and cards will be made from it. Change a number here, nowhere else.
+
+[rules]
+hero_move = 6
+bleeding_cards = 3     # rounds to save a downed hero
+haul_up_hp = 5         # HP after an ally hauls you up
+combo_max = 5
+seeds_max = 2
+grit_per_attack = 1
+max_rounds = 60        # the simulator gives up after this many
+
+[heroes.warden]
+hp = 60
+die = 8
+attack_range = 1
+resource = "grit"
+pool = 10
+start = 2
+regen = 0
+crit_gain = 1          # grit
+
+[heroes.rogue]
+hp = 36
+die = 6
+attack_range = 1
+resource = "energy"
+pool = 10
+start = 10
+regen = 3
+crit_gain = 1          # one extra combo point
+
+[heroes.druid]
+hp = 36
+die = 6
+attack_range = 8
+resource = "energy"
+pool = 10
+start = 10
+regen = 3
+crit_gain = 1          # a Seed
+
+[heroes.mage]
+hp = 28
+die = 4
+attack_range = 10
+resource = "mana"
+pool = 30
+start = 30
+regen = 1
+crit_gain = 2          # mana
+
+# Ability fields: cost, cast (rounds), hits (channel), range, radius,
+# dice = [count, sides], bonus, cards (how long it lasts), value (what each
+# card is worth), alt (a second number, explained per ability), loud, cooldown.
+# A field left out is 0 (or false). An ability with no range needs no reach:
+# it is used on yourself, or around you. Range 1 means next to you.
+
+[abilities.challenge]
+hero = "warden"
+cost = 1
+range = 6
+cards = 3
+
+[abilities.war_cry]
+hero = "warden"
+cost = 3
+radius = 3
+cards = 1
+
+[abilities.intercede]
+hero = "warden"
+cost = 2
+range = 6
+cards = 1
+value = 4              # damage taken off each hit on the guarded ally
+
+[abilities.chain_hook]
+hero = "warden"
+cost = 2
+range = 6
+
+[abilities.bulwark]
+hero = "warden"
+cost = 4
+radius = 2             # how deep "behind you" goes
+cards = 1
+value = 8              # damage taken off the blast
+
+[abilities.unbroken]
+hero = "warden"
+cost = 5
+cards = 1
+
+[abilities.backstab]
+hero = "rogue"
+cost = 4
+range = 1
+dice = [2, 6]
+
+[abilities.eviscerate]
+hero = "rogue"
+cost = 3
+range = 1
+dice = [1, 6]          # per combo point
+loud = true
+
+[abilities.kidney_shot]
+hero = "rogue"
+cost = 3
+range = 1
+cards = 1
+alt = 2                # cards at full combo points
+
+[abilities.cheap_shot]
+hero = "rogue"
+cost = 3
+range = 1
+cards = 1
+
+[abilities.sap]
+hero = "rogue"
+cost = 3
+range = 1
+cards = 4
+
+[abilities.shadowstep]
+hero = "rogue"
+cost = 2
+range = 8
+
+[abilities.vanish]
+hero = "rogue"
+cost = 4
+
+[abilities.rejuvenation]
+hero = "druid"
+cost = 2
+range = 8
+cards = 4
+value = 4
+
+[abilities.regrowth]
+hero = "druid"
+cost = 4
+cast = 1
+range = 8
+dice = [3, 6]
+bonus = 4
+loud = true
+
+[abilities.swiftmend]
+hero = "druid"
+cost = 2               # free on an ally below half HP
+range = 8
+dice = [2, 6]
+bonus = 2
+
+[abilities.wild_growth]
+hero = "druid"
+cost = 5
+range = 8
+radius = 2
+cards = 2
+value = 4
+
+[abilities.cleanse]
+hero = "druid"
+cost = 1
+range = 8
+
+[abilities.shadowmeld]
+hero = "druid"
+cost = 2
+value = 3              # squares moved
+
+[abilities.nourish]
+hero = "druid"
+range = 8
+dice = [1, 6]
+alt = 2                # energy back on the top face
+
+[abilities.arcane_volley]
+hero = "mage"
+cost = 2               # per hit
+hits = 3
+range = 10
+dice = [2, 6]
+loud = true
+
+[abilities.firebolt]
+hero = "mage"
+cost = 4
+cast = 1
+range = 10
+dice = [4, 6]
+
+[abilities.meteor]
+hero = "mage"
+cost = 10
+cast = 2
+range = 10
+radius = 2
+dice = [8, 6]
+
+[abilities.frost_ring]
+hero = "mage"
+cost = 3
+cards = 2
+
+[abilities.blink]
+hero = "mage"
+cost = 2
+range = 6
+
+[abilities.quicken]
+hero = "mage"
+cost = 8
+cards = 2
+
+[abilities.polymorph]
+hero = "mage"
+cost = 4
+cast = 1
+range = 10
+cards = 4
+
+[abilities.disrupt]
+hero = "shared"
+range = 1
+alt = 10               # the Mage's range
+cooldown = 3

@@ -3,7 +3,7 @@ from dataclasses import replace
 from tests.helpers import state, enemy, GAME
 from fastcombat.combat import *
 from fastcombat.numbers import load_numbers, load_fight
-from fastcombat.units import Announced, Cast, new_state
+from fastcombat.units import Announced, Cast, Stack, new_state
 
 def test_shielded_ignores_small_hits():
     s = state(); b = enemy(s, "brute", (8, 8))

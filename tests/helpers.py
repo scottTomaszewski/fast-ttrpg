@@ -7,8 +7,12 @@ from fastcombat.grid import Pos
 from fastcombat.numbers import load_fight, load_numbers
 from fastcombat.units import Enemy, FightState, new_state
 
-# The repo's game files: the numbers file and the fights.
-GAME = Path(__file__).parent.parent / "game"
+# The tests' own frozen copy of the game files. The tests check exact numbers
+# (a wolf hits for 4), and the real numbers will be tuned, so the tests read
+# this copy, which only changes when a test needs it to.
+GAME = Path(__file__).parent / "data"
+# The real game files: the numbers file and the fights.
+REAL_GAME = Path(__file__).parent.parent / "game"
 
 
 class _ScriptedRolls:
@@ -35,7 +39,7 @@ def state(
     rolls: list[int] | None = None,
     seed: int = 1,
 ) -> FightState:
-    """A fight in round 1 on the real game files, with no enemies in it yet.
+    """A fight in round 1 on the tests' copy of the game files, with no enemies yet.
 
     Each test adds just the enemies it needs with `enemy`, so the first wolf
     a test adds is always "wolf1". The files are read fresh every time, so a
