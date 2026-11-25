@@ -14,7 +14,7 @@ within its radius of the square it is aimed at.
 
 from fastcombat.abilities import Action, check, effect, target_enemy
 from fastcombat.combat import add_stack, control, damage_enemy, damage_hero
-from fastcombat.grid import adjacent, within
+from fastcombat.grid import adjacent, on_map, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.units import FightState, Hero
 
@@ -48,10 +48,12 @@ def firebolt(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -
 
 
 @check("meteor")
-def _meteor_needs_a_centre(
+def _meteor_needs_a_centre_on_the_map(
     state: FightState, mage: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    return action.pos is not None
+    if action.pos is None:
+        return False
+    return on_map(action.pos, state.fight.width, state.fight.height)
 
 
 @effect("meteor")
@@ -93,9 +95,8 @@ def _blink_needs_a_free_square(
     """A square on the map where nobody stands. The reach is checked for every ability."""
     if action.pos is None:
         return False
-    x, y = action.pos
-    on_map = 0 <= x < state.fight.width and 0 <= y < state.fight.height
-    return on_map and action.pos not in state.occupied()
+    on_the_map = on_map(action.pos, state.fight.width, state.fight.height)
+    return on_the_map and action.pos not in state.occupied()
 
 
 @effect("blink")

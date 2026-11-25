@@ -1,4 +1,4 @@
-from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away, approach, nearest_free, free_next_to
+from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away, approach, nearest_free, free_next_to, on_map
 
 def test_diagonals_cost_one():
     assert distance((0, 0), (3, 2)) == 3
@@ -82,3 +82,8 @@ def test_free_next_to_is_the_free_square_in_the_ring_closest_to_a_spot():
     assert free_next_to((3, 6), (8, 6), {(4, 6)}, 16, 12) == (4, 7)     # (4, 5) is just as close; the fixed order picks
     assert free_next_to((3, 6), (3, 10), set(), 16, 12) == (3, 7)        # straight steps come before diagonal ones
     assert free_next_to((0, 0), (5, 5), {(1, 0), (0, 1), (1, 1)}, 16, 12) is None   # the rest is off the map
+
+def test_on_map_is_every_square_from_the_top_left_corner_to_one_short_of_the_size():
+    assert on_map((0, 0), 4, 3) and on_map((3, 2), 4, 3)
+    assert not on_map((4, 2), 4, 3) and not on_map((3, 3), 4, 3)
+    assert not on_map((-1, 0), 4, 3) and not on_map((0, -1), 4, 3)

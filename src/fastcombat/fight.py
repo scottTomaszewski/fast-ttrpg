@@ -17,7 +17,7 @@ from fastcombat.combat import (
     top_of_party_turn_cards,
 )
 from fastcombat.enemy_ai import gm_turn
-from fastcombat.grid import Pos, adjacent, distance
+from fastcombat.grid import Pos, adjacent, distance, on_map
 from fastcombat.numbers import FightDef, HeroSpec, Numbers
 from fastcombat.policies import Policy, default_policy
 from fastcombat.units import Enemy, FightState, Hero, Tally, new_state
@@ -147,9 +147,9 @@ def _move(state: FightState, hero: Hero, dest: Pos) -> None:
         return
     if hero.cast is not None and not hero.cast.is_channel:
         drop_cast(state, hero)
-    on_map = 0 <= dest[0] < state.fight.width and 0 <= dest[1] < state.fight.height
+    on_the_map = on_map(dest, state.fight.width, state.fight.height)
     close_enough = distance(hero.pos, dest) <= state.numbers.rules["hero_move"]
-    if on_map and close_enough and dest not in state.occupied():
+    if on_the_map and close_enough and dest not in state.occupied():
         hero.pos = dest
 
 

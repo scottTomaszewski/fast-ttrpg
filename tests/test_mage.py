@@ -73,6 +73,12 @@ def test_meteor_needs_a_centre():
     s = state(); m = s.heroes["mage"]
     assert not use(s, "mage", "meteor") and m.cast is None and "mage" not in s.marked
 
+def test_meteor_needs_a_centre_on_the_map():
+    s = state(); m = s.heroes["mage"]                   # at (1, 5); both squares are in reach
+    assert not use(s, "mage", "meteor", pos=(-1, 5)) and not use(s, "mage", "meteor", pos=(1, -2))
+    assert m.cast is None and "mage" not in s.marked
+    assert use(s, "mage", "meteor", pos=(0, 5))
+
 def test_meteor_is_a_blast_and_spares_a_hero_who_is_down():
     s = state(rolls=[1] * 8); m = s.heroes["mage"]; r = s.heroes["rogue"]; d = s.heroes["druid"]
     r.pos = (8, 6); add_stack(r, "bulwark", 1, 8)       # Bulwark only softens a blast

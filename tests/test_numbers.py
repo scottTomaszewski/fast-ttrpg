@@ -148,3 +148,21 @@ def test_a_bad_value_in_the_fight_file_names_the_place(tmp_path, old, new, place
     p = tmp_path / "f.toml"; p.write_text(text.replace(old, new, 1))
     with pytest.raises(NumbersError, match=place):
         load_fight(p)
+
+@pytest.mark.parametrize("old, new, place", [
+    ("first = 3\nevery = 4", "first = 3\nevery = 0", r"boss_script\[0\]\.every"),
+    ("first = 5\nevery = 5", "first = 5\nevery = -1", r"boss_script\[1\]\.every"),
+    ("first = 2\nevery = 2", "first = 0\nevery = 2", r"boss_script\[2\]\.first"),
+    ("cast_every = 4", "cast_every = -1", r"enemy_types\.shaman\.cast_every"),
+])
+def test_a_repeat_that_can_never_come_round_names_the_place(tmp_path, old, new, place):
+    text = (GAME / "fights" / "ogre_warlord.toml").read_text()
+    assert text.count(old) == 1
+    p = tmp_path / "f.toml"; p.write_text(text.replace(old, new))
+    with pytest.raises(NumbersError, match=place):
+        load_fight(p)
+
+def test_a_cast_every_of_zero_means_the_enemy_never_casts(tmp_path):
+    text = (GAME / "fights" / "ogre_warlord.toml").read_text()
+    p = tmp_path / "f.toml"; p.write_text(text.replace("cast_every = 4", "cast_every = 0"))
+    assert load_fight(p).enemy_types["shaman"].cast_every == 0

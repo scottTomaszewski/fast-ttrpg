@@ -197,6 +197,8 @@ def load_fight(path: Path) -> FightDef:
         enemy = _build(EnemySpec, table, where, type=name)
         _check_word(enemy.tier, TIERS, f"{where}.tier")
         _check_word(enemy.prefers, PREFERS, f"{where}.prefers")
+        # 0 means it never casts. Below 0 makes no sense.
+        _check_at_least(enemy.cast_every, 0, f"{where}.cast_every")
         enemy_types[name] = enemy
 
     spawns = []
@@ -212,6 +214,10 @@ def load_fight(path: Path) -> FightDef:
     for i, table in enumerate(_check(raw["boss_script"], list, "boss_script")):
         step = _build(ScriptStep, table, f"boss_script[{i}]")
         _check_word(step.kind, KINDS, f"boss_script[{i}].kind")
+        # Rounds count from 1, and a step has to wait at least one round to
+        # come up again: with 0 it could never be worked out when it is due.
+        _check_at_least(step.first, 1, f"boss_script[{i}].first")
+        _check_at_least(step.every, 1, f"boss_script[{i}].every")
         boss_script.append(step)
 
     return FightDef(
@@ -325,6 +331,11 @@ def _whole(value: object) -> bool:
 def _check_word(value: str, allowed: tuple[str, ...], where: str) -> None:
     if value not in allowed:
         raise NumbersError(f"{where}: {value!r} should be one of {', '.join(allowed)}")
+
+
+def _check_at_least(value: int, lowest: int, where: str) -> None:
+    if value < lowest:
+        raise NumbersError(f"{where}: should be {lowest} or more, not {value}")
 
 
 def _join(where: str, key: str) -> str:

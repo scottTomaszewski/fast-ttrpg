@@ -25,6 +25,11 @@ def adjacent(a: Pos, b: Pos) -> bool:
     return distance(a, b) == 1
 
 
+def on_map(pos: Pos, width: int, height: int) -> bool:
+    """True when `pos` is a square on a map `width` wide and `height` tall."""
+    return 0 <= pos[0] < width and 0 <= pos[1] < height
+
+
 def within(center: Pos, radius: int, width: int, height: int) -> set[Pos]:
     """Every square on the map no more than `radius` steps from `center`."""
     cx, cy = center
@@ -160,7 +165,7 @@ def free_next_to(
     free = []
     for dx, dy in DIRECTIONS:
         square = (center[0] + dx, center[1] + dy)
-        if 0 <= square[0] < width and 0 <= square[1] < height and square not in taken:
+        if on_map(square, width, height) and square not in taken:
             free.append(square)
     return min(free, key=lambda square: distance(square, toward), default=None)
 
@@ -215,7 +220,7 @@ def _spread(
             there = (here[0] + dx, here[1] + dy)
             if there in came_from or there in blocked:
                 continue
-            if not (0 <= there[0] < width and 0 <= there[1] < height):
+            if not on_map(there, width, height):
                 continue
             came_from[there] = here
             taken[there] = taken[here] + 1
