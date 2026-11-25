@@ -10,10 +10,10 @@ combo_per_hit = 1      # combo points a Rogue gets for each auto-attack die that
 backstab_hidden_multiplier = 2   # a Backstab from hiding hits this many times as hard
 seeds_max = 2
 grit_per_attack = 1
-max_rounds = 60        # the simulator gives up after this many
+max_rounds = 200       # the simulator gives up after this many
 
 [heroes.warden]
-hp = 60
+hp = 90
 die = 8
 attack_range = 1
 resource = "grit"
@@ -60,7 +60,7 @@ crit_gain = 2          # mana
 
 [abilities.challenge]
 hero = "warden"
-cost = 1
+cost = 2
 range = 6
 cards = 3
 
@@ -79,7 +79,7 @@ value = 4              # damage taken off each hit on the guarded ally
 
 [abilities.chain_hook]
 hero = "warden"
-cost = 2
+cost = 4
 range = 6
 
 [abilities.bulwark]

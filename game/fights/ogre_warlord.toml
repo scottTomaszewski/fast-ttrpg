@@ -11,7 +11,7 @@ mage = [1, 5]
 
 [enemy_types.ogre]
 tier = "boss"
-hp = 320
+hp = 130
 dice = [2, 6]          # the boss rolls its melee hit
 bonus = 2
 move = 4
@@ -20,7 +20,7 @@ prefers = "nearest"
 
 [enemy_types.shaman]   # stands back, poisons, and heals the boss unless stopped
 hp = 24
-damage = 3
+damage = 2
 move = 4
 range = 8
 prefers = "random"
@@ -32,24 +32,24 @@ cast_heal = 25
 
 [enemy_types.wolf]     # runs past the tank
 hp = 16
-damage = 4
+damage = 3
 move = 7
 range = 1
 prefers = "backline"
 
 [enemy_types.brute]    # Shielded: ignores hits below 5
 hp = 30
-damage = 6
+damage = 4
 move = 4
 range = 1
 prefers = "nearest"
 shielded = 5
 
-[enemy_types.goblin]
+[enemy_types.goblin]    # slow, so a Meteor cast on them still catches them
 tier = "fodder"
 hp = 1
 damage = 2
-move = 5
+move = 1
 range = 1
 prefers = "backline"
 
@@ -63,16 +63,13 @@ pos = [10, 7]
 type = "shaman"
 pos = [13, 3]
 [[spawns]]
-type = "shaman"
-pos = [13, 9]
-[[spawns]]
 type = "wolf"
 pos = [10, 3]
 [[spawns]]
 type = "wolf"
 pos = [10, 9]
 
-# two waves of six goblins on the far edge
+# one wave of six goblins on the far edge
 [[spawns]]
 type = "goblin"
 pos = [15, 3]
@@ -97,44 +94,22 @@ round = 6
 type = "goblin"
 pos = [15, 8]
 round = 6
-[[spawns]]
-type = "goblin"
-pos = [15, 3]
-round = 12
-[[spawns]]
-type = "goblin"
-pos = [15, 4]
-round = 12
-[[spawns]]
-type = "goblin"
-pos = [15, 5]
-round = 12
-[[spawns]]
-type = "goblin"
-pos = [15, 6]
-round = 12
-[[spawns]]
-type = "goblin"
-pos = [15, 7]
-round = 12
-[[spawns]]
-type = "goblin"
-pos = [15, 8]
-round = 12
 
 # The boss announces at most one of these per turn; the first that is due wins.
+# The timings matter for how long a fight lasts: a Ground Slam makes the
+# heroes next to the boss step away for a turn. See docs/tuning-log.md.
 [[boss_script]]
 name = "ground_slam"   # announced blast around the boss
 kind = "blast"
-first = 3
-every = 4
+first = 4
+every = 6
 radius = 2
 dice = [3, 6]
 
 [[boss_script]]
 name = "skull_crusher" # announced heavy hit on whoever the boss is attacking
 kind = "heavy"
-first = 5
+first = 6
 every = 5
 dice = [6, 6]
 
