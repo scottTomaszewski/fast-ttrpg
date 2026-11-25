@@ -49,8 +49,8 @@ def _first_rule_that_names_a_hero(
     """Rules 1 to 4. `up` is every hero who is up, in id order, and is never empty."""
     if "taunt" in enemy.stacks and warden is not None:
         return warden
-    puller = state.heroes.get(enemy.pulled_by) if enemy.pulled_by else None
-    if puller is not None and puller.up:
+    puller = _puller(state, enemy)
+    if puller is not None:
         return puller
     if held(state, enemy):
         return warden
@@ -67,12 +67,19 @@ def _first_rule_that_names_a_hero(
 def can_move(state: FightState, enemy: Enemy) -> bool:
     """False when the enemy must stay where it is this turn.
 
-    A hold keeps it next to the Warden, unless a pull is dragging it away.
-    Rooted cards keep it in place, and so does a stun, sap or sheep.
+    A hold keeps it next to the Warden, unless a pull is dragging it away
+    (a pull by a hero who is down or out counts for nothing). Rooted cards
+    keep it in place, and so does a stun, sap or sheep.
     """
-    if held(state, enemy) and enemy.pulled_by is None:
+    if held(state, enemy) and _puller(state, enemy) is None:
         return False
     return "rooted" not in enemy.stacks and not enemy.controlled
+
+
+def _puller(state: FightState, enemy: Enemy) -> Hero | None:
+    """The hero who pulled `enemy`, if that hero is up. Otherwise None."""
+    hero = state.heroes.get(enemy.pulled_by) if enemy.pulled_by else None
+    return hero if hero is not None and hero.up else None
 
 
 def apply_loud(state: FightState, hero_id: str, enemy: Enemy) -> None:

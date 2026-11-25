@@ -1,4 +1,4 @@
-from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away
+from fastcombat.grid import distance, adjacent, within, behind, walk, walk_away, approach
 
 def test_diagonals_cost_one():
     assert distance((0, 0), (3, 2)) == 3
@@ -35,3 +35,37 @@ def test_a_walker_already_in_reach_stays_put_even_if_its_square_is_in_blocked():
 def test_walk_away_stays_put_when_moving_gains_nothing():
     # Stepping sideways keeps the threat 5 away, so the fewest steps (none) wins.
     assert walk_away((0, 0), [(0, 5)], 3, set(), 3, 10) == (0, 0)
+
+def test_walk_goes_round_a_partial_wall():
+    assert walk((0, 0), (2, 0), 5, {(1, 0)}, 3, 2) == (2, 0)
+
+def test_walk_with_no_reach_cannot_end_on_a_blocked_goal():
+    assert walk((0, 0), (5, 0), 10, {(5, 0)}, 10, 10) == (0, 0)
+
+def test_negative_steps_mean_stay_put():
+    assert walk((0, 0), (9, 0), -3, set(), 10, 10) == (0, 0)
+    assert approach((0, 0), (9, 0), -3, set(), 10, 10) == (0, 0)
+
+
+# `approach` is `walk` for a crowd. The corridor below is one square tall, and
+# the goal at (5, 0) has bodies on both sides, so nobody can get next to it.
+BOXED_IN = {(4, 0), (5, 0), (6, 0)}
+
+def test_approach_walks_like_walk_when_there_is_a_way():
+    assert approach((0, 0), (9, 0), 3, set(), 10, 10) == walk((0, 0), (9, 0), 3, set(), 10, 10) == (3, 0)
+    assert approach((0, 0), (2, 0), 5, {(1, 0)}, 3, 2) == (2, 0)
+
+def test_approach_gets_as_close_as_it_can_to_a_boxed_in_goal():
+    assert walk((0, 0), (5, 0), 10, BOXED_IN, 10, 1, reach=1) == (0, 0)      # walk gives up
+    assert approach((0, 0), (5, 0), 10, BOXED_IN, 10, 1, reach=1) == (3, 0)
+    assert approach((0, 0), (5, 0), 2, BOXED_IN, 10, 1, reach=1) == (2, 0)   # only as far as its steps
+
+def test_approach_stays_put_when_nothing_it_can_reach_is_closer():
+    assert approach((3, 0), (5, 0), 10, BOXED_IN | {(3, 0)}, 10, 1, reach=1) == (3, 0)
+
+def test_approach_stops_at_the_first_closest_square_it_finds():
+    # A wall of bodies right across the map. Every square of column 3 is 2
+    # from the goal and two steps away; straight ahead is looked at first.
+    wall = {(4, y) for y in range(5)}
+    assert approach((1, 2), (5, 2), 5, wall, 7, 5, reach=1) == (3, 2)
+    assert approach((1, 0), (5, 2), 5, wall, 7, 5, reach=1) == (3, 0)

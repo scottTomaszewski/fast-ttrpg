@@ -80,6 +80,12 @@ def test_a_pull_toward_a_hero_who_is_down_is_ignored():
     damage_hero(s, s.heroes["rogue"], 99, attacker=None)
     assert choose_target(s, loose).id == "mage" and choose_target(s, near).id == "warden"
 
+def test_a_pull_by_a_hero_who_is_down_does_not_break_the_hold():
+    s = state(); w = enemy(s, "wolf", (4, 6)); w.pulled_by = "rogue"   # next to the warden
+    assert can_move(s, w)
+    damage_hero(s, s.heroes["rogue"], 99, attacker=None)
+    assert not can_move(s, w) and choose_target(s, w).id == "warden"
+
 def test_nearest_and_backline_break_ties_by_id():
     s = state(); b = enemy(s, "brute", (2, 3))                         # 2 from the rogue and the mage
     assert choose_target(s, b).id == "mage"

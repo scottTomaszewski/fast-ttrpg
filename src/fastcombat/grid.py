@@ -12,7 +12,7 @@ Pos = tuple[int, int]
 
 # The eight ways to step, straight ones first. Always looking in the same
 # order means the same fight always walks the same way.
-STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1))
+DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1))
 
 
 def distance(a: Pos, b: Pos) -> int:
@@ -64,21 +64,47 @@ def walk(
     along a shortest path that never passes through or stops on a blocked
     square, and you stop after `steps` steps. Your own square never counts as
     blocked. If you are already close enough, or there is no way there, you
-    stay on `start`.
+    stay on `start`. Fewer than 0 steps is the same as 0.
     """
     blocked = blocked - {start}
-    targets = within(goal, reach, width, height) - blocked
-    if not targets:
+    path = _path_to(start, goal, reach, blocked, width, height)
+    if path is None:
         return start
-    came_from: dict[Pos, Pos | None] = {}
-    for square, _ in _spread(start, blocked, width, height, came_from):
-        if square in targets:
-            path = [square]
-            while came_from[path[-1]] is not None:
-                path.append(came_from[path[-1]])
-            path.reverse()
-            return path[min(steps, len(path) - 1)]
-    return start
+    return path[min(max(steps, 0), len(path) - 1)]
+
+
+def approach(
+    start: Pos,
+    goal: Pos,
+    steps: int,
+    blocked: set[Pos],
+    width: int,
+    height: int,
+    reach: int = 0,
+) -> Pos:
+    """Like `walk`, but when there is no way to get within `reach` of `goal`,
+    you still get as close as you can.
+
+    That happens when the goal is boxed in by bodies. You then go to the
+    square, no more than `steps` steps away, that is closest to `goal`. If
+    several are just as close, the one that takes the fewest steps wins, then
+    the one the search finds first. If nothing you can reach is closer than
+    where you stand, you stay on `start`. This way a crowd does not freeze
+    the ones at the back.
+    """
+    blocked = blocked - {start}
+    path = _path_to(start, goal, reach, blocked, width, height)
+    if path is not None:
+        return path[min(max(steps, 0), len(path) - 1)]
+    best = start
+    best_gap = distance(start, goal)
+    for square, taken in _spread(start, blocked, width, height, {}):
+        if taken > steps:
+            break
+        gap = distance(square, goal)
+        if gap < best_gap:
+            best, best_gap = square, gap
+    return best
 
 
 def walk_away(
@@ -109,6 +135,33 @@ def walk_away(
     return best
 
 
+def _path_to(
+    start: Pos,
+    goal: Pos,
+    reach: int,
+    blocked: set[Pos],
+    width: int,
+    height: int,
+) -> list[Pos] | None:
+    """The shortest path from `start` to a free square within `reach` of `goal`.
+
+    The path starts with `start` and ends on that square. It is None when
+    there is no way there.
+    """
+    targets = within(goal, reach, width, height) - blocked
+    if not targets:
+        return None
+    came_from: dict[Pos, Pos | None] = {}
+    for square, _ in _spread(start, blocked, width, height, came_from):
+        if square in targets:
+            path = [square]
+            while came_from[path[-1]] is not None:
+                path.append(came_from[path[-1]])
+            path.reverse()
+            return path
+    return None
+
+
 def _spread(
     start: Pos,
     blocked: set[Pos],
@@ -128,7 +181,7 @@ def _spread(
     while queue:
         here = queue.popleft()
         yield here, taken[here]
-        for dx, dy in STEPS:
+        for dx, dy in DIRECTIONS:
             there = (here[0] + dx, here[1] + dy)
             if there in came_from or there in blocked:
                 continue

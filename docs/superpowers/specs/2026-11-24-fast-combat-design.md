@@ -125,8 +125,9 @@ comes off per round; when the stack is empty the effect is over. Heals over
 time are the model: the healer hands an ally 4 "heal N" cards and the ally
 turns one in at the top of each party turn.
 
-Hero-side stacks tick at the top of the party turn. Enemy-side stacks tick
-at the end of the GM turn.
+Hero-side stacks tick at the top of the party turn, except Bleeding cards,
+which come off at the end of the party turn. Enemy-side stacks tick at the
+end of the GM turn.
 
 ### Defence
 
