@@ -31,8 +31,10 @@ def gm_turn(state: FightState) -> None:
     for enemy in sorted(state.living_enemies(), key=lambda enemy: enemy.id):
         if enemy.controlled:
             # A stunned, sapped or sheeped enemy does nothing, so it is
-            # attacking nobody: it forgets who it went for last turn.
+            # attacking nobody: it forgets who it went for last turn, and
+            # any pull on it is used up, as a pull is after a normal turn.
             enemy.target = None
+            enemy.pulled_by = None
         else:
             _take_turn(state, enemy)
     announce(state)

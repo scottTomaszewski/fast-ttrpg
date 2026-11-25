@@ -103,17 +103,16 @@ def party_turn(state: FightState, policies: dict[str, Policy]) -> None:
 def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
     """`hero` auto-attacks `enemy`, if it is alive and in reach.
 
-    One die, or two added together into one hit with a Quicken card. A
-    Rogue gets combo points (`combo_per_hit`) for each die that did not
-    miss. Each crit also gives the class's crit bonus. Attacking gives a
-    hidden hero away.
+    One die. With a Quicken card, as many dice as Quicken's `value` in the
+    numbers file, added together into one hit. A Rogue gets combo points
+    (`combo_per_hit`) for each die that did not miss. Each crit also gives
+    the class's crit bonus. Attacking gives a hidden hero away.
     """
     spec = state.numbers.heroes[hero.cls]
     if enemy.dead or distance(hero.pos, enemy.pos) > spec.attack_range:
         return
-    rolls = [state.dice.auto_attack(spec.die)]
-    if "quicken" in hero.stacks:
-        rolls.append(state.dice.auto_attack(spec.die))
+    count = state.numbers.abilities["quicken"].value if "quicken" in hero.stacks else 1
+    rolls = [state.dice.auto_attack(spec.die) for _ in range(count)]
     damage_enemy(state, hero.id, enemy, sum(roll.damage for roll in rolls), auto=True)
     rules = state.numbers.rules
     for roll in rolls:
@@ -188,14 +187,17 @@ def _haul_up(state: FightState, hero: Hero, target_id: str | None) -> None:
 def _write_down_resources(state: FightState, heroes: list[Hero]) -> None:
     """After the act step: each hero's resource goes in the tally.
 
-    A hero who is up and has too little to pay for even their cheapest
-    ability has had a starved round.
+    A hero who is up has had an up round. If they also have too little to
+    pay for even their cheapest ability, it was a starved round.
     """
     tally = state.tally
     for hero in heroes:
         tally.resource_by_round[hero.id].append(hero.resource)
+        if not hero.up:
+            continue
+        tally.up_rounds[hero.id] += 1
         cheapest = _cheapest_cost(state.numbers, hero.cls)
-        if hero.up and cheapest is not None and hero.resource < cheapest:
+        if cheapest is not None and hero.resource < cheapest:
             tally.starved_rounds[hero.id] += 1
 
 

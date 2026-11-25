@@ -74,6 +74,13 @@ def test_backstab_on_an_enemy_going_for_someone_else_or_taunted():
     s2 = state(party=("rogue",)); s2.heroes["rogue"].hidden = False; w2 = near(s2)
     add_stack(w2, "taunt", 1); assert use(s2, "rogue", "backstab", "wolf1")
 
+def test_backstab_is_refused_on_an_enemy_the_rogue_pulled():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; w = near(s)   # held by the warden at (3, 6)
+    w.target = "warden"; w.pulled_by = "rogue"                         # but it is coming for her now
+    assert not use(s, "rogue", "backstab", "wolf1")
+    add_stack(w, "taunt", 1)                                           # a Taunt beats her pull
+    assert use(s, "rogue", "backstab", "wolf1")
+
 def test_backstab_not_from_hiding_hits_once_and_combo_points_stop_at_the_most():
     s = state(rolls=[3, 4]); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5; w = near(s)
     assert use(s, "rogue", "backstab", "wolf1") and w.hp == 16 - 7 and r.combo == 5

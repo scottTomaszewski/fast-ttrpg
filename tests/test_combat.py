@@ -5,6 +5,7 @@ from tests.helpers import state, enemy, GAME
 from fastcombat.combat import *
 from fastcombat.numbers import load_numbers, load_fight
 from fastcombat.units import Announced, Cast, Stack, new_state
+from fastcombat.abilities import Action, use_ability
 
 def test_shielded_ignores_small_hits():
     s = state(); b = enemy(s, "brute", (8, 8))
@@ -160,14 +161,21 @@ def test_going_down_drops_everything_and_a_downed_hero_takes_no_more_hits():
     assert m.stacks["bleeding"].cards == 2 and s.tally.times_down["mage"] == 1
     damage_hero(s, r, 99, attacker=None); assert not r.hidden
 
-def test_heal_cards_are_credited_to_the_druid_and_poison_hurts():
+def test_heal_cards_are_credited_to_whoever_put_them_on_and_poison_hurts():
     s = state(); w = s.heroes["warden"]; w.hp = 40
-    add_stack(w, "wild_growth", 2, 4); add_stack(w, "poison", 3, 2)
+    add_stack(w, "wild_growth", 2, 4, source="druid"); add_stack(w, "poison", 3, 2)
     top_of_party_turn_cards(s)
     assert w.hp == 42 and s.tally.healing["druid"] == 4 and w.resource == 2   # poison is no attack
     s2 = state(party=("warden",)); w2 = s2.heroes["warden"]; w2.hp = 40
     add_stack(w2, "rejuvenation", 4, 4); top_of_party_turn_cards(s2)
-    assert s2.tally.healing["warden"] == 4                               # no Druid: your own
+    assert s2.tally.healing["warden"] == 4                               # nobody put them on: your own
+
+def test_the_second_druids_heal_cards_are_the_second_druids_healing():
+    s = state(party=("warden", "druid", "druid")); w = s.heroes["warden"]; w.hp = 40
+    assert use_ability(s, s.heroes["druid2"], Action("ability", "rejuvenation", "warden"))
+    assert use_ability(s, s.heroes["druid2"], Action("ability", "wild_growth", pos=w.pos))
+    top_of_party_turn_cards(s)
+    assert s.tally.healing == {"warden": 0, "druid": 0, "druid2": 8}
 
 def test_poison_that_takes_you_down_costs_a_bleeding_card_only_at_the_end_of_the_turn():
     s = state(); m = s.heroes["mage"]; m.hp = 2; add_stack(m, "poison", 3, 2)

@@ -53,8 +53,9 @@ def test_the_summary_counts_from_the_tallies():
     assert s.auto_share == autos / damage
     assert s.damage_share["mage"] == (a.tally.damage["mage"] + b.tally.damage["mage"]) / damage
     assert s.rounds_median == (a.rounds + b.rounds) / 2
-    starved = [r.tally.starved_rounds["druid"] / r.rounds for r in (a, b)]
+    starved = [r.tally.starved_rounds["druid"] / r.tally.up_rounds["druid"] for r in (a, b)]
     assert s.starved["druid"] == sum(starved) / 2
+    assert s.lowest_hp["mage"] == (a.tally.lowest_hp["mage"] + b.tally.lowest_hp["mage"]) / 2
     # the curve is as long as the longest fight
     assert len(s.resource_curve["mage"]) == max(a.rounds, b.rounds)
 
@@ -89,6 +90,23 @@ def test_the_printed_summary_says_ended_full_means_up_and_full():
     text = format_summary(summarize([run_fight(N, F, PARTY, seed=1)]))
     assert "up and full" in text
 
+def test_starved_counts_only_the_rounds_a_hero_was_up():
+    r = run_fight(N, F, PARTY, seed=1)
+    tally = replace(r.tally, starved_rounds={**r.tally.starved_rounds, "mage": 3},
+                    up_rounds={**r.tally.up_rounds, "mage": 4})      # down or out for the rest
+    assert summarize([replace(r, rounds=20, tally=tally)]).starved["mage"] == 0.75
+    never_up = replace(tally, starved_rounds={**tally.starved_rounds, "mage": 0},
+                       up_rounds={**tally.up_rounds, "mage": 0})
+    assert summarize([replace(r, tally=never_up)]).starved["mage"] == 0
+
+def test_the_printed_summary_shows_each_heros_lowest_hp():
+    r = run_fight(N, F, PARTY, seed=1)
+    low = replace(r, tally=replace(r.tally, lowest_hp={"warden": 0.5, "rogue": 0.25, "druid": 1.0, "mage": 0.0}))
+    text = format_summary(summarize([low]))
+    assert "lowest HP" in text
+    rows = {line.split()[0]: line.split() for line in text.splitlines()[-4:]}
+    assert rows["warden"][-1] == "50%" and rows["rogue"][-1] == "25%" and rows["mage"][-1] == "0%"
+
 def test_a_fight_knows_each_heros_full_pool():
     r = run_fight(N, F, ["mage", "rogue", "rogue"], seed=0)
     assert r.pool == {"mage": N.heroes["mage"].pool, "rogue": N.heroes["rogue"].pool,
@@ -104,7 +122,8 @@ def good(**changes) -> Summary:
                 rounds_p90=22, in_band=0.6, danger_rate=0.5, down_rate={h: 0.1 for h in heroes},
                 auto_share=0.3, damage_share={h: 0.5 for h in heroes},
                 healing_share={h: 0.5 for h in heroes}, starved={h: 0.2 for h in heroes},
-                ended_full={h: 0.2 for h in heroes}, resource_curve={h: [] for h in heroes})
+                ended_full={h: 0.2 for h in heroes}, lowest_hp={h: 0.5 for h in heroes},
+                resource_curve={h: [] for h in heroes})
     return replace(s, **changes)
 
 def passed(full, without=None, on_auto=None):

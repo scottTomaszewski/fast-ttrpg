@@ -14,9 +14,15 @@ HEAL_STACKS = ("rejuvenation", "wild_growth")
 BROKEN_BY_DAMAGE = ("sap", "sheep")
 
 
-def add_stack(unit: Hero | Enemy, name: str, cards: int, value: int = 0) -> None:
-    """Give `unit` a stack of cards, in place of any stack it had with that name."""
-    unit.stacks[name] = Stack(cards, value)
+def add_stack(
+    unit: Hero | Enemy, name: str, cards: int, value: int = 0, source: str | None = None
+) -> None:
+    """Give `unit` a stack of cards, in place of any stack it had with that name.
+
+    `source` is the id of the hero who put it on, if it matters who did
+    (heal cards: their healing goes in that hero's tally).
+    """
+    unit.stacks[name] = Stack(cards, value, source)
 
 
 def control(state: FightState, enemy: Enemy, name: str, cards: int) -> None:
@@ -172,22 +178,21 @@ def heal_hero(state: FightState, healer_id: str, target: Hero, amount: int) -> i
 def top_of_party_turn_cards(state: FightState) -> None:
     """Every hero who is not out turns in one card from each stack they hold.
 
-    Heal cards heal (the first Druid in the party gets the credit, or the
-    hero if there is no Druid) and poison hurts. Then each stack the hero
+    Heal cards heal (the hero who put them on gets the credit, or the hero
+    holding them if nobody did) and poison hurts. Then each stack the hero
     held when this began loses one card. A stack that went away in between,
     because the hero went down or got up, does not. Bleeding cards are the
     one exception: they come off at the end of the party turn instead, in
     `end_of_party_turn_cards`.
     """
-    druid = next((h for h in state.heroes.values() if h.cls == "druid"), None)
     for hero in state.heroes.values():
         if hero.out:
             continue
         held = dict(hero.stacks)
-        healer_id = druid.id if druid else hero.id
         for name in HEAL_STACKS:
             if name in hero.stacks:
-                heal_hero(state, healer_id, hero, hero.stacks[name].value)
+                stack = hero.stacks[name]
+                heal_hero(state, stack.source or hero.id, hero, stack.value)
         if "poison" in hero.stacks:
             damage_hero(state, hero, hero.stacks["poison"].value, attacker=None)
         for name, stack in held.items():

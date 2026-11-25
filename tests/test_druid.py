@@ -129,3 +129,10 @@ def test_shadowmeld_never_walks_through_anyone():
 def test_shadowmeld_does_not_run_from_a_dead_enemy():
     s = state(); w = enemy(s, "wolf", (2, 7)); w.dead = True
     assert use(s, "druid", "shadowmeld") and s.heroes["druid"].pos == (1, 7)
+
+def test_nourish_rolls_its_dice_count_and_adds_its_bonus():
+    from dataclasses import replace
+    s = state(rolls=[3, 4, 2, 6]); d = s.heroes["druid"]; d.resource = 4; w = s.heroes["warden"]; w.hp = 30
+    s.numbers.abilities["nourish"] = replace(s.numbers.abilities["nourish"], dice=(2, 6), bonus=1)
+    use(s, "druid", "nourish", "warden"); assert w.hp == 30 + 3 + 4 + 1 and d.resource == 4
+    use(s, "druid", "nourish", "warden"); assert w.hp == 38 + 2 + 6 + 1 and d.resource == 6   # any die on its top face

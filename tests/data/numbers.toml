@@ -1,6 +1,7 @@
 # Frozen copy for the tests. The real game numbers are in game/ and may differ.
 # Every number in the game. The simulator reads this file, and the class
-# sheets and cards will be made from it. Change a number here, nowhere else.
+# sheets and cards will be made from it. Change a number here only when a
+# test needs it.
 
 [rules]
 hero_move = 6
@@ -220,6 +221,7 @@ range = 6
 hero = "mage"
 cost = 8
 cards = 2
+value = 2              # dice for each auto-attack while quickened
 
 [abilities.polymorph]
 hero = "mage"

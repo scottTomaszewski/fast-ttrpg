@@ -35,6 +35,7 @@ otherwise: "a downed ally" is one who is down. "Lowest" for allies means
 the lowest share of their max HP.
 """
 
+from dataclasses import replace
 from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
@@ -227,9 +228,10 @@ class RoguePolicy(_ClassPolicy):
     or next to the normal focus if there is no such enemy; a square also out
     of danger, if possible. In round 1, while hidden, a shielded enemy that
     can be reached this move comes first, so it can be sapped. If walking
-    cannot take her next to the ability focus, but rule 9 can (it is farther
-    than her move, within Shadowstep's range, and Shadowstep can be used
-    now), she stays put and Shadowsteps in the act step.
+    cannot take her next to the ability focus, but rule 9 can (from the
+    square she stays on, it is farther than her move, within Shadowstep's
+    range, and Shadowstep can be used), she stays put (stepping out of
+    danger if she must) and Shadowsteps in the act step.
 
     1. Haul up.
     2. Hidden, round 1, and a shielded enemy is next to me (or reachable
@@ -261,8 +263,13 @@ class RoguePolicy(_ClassPolicy):
                 return _stay(state, rogue)
             return _go(state, rogue, target.pos, reach=1)
         dest = _go(state, rogue, target.pos, reach=1)
-        if not adjacent(dest, target.pos) and _shadowstep(state, rogue, target):
-            return _stay(state, rogue)  # rule 9 takes her there in the act step
+        if adjacent(dest, target.pos):
+            return dest
+        # Rule 9 can take her there in the act step, from the square she
+        # stays on (out of danger, if she has to step out of it).
+        stay = _stay(state, rogue)
+        if _shadowstep(state, replace(rogue, pos=stay), target):
+            return stay
         return dest
 
     def act(self, state: FightState, rogue: Hero) -> Action:
@@ -805,7 +812,9 @@ def _shadowstep(state: FightState, rogue: Hero, focus: Enemy) -> Action | None:
     """Rogue rule 9: Shadowstep to `focus` if it is farther than her move, within
     Shadowstep's range, and Shadowstep can be used now. Otherwise None.
 
-    The move step asks this too, so she waits for it instead of walking.
+    The move step asks this too, so she waits for it instead of walking. It
+    asks with a copy of the Rogue on the square she would stay on, so the
+    answer is the one the act step will get from there.
     """
     gap = distance(rogue.pos, focus.pos)
     if state.numbers.rules["hero_move"] < gap <= state.numbers.abilities["shadowstep"].range:

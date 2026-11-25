@@ -295,3 +295,12 @@ def test_rogue_hits_an_enemy_next_to_her_when_her_focus_is_far_away():
     assert act(s, "rogue") == Action("auto", target="brute1")       # the weakest enemy next to her
     add_stack(s.enemies["brute1"], "stun", 1)
     assert act(s, "rogue") == Action("none")
+
+def test_rogue_waits_for_shadowstep_only_if_she_could_still_use_it_after_stepping_out_of_danger():
+    from fastcombat.grid import within
+    s = state(); r = s.heroes["rogue"]                              # at (2, 5), move 6, Shadowstep range 8
+    enemy(s, "wolf", (10, 5))                                       # 8 away: a walk ends 2 short
+    s.marked["mage"] = frozenset(within((2, 5), 1, 16, 12))         # a blast is coming down on her
+    # Stepping out of it puts her at (0, 3), 10 from the wolf: too far to Shadowstep.
+    # So she walks toward the wolf instead of waiting.
+    assert default_policy("rogue").move(s, r) == (8, 5)

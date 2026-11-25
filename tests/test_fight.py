@@ -33,6 +33,11 @@ def test_quicken_rolls_two_dice():
     s = state(rolls=[3, 4]); r = s.heroes["rogue"]; w = enemy(s, "wolf", (3, 5))
     add_stack(r, "quicken", 2); auto_attack(s, r, w); assert w.hp == 9
 
+def test_how_many_dice_quicken_rolls_comes_from_the_numbers():
+    s = state(rolls=[3, 4, 2]); r = s.heroes["rogue"]; w = enemy(s, "wolf", (3, 5))
+    s.numbers.abilities["quicken"] = replace(s.numbers.abilities["quicken"], value=3)
+    add_stack(r, "quicken", 2); auto_attack(s, r, w); assert w.hp == 16 - 9 and r.combo == 3
+
 def test_a_held_enemy_stays_and_hits_the_warden():
     s = state(); w = enemy(s, "wolf", (4, 6)); gm_turn(s)
     assert w.pos == (4, 6) and s.heroes["warden"].hp == 56 and s.heroes["warden"].resource == 3
@@ -40,6 +45,11 @@ def test_a_held_enemy_stays_and_hits_the_warden():
 def test_a_stunned_enemy_does_nothing_and_the_card_comes_off_after():
     s = state(); w = enemy(s, "wolf", (4, 6)); add_stack(w, "stun", 1); gm_turn(s)
     assert s.heroes["warden"].hp == 60 and "stun" not in w.stacks
+
+def test_a_controlled_enemy_forgets_its_pull_too():
+    s = state(); w = enemy(s, "wolf", (10, 3)); w.pulled_by = "druid"; add_stack(w, "stun", 1)
+    gm_turn(s); assert w.pulled_by is None and w.target is None
+    gm_turn(s); assert w.target == "mage"                                # not the druid: the pull is gone
 
 def test_nobody_ever_shares_a_square():
     s = state()
@@ -188,11 +198,12 @@ def test_a_hero_who_cannot_pay_for_anything_has_a_starved_round():
     party_turn(s, idle(s))
     assert s.tally.starved_rounds == {"warden": 1, "rogue": 0, "druid": 0, "mage": 0}
     assert s.tally.resource_by_round["mage"] == [0]
+    assert s.tally.up_rounds == {"warden": 1, "rogue": 1, "druid": 1, "mage": 0}   # the mage was down
 
 def test_a_hero_moves_only_within_reach_and_never_onto_someone_or_off_the_map():
     s = state(); h = s.heroes
     party_turn(s, idle(s, rogue=Plays(dest=(15, 5)), druid=Plays(dest=(1, 5)),
-                       mage=Plays(dest=(4, 4)), warden=Plays(dest=(3, -1))))
+                       mage=Plays(dest=(4, 4)), warden=Plays(dest=(-1, 6))))   # 4 steps, off the map
     assert [h[x].pos for x in ("rogue", "druid", "mage", "warden")] == [(2, 5), (1, 7), (4, 4), (3, 6)]
 
 def test_moving_breaks_a_cast_but_not_a_channel(beam):

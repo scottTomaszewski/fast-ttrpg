@@ -61,8 +61,10 @@ def meteor(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> 
     """The blast lands: one roll, and everyone in the area takes all of it.
 
     That is every living enemy there, and every hero there who is up, the
-    Mage too. For a hero it counts as a blast, so Bulwark makes it smaller.
-    A hero who is down is left alone.
+    Mage too. A hero who is down is left alone. For a hero it counts as a
+    blast, but Bulwark does not make it smaller in this fight: the Warden
+    plants Bulwark against the boss's blasts, and a one-card Bulwark comes
+    off at the top of the next party turn, before a cast lands.
     """
     amount = state.dice.roll_many(*spec.dice, spec.bonus)
     area = within(action.pos, spec.radius, state.fight.width, state.fight.height)
@@ -109,8 +111,8 @@ def blink(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> N
 def quicken(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> None:
     """Quicken cards on every hero who is up, the Mage too.
 
-    While the cards last, their auto-attacks roll two dice (see
-    `fight.auto_attack`).
+    While the cards last, their auto-attacks roll Quicken's `value` dice
+    instead of one (see `fight.auto_attack`).
     """
     for hero in state.up_heroes():
         add_stack(hero, "quicken", spec.cards)

@@ -219,6 +219,7 @@ range = 6
 hero = "mage"
 cost = 8
 cards = 2
+value = 2              # dice for each auto-attack while quickened
 
 [abilities.polymorph]
 hero = "mage"

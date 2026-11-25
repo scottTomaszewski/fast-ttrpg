@@ -32,16 +32,20 @@ def _backstab_needs_an_enemy_busy_with_someone_else(
 ) -> bool:
     """From hiding, any enemy will do. Otherwise it must be busy with someone else.
 
-    Busy means: it is going for another hero, the Warden is holding it, or
-    it has Taunt cards.
+    Busy means: it has Taunt cards; or the Rogue did not pull it, and it is
+    going for another hero or the Warden is holding it. An enemy the Rogue
+    pulled is coming for her (a pull beats the Warden's hold), so it is not
+    busy with someone else; only Taunt cards beat her pull.
     """
     enemy = target_enemy(state, action)
     if enemy is None:
         return False
-    if rogue.hidden:
+    if rogue.hidden or "taunt" in enemy.stacks:
         return True
+    if enemy.pulled_by == rogue.id:
+        return False
     going_for_someone_else = enemy.target is not None and enemy.target != rogue.id
-    return going_for_someone_else or held(state, enemy) or "taunt" in enemy.stacks
+    return going_for_someone_else or held(state, enemy)
 
 
 @effect("backstab")

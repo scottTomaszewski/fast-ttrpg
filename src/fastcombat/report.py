@@ -52,8 +52,9 @@ class Summary:
     auto_share: float  # auto-attack damage / all hero damage
     damage_share: dict[str, float]  # each hero's part of all hero damage
     healing_share: dict[str, float]  # each hero's part of all healing
-    starved: dict[str, float]  # mean share of rounds starved
+    starved: dict[str, float]  # mean share of the rounds they were up, starved
     ended_full: dict[str, float]  # share of fights ending up, with a full pool
+    lowest_hp: dict[str, float]  # mean of the lowest share of max HP they got to
     resource_curve: dict[str, list[float]]  # mean resource at each round
 
 
@@ -76,7 +77,8 @@ def summarize(results: list[FightResult]) -> Summary:
 
     A hero "ended full" only if they were up at the end with a full pool. A
     hero who is down or out gets no resource back, so a full pool then only
-    means they fell before spending it, not that they had too much.
+    means they fell before spending it, not that they had too much. For the
+    same reason "starved" counts only the rounds the hero was up.
     """
     if not results:
         raise ValueError("there are no fights to sum up")
@@ -107,9 +109,11 @@ def summarize(results: list[FightResult]) -> Summary:
         damage_share={h: _part(damage[h], sum(damage.values())) for h in heroes},
         healing_share={h: _part(healing[h], sum(healing.values())) for h in heroes},
         starved={
-            h: sum(r.tally.starved_rounds[h] / r.rounds for r in results) / n for h in heroes
+            h: sum(_part(r.tally.starved_rounds[h], r.tally.up_rounds[h]) for r in results) / n
+            for h in heroes
         },
         ended_full={h: _share(results, lambda r: _ended_full(r, h)) for h in heroes},
+        lowest_hp={h: sum(r.tally.lowest_hp[h] for r in results) / n for h in heroes},
         resource_curve={h: _curve([r.tally.resource_by_round[h] for r in results]) for h in heroes},
     )
 
@@ -201,13 +205,14 @@ def format_summary(s: Summary) -> str:
         f"(down to {_whole_pct(DANGER_HP)} HP, or went down)",
         f"Auto-attack damage:     {_whole_pct(s.auto_share)} of all damage",
         "",
-        f"{'hero':<10}{'damage':>8}{'healing':>9}{'starved':>9}{'up and full':>13}{'went down':>11}",
+        f"{'hero':<10}{'damage':>8}{'healing':>9}{'starved':>9}{'up and full':>13}"
+        f"{'went down':>11}{'lowest HP':>11}",
     ]
     for h in s.damage_share:
         lines.append(
             f"{h:<10}{_whole_pct(s.damage_share[h]):>8}{_whole_pct(s.healing_share[h]):>9}"
             f"{_whole_pct(s.starved[h]):>9}{_whole_pct(s.ended_full[h]):>13}"
-            f"{_whole_pct(s.down_rate[h]):>11}"
+            f"{_whole_pct(s.down_rate[h]):>11}{_whole_pct(s.lowest_hp[h]):>11}"
         )
     return "\n".join(lines)
 

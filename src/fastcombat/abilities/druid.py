@@ -37,7 +37,9 @@ def rejuvenation(
     state: FightState, druid: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Heal cards on one ally. A new Rejuvenation takes the place of the old one."""
-    add_stack(state.heroes[action.target], "rejuvenation", spec.cards, spec.value)
+    add_stack(
+        state.heroes[action.target], "rejuvenation", spec.cards, spec.value, source=druid.id
+    )
 
 
 @check("regrowth")
@@ -108,7 +110,7 @@ def wild_growth(
     area = within(action.pos, spec.radius, state.fight.width, state.fight.height)
     for ally in state.up_heroes():
         if ally.pos in area:
-            add_stack(ally, "wild_growth", spec.cards, spec.value)
+            add_stack(ally, "wild_growth", spec.cards, spec.value, source=druid.id)
 
 
 @check("cleanse")
@@ -152,15 +154,16 @@ def _nourish_needs_an_ally(
 
 @effect("nourish")
 def nourish(state: FightState, druid: Hero, spec: AbilitySpec, action: Action) -> None:
-    """Roll one die and heal one ally by what it shows.
+    """Roll Nourish's dice and heal one ally by what they show, plus its bonus.
 
-    It is a plain roll: a 1 still heals 1, and nothing rolls again. The top
-    face also gives the Druid `alt` energy back, never more than their pool.
+    It is a plain roll: a 1 still heals 1, and nothing rolls again. If any
+    die shows its top face, the Druid also gets `alt` energy back, never
+    more than their pool.
     """
-    sides = spec.dice[1]
-    roll = state.dice.roll(sides)
-    heal_hero(state, druid.id, state.heroes[action.target], roll)
-    if roll == sides:
+    count, sides = spec.dice
+    rolls = [state.dice.roll(sides) for _ in range(count)]
+    heal_hero(state, druid.id, state.heroes[action.target], sum(rolls) + spec.bonus)
+    if sides in rolls:
         pool = state.numbers.heroes[druid.cls].pool
         druid.resource = min(pool, druid.resource + spec.alt)
 

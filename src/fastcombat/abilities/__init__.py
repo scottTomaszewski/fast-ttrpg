@@ -12,7 +12,8 @@ which fills the tables below using these decorators:
 - `@effect("id")`: what the ability does.
 - `@check("id")`: an extra rule for when it may be used, if it has one.
 - `@cost("id")`: a cost that is not always the same, if it has one.
-- `@keeps_hiding("id")`: using it does not give a hidden hero away (Vanish).
+- `@keeps_hiding("id")`: using it does not give a hidden hero away (Vanish
+  and Shadowstep).
 
 A cooldown is a stack of cards on the hero, called "cd:" and the ability's
 name ("cd:disrupt"). One card comes off at the top of each party turn, like
@@ -173,9 +174,9 @@ def resolve(state: FightState, hero: Hero, spec: AbilitySpec, action: Action) ->
     False, and nothing happens, if the hero cannot pay or the target is
     missing, dead or out by now.
 
-    Once it has happened, the hero is not hidden any more. An ability marked
-    with `@keeps_hiding` (Vanish) is the one way to stay hidden: after it,
-    the hero is hidden or not just as its effect left them.
+    Once it has happened, the hero is not hidden any more, unless the
+    ability is marked with `@keeps_hiding` (Vanish and Shadowstep): after
+    one of those, the hero is hidden or not just as its effect left them.
     """
     price = cost_of(state, hero, spec, action)
     if hero.resource < price:
