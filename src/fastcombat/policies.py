@@ -53,7 +53,7 @@ WILD_GROWTH_ALLIES = 3  # Druid: Wild Growth when it covers this many of them
 REGROWTH_AT = 0.60  # Druid: Regrowth an ally at 60% HP or less
 REJUVENATION_AT = 0.80  # Druid: Rejuvenation on an ally at 80% HP or less...
 REJUVENATION_ENERGY = 6  # ...when the Druid has this much energy or more
-MAGE_SAFE_GAP = 5  # Mage: likes to stand at least this far from every enemy
+MAGE_SAFE_GAP = 5  # Mage: likes to stand this far from every enemy; farther is no better
 METEOR_ENEMIES = 4  # Mage: Meteor when it would hit this many enemies
 QUICKEN_ROUND = 5  # Mage: Quicken from this round on
 VOLLEY_TAUNT_CARDS = 3  # Mage: Arcane Volley only on a focus with this many Taunt cards
@@ -219,9 +219,7 @@ class WardenPolicy(_ClassPolicy):
         # 9. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
         if action := _auto(state, warden, _focus(state, warden)):
             return action
-        free = [e for e in _enemies_next_to(state, warden) if not e.controlled]
-        weakest = min(free, key=lambda e: (e.hp, e.id), default=None)
-        return _auto(state, warden, weakest) or Action("none")
+        return _auto(state, warden, _weakest_next_to(state, warden)) or Action("none")
 
 
 class RoguePolicy(_ClassPolicy):
@@ -247,7 +245,9 @@ class RoguePolicy(_ClassPolicy):
     8. Backstab the focus.
     9. The focus is farther than my move and within Shadowstep's range:
        Shadowstep.
-    10. Auto-attack the focus if it is next to me.
+    10. Auto-attack the normal focus (fodder too) if it is next to me; or
+        else the focus my abilities aim at, if it is next to me; or else the
+        lowest-HP enemy next to me that is not controlled.
     """
 
     def where_to(self, state: FightState, rogue: Hero) -> Pos:
@@ -329,8 +329,13 @@ class RoguePolicy(_ClassPolicy):
             if action := _shadowstep(state, rogue, focus):
                 return action
 
-        # 10. Auto-attack the focus if it is next to me (fodder too).
-        return _auto(state, rogue, _focus(state, rogue)) or Action("none")
+        # 10. Auto-attack the normal focus if it is next to me (fodder too), else
+        # the ability focus if it is next to me, else the weakest enemy next to me.
+        if action := _auto(state, rogue, _focus(state, rogue)):
+            return action
+        if action := _auto(state, rogue, focus):
+            return action
+        return _auto(state, rogue, _weakest_next_to(state, rogue)) or Action("none")
 
 
 class DruidPolicy(_ClassPolicy):
@@ -452,9 +457,10 @@ class DruidPolicy(_ClassPolicy):
 
 
 class MagePolicy(_ClassPolicy):
-    """The Mage. Move: in spell range of the focus, and at least 5 squares
-    from the nearest enemy when possible. While casting (not channelling),
-    stay still unless standing in danger.
+    """The Mage. Move: in spell range of the focus, and as far from the
+    nearest enemy as she can get this move, up to 5 squares: any square 5
+    or more from every enemy is just as good as another. While casting (not
+    channelling), stay still unless standing in danger.
 
     1. Haul up.
     2. In the middle of a cast or a channel: continue.
@@ -481,7 +487,7 @@ class MagePolicy(_ClassPolicy):
         reach = state.numbers.abilities["firebolt"].range
         threats = [e.pos for e in state.living_enemies()]
         return _stand(
-            state, mage, focus.pos, reach, lambda square: _gap(square, threats) < MAGE_SAFE_GAP
+            state, mage, focus.pos, reach, lambda square: -min(_gap(square, threats), MAGE_SAFE_GAP)
         )
 
     def act(self, state: FightState, mage: Hero) -> Action:
@@ -773,6 +779,12 @@ def _enemies_next_to(state: FightState, hero: Hero) -> list[Enemy]:
     """Every living enemy next to `hero`, in id order."""
     near = [e for e in state.living_enemies() if adjacent(e.pos, hero.pos)]
     return sorted(near, key=lambda e: e.id)
+
+
+def _weakest_next_to(state: FightState, hero: Hero) -> Enemy | None:
+    """The enemy next to `hero` with the least HP that is not controlled (ties: by id)."""
+    free = [e for e in _enemies_next_to(state, hero) if not e.controlled]
+    return min(free, key=lambda e: (e.hp, e.id), default=None)
 
 
 def _loose(state: FightState, enemy: Enemy) -> bool:

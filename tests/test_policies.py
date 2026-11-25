@@ -200,7 +200,7 @@ def test_mage_auto_attacks_fodder_and_firebolts_a_real_enemy():
 
 # --- Before tuning: the heroes play sensibly -----------------------------------
 
-from fastcombat.abilities import use_ability
+from fastcombat.abilities import Action, use_ability
 
 def test_rogue_walks_to_her_ability_focus_not_to_fodder():
     s = state(); r = s.heroes["rogue"]                              # at (2, 5), move 6
@@ -255,15 +255,43 @@ def test_two_mages_do_not_polymorph_the_same_enemy():
     use_ability(s, s.heroes["mage"], a)                             # her sheep is on its way
     assert act(s, "mage2").ability != "polymorph"
 
-def test_two_mages_fall_so_fast_that_only_one_meteor_lands():
+def test_two_mages_fall_so_fast_that_the_second_meteor_may_never_land():
     # Two Mages alone lose in 3 or 4 rounds. In round 1 "mage" (first by id)
     # takes the Polymorph and "mage2" starts a Meteor, which lands in round 3.
-    # In round 2 "mage" starts her own Meteor, which would land in round 4:
-    # by then she is down. So one Mage doing no damage is the fight being
-    # short, not a Mage that cannot play. (Before the Polymorph fix, it was
-    # "mage2" who did nothing: both cast the same Polymorph in round 1.)
+    # In round 2 "mage" starts her own Meteor, which lands in round 4 only if
+    # she is still up then. In a 3-round fight she is not, so one Mage doing
+    # no damage is the fight being short, not a Mage that cannot play.
+    # (Before the Polymorph fix, it was "mage2" who did nothing: both cast
+    # the same Polymorph in round 1. Since the Mage backs off as far as she
+    # can, "mage" sometimes lasts until round 4 and her Meteor lands.)
     n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
     for seed in range(3):
         r = run_fight(n, f, ["mage", "mage"], seed=seed)
-        assert not r.won and r.rounds <= 4
-        assert r.tally.damage["mage"] == 0 and r.tally.damage["mage2"] > 0
+        assert not r.won and r.rounds <= 4 and r.tally.damage["mage2"] > 0
+        if r.rounds == 3:
+            assert r.tally.damage["mage"] == 0
+
+
+# --- The final review: the Mage's standing square and the Rogue's rule 10 -------
+
+def test_mage_backs_off_as_far_as_she_can_when_nowhere_is_five_away():
+    s = state(party=("mage",)); m = s.heroes["mage"]               # at (1, 5), move 6
+    for square in ((4, 0), (4, 5), (4, 11)):                        # every square in reach is 4 or less from one
+        enemy(s, "wolf", square)
+    dest = default_policy("mage").move(s, m)
+    assert dest == (0, 4)                                           # 4 from the nearest wolf, one step away
+
+def test_mage_counts_five_or_more_from_every_enemy_as_the_same():
+    s = state(party=("mage",)); m = s.heroes["mage"]
+    enemy(s, "wolf", (6, 5))                                        # already 5 away: farther is no better
+    assert default_policy("mage").move(s, m) == m.pos
+
+def test_rogue_hits_an_enemy_next_to_her_when_her_focus_is_far_away():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.resource = 0   # no abilities, only auto-attacks
+    enemy(s, "goblin", (12, 10))                                    # the focus: 1 HP, far away
+    enemy(s, "brute", (3, 4)); enemy(s, "wolf", (2, 4))             # both next to her at (2, 5)
+    assert act(s, "rogue") == Action("auto", target="wolf1")        # the ability focus, next to her
+    s.enemies["wolf1"].pos = (10, 10)                               # the ability focus is far away too
+    assert act(s, "rogue") == Action("auto", target="brute1")       # the weakest enemy next to her
+    add_stack(s.enemies["brute1"], "stun", 1)
+    assert act(s, "rogue") == Action("none")
