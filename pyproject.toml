@@ -2,9 +2,6 @@
 name = "fastcombat"
 version = "0.1.0"
 description = "Plays fights of the fast combat rules over and over to test the numbers."
-authors = [
-    { name = "Scott Tomaszewski", email = "scottTomaszewski@gmail.com" }
-]
 requires-python = ">=3.12"
 dependencies = []
 
