@@ -1,6 +1,9 @@
 # Fast combat: design
 
 Date: 2026-11-24. Status: approved by the owner on 2026-11-24 (after a skim).
+Changed during the build: Bleeding timing, Shadowstep keeps hiding, hidden
+heroes cannot be targeted. See docs/tuning-log.md, "Rules the simulator had
+to decide".
 
 Things marked **(call)** were proposed by the assistant and not yet argued
 over. Everything else was decided by the owner in conversation.

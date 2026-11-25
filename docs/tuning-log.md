@@ -279,7 +279,36 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    because the Warden and Rogue lose a whole turn stepping out of it.
    If the slam timing changes later, length needs checking again.
 
+## Rules the simulator had to decide
+
+The design left these open, or said something the simulator could not
+do as written. Each was decided while building it. The owner may want
+to change any of them.
+
+- Bleeding cards come off at the end of the party turn, after everyone
+  has acted, not at the top like other cards.
+- Shadowstep keeps the Rogue hidden.
+- Enemies cannot pick a hidden hero as their target. Blasts still hit a
+  hidden hero standing in the area.
+- A new Taunt, stun, sap or sheep never shortens one already there.
+- Going down wipes every card the hero holds: heal cards, Quicken,
+  cooldowns, all of them.
+- Kidney Shot cannot be used on a boss, but Cheap Shot can, to break the
+  boss's cast.
+- A channel (Arcane Volley) checks its reach again on every hit.
+- Vanish while already hidden keeps the Rogue hidden.
+- A cast that is cancelled or broken costs nothing.
+- Heroes move, and act, one after another in id order (druid, mage,
+  rogue, warden), not truly all at once. So a hero who acts before the
+  Mage in that order gets one quickened turn fewer than one who acts
+  after her: Quicken lands after they have already attacked that turn.
+- The Warden starts a fight with 0 grit.
+
 ## Final
+
+These numbers were tuned before the fixes from the final review (the
+kit check, the Warden's new rules, hidden heroes, the Mage and Rogue
+fixes, the Warden starting on 0 grit). They are being tuned again.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
 used while tuning; every tuning run used seeds below 100000). The
