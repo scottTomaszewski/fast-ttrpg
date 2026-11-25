@@ -9,6 +9,7 @@ costs nothing but the time.
 
 A channel makes one hit in each act step, for a set number of hits, and
 the hero may move while channelling. Each hit is paid for when it happens.
+If the target (or the square) is out of reach by then, the channel ends.
 
 A hero's cast or channel is kept in `hero.cast`. A cast that hits an area
 also marks that area in `state.marked`, so everyone can see where it will
@@ -72,7 +73,8 @@ def continue_cast(state: FightState, hero: Hero) -> None:
 
     A cast has one act step fewer left to spend. A channel makes its next
     hit, and pays for it. The channel ends after its last hit, or as soon
-    as a hit cannot happen (the hero cannot pay, or the target is gone).
+    as a hit cannot happen (the hero cannot pay, or the target is gone or
+    out of reach). A hit that cannot happen costs nothing.
     """
     cast = hero.cast
     if cast is None:
@@ -117,12 +119,18 @@ def may_move(hero: Hero) -> bool:
 
 
 def _resolve_cast(state: FightState, hero: Hero, cast: Cast) -> bool:
-    """Make `cast` happen once, through the ability rules. True if it did."""
+    """Make `cast` happen once, through the ability rules. True if it did.
+
+    A channel hit happens only if its target, or its square, is still in
+    reach: the hero or the target may have moved since the last hit.
+    """
     # Imported here and not at the top, because the ability rules import
     # this file to start casts. Importing it at the top would go round in
     # a circle.
-    from fastcombat.abilities import Action, resolve
+    from fastcombat.abilities import Action, in_reach, resolve
 
     spec = state.numbers.abilities[cast.ability]
     action = Action("ability", cast.ability, cast.target, cast.center)
+    if cast.is_channel and not in_reach(state, hero, spec, action):
+        return False
     return resolve(state, hero, spec, action)
