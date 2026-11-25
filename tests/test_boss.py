@@ -104,9 +104,24 @@ def test_the_boulder_with_nobody_to_aim_at_rolls_nothing():
 def test_the_boss_hits_first_and_throws_second():
     # The ogre's melee hit on the Warden (2d6: 1, 1, plus 2), then the die that
     # picks who the boulder hits (3 of 3: the rogue), then the boulder (2d6: 6, 6).
-    s, o = boss_state(2, rolls=[1, 1, 3, 6, 6]); gm_turn(s)
+    s, o = boss_state(2, rolls=[1, 1, 3, 6, 6]); s.heroes["rogue"].hidden = False; gm_turn(s)
     assert s.heroes["warden"].hp == 56 and s.heroes["rogue"].hp == 24
 
 def test_the_boulder_comes_only_on_its_rounds():
     s, o = boss_state(3, rolls=[3, 3])                                   # just the ogre's melee hit
     gm_turn(s); assert s.heroes["warden"].hp == 52 and s.heroes["mage"].hp == 28
+
+def test_the_boulder_never_picks_a_hidden_hero():
+    # Not next to the ogre: druid, mage, rogue. The mage is hidden here, so
+    # the die picks from the druid and the rogue only: 2 of 2 is the rogue.
+    # Then the boulder (2d6: 2, 3).
+    s, o = boss_state(2, rolls=[2, 2, 3])
+    s.heroes["rogue"].hidden = False; s.heroes["mage"].hidden = True
+    throw(s, o, boulder(s))
+    assert s.heroes["rogue"].hp == 31 and s.heroes["mage"].hp == 28
+
+def test_a_blast_still_hits_a_hidden_hero_in_its_area():
+    s, o = boss_state(3, rolls=[4, 4, 4]); announce(s); s.round = 4
+    r = s.heroes["rogue"]; r.pos = (5, 5); assert r.hidden
+    land_announced(s)
+    assert r.hp == 36 - 12

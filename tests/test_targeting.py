@@ -16,7 +16,8 @@ def test_taunt_cards_work_at_any_distance():
     assert choose_target(s, w).id == "warden"
 
 def test_loud_strips_a_taunt_card_before_it_pulls():
-    s = state(); w = enemy(s, "wolf", (4, 6)); add_stack(w, "taunt", 1)
+    s = state(); s.heroes["rogue"].hidden = False                      # a hidden rogue's pull counts for nothing
+    w = enemy(s, "wolf", (4, 6)); add_stack(w, "taunt", 1)
     damage_enemy(s, "rogue", w, 1, loud=True)
     assert "taunt" not in w.stacks and w.pulled_by is None
     damage_enemy(s, "rogue", w, 1, loud=True)
@@ -62,7 +63,7 @@ def test_a_loud_hit_that_kills_pulls_nothing_and_a_quiet_hit_does_nothing():
     assert t.stacks["taunt"] == Stack(2) and t.pulled_by is None
 
 def test_only_the_random_rule_rolls_a_die():
-    s = state(rolls=[])                                               # any roll would fail the test
+    s = state(rolls=[]); s.heroes["rogue"].hidden = False             # any roll would fail the test
     a = enemy(s, "shaman", (10, 3)); add_stack(a, "taunt", 1)
     b = enemy(s, "shaman", (4, 6))                                     # next to the warden
     c = enemy(s, "shaman", (10, 7)); c.pulled_by = "rogue"
@@ -81,7 +82,8 @@ def test_a_pull_toward_a_hero_who_is_down_is_ignored():
     assert choose_target(s, loose).id == "mage" and choose_target(s, near).id == "warden"
 
 def test_a_pull_by_a_hero_who_is_down_does_not_break_the_hold():
-    s = state(); w = enemy(s, "wolf", (4, 6)); w.pulled_by = "rogue"   # next to the warden
+    s = state(); s.heroes["rogue"].hidden = False
+    w = enemy(s, "wolf", (4, 6)); w.pulled_by = "rogue"                # next to the warden
     assert can_move(s, w)
     damage_hero(s, s.heroes["rogue"], 99, attacker=None)
     assert not can_move(s, w) and choose_target(s, w).id == "warden"
@@ -123,3 +125,38 @@ def test_dropping_pulls_lets_go_of_one_hero_only():
     a.pulled_by = b.pulled_by = "rogue"; c.pulled_by = "mage"
     drop_pulls(s, "rogue")
     assert (a.pulled_by, b.pulled_by, c.pulled_by) == (None, None, "mage")
+
+
+# --- A hidden hero is never picked (the controller's ruling) ------------------
+# The Rogue starts every fight hidden.
+
+def test_a_hidden_hero_is_passed_over_by_what_an_enemy_prefers():
+    s = state(); b = enemy(s, "brute", (3, 4))                         # next to the rogue at (2, 5)
+    assert s.heroes["rogue"].hidden and choose_target(s, b).id == "mage"    # 2 away, like the warden
+    s.heroes["rogue"].hidden = False
+    assert choose_target(s, b).id == "rogue"
+    w = enemy(s, "wolf", (10, 3)); s.heroes["mage"].hidden = True       # the back line's weakest is hidden
+    assert choose_target(s, w).id == "druid"
+
+def test_the_random_pick_counts_only_the_heroes_who_are_seen():
+    s = state(rolls=[3]); sh = enemy(s, "shaman", (10, 3))
+    assert choose_target(s, sh).id == "warden"                          # druid, mage, warden: 3 of 3
+    s2 = state(rolls=[3]); s2.heroes["rogue"].hidden = False; sh2 = enemy(s2, "shaman", (10, 3))
+    assert choose_target(s2, sh2).id == "rogue"                         # druid, mage, rogue, warden: 3 of 4
+
+def test_a_pull_by_a_hidden_hero_counts_as_no_pull():
+    s = state(); loose = enemy(s, "wolf", (10, 3)); near = enemy(s, "wolf", (4, 6))
+    loose.pulled_by = near.pulled_by = "rogue"                          # the rogue is hidden
+    assert choose_target(s, loose).id == "mage"
+    assert choose_target(s, near).id == "warden" and not can_move(s, near)
+
+def test_an_enemy_with_only_hidden_heroes_to_go_for_has_no_target():
+    s = state(party=("rogue",)); w = enemy(s, "wolf", (3, 5))
+    assert choose_target(s, w) is None
+
+def test_a_hidden_warden_is_never_the_one_an_intercede_hands_on_to():
+    # A Warden cannot hide in the game today; this pins the rule for when one can.
+    s = state(); w = enemy(s, "wolf", (10, 3)); add_stack(s.heroes["mage"], "interceded", 1)
+    assert choose_target(s, w).id == "warden"
+    s.heroes["warden"].hidden = True
+    assert choose_target(s, w).id == "mage"

@@ -10,7 +10,9 @@ hiding is (`backstab_hidden_multiplier`).
 Three words used below. Hidden: the Rogue starts a fight hidden, and Vanish
 hides them again. Shadowstep does not give them away. Using any other
 ability does, once it has happened (see `resolve`), so a rule that asks "is
-the Rogue hidden?" still sees the answer from before. Combo points: the
+the Rogue hidden?" still sees the answer from before. While hidden, no
+enemy can pick the Rogue as its target, and a pull by her counts for
+nothing; a blast still hits her (see `targeting.py`). Combo points: the
 Rogue gets them from auto-attacks that hit and from Backstab, and Eviscerate
 and Kidney Shot spend them all. A free square is one on the map where nobody stands; the Rogue's
 own square counts as free.
@@ -147,7 +149,8 @@ def shadowstep(
     """Appear on the free square next to the enemy that is closest to the Rogue.
 
     It does not give the Rogue away: if she was hidden, she still is, so she
-    can open with a Backstab from hiding or a Sap. If she was not, she is not.
+    can open with a Backstab from hiding or a Sap, and no enemy can pick her
+    as its target. If she was not, she is not.
     """
     square = _landing(state, rogue, state.enemies[action.target])
     if square is not None:
@@ -157,7 +160,11 @@ def shadowstep(
 @keeps_hiding("vanish")
 @effect("vanish")
 def vanish(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> None:
-    """Every enemy pulled by the Rogue lets go of them, and the Rogue hides."""
+    """Every enemy pulled by the Rogue lets go of them, and the Rogue hides.
+
+    While she is hidden, no enemy can pick her as its target (a blast still
+    hits her). Vanish while already hidden keeps her hidden.
+    """
     drop_pulls(state, rogue.id)
     rogue.hidden = True
 

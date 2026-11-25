@@ -10,6 +10,11 @@ wins:
 4. Otherwise it goes for whoever its kind likes best (see `choose_target`).
 
 "The Warden" is always the first Warden in the party who is up.
+
+An enemy never picks a hero who is hidden, by any of these rules. A pull by
+a hero who is hidden counts as no pull. If every hero who is up is hidden,
+the enemy has nobody to go for. (A blast still hits a hidden hero who
+stands in its area: it is aimed at a square, not at a hero.)
 """
 
 from fastcombat.grid import adjacent, distance
@@ -23,16 +28,19 @@ def held(state: FightState, enemy: Enemy) -> bool:
 
 
 def choose_target(state: FightState, enemy: Enemy) -> Hero | None:
-    """The hero `enemy` attacks this turn, or None when no hero is up.
+    """The hero `enemy` attacks this turn, or None when no hero is up and seen.
 
     After the rules at the top of this file pick a hero, one more rule:
     if that hero has Interceded cards, the enemy has no Taunt cards, and the
-    Warden is up, the Warden steps in and is attacked instead.
+    Warden is up, the Warden steps in and is attacked instead. A hidden hero
+    is never picked, by any rule.
     """
-    up = sorted(state.up_heroes(), key=lambda hero: hero.id)
+    up = sorted(seen_heroes(state), key=lambda hero: hero.id)
     if not up:
         return None
     warden = state.warden()
+    if warden is not None and warden.hidden:
+        warden = None
     target = _first_rule_that_names_a_hero(state, enemy, warden, up)
     if (
         "interceded" in target.stacks
@@ -46,13 +54,14 @@ def choose_target(state: FightState, enemy: Enemy) -> Hero | None:
 def _first_rule_that_names_a_hero(
     state: FightState, enemy: Enemy, warden: Hero | None, up: list[Hero]
 ) -> Hero:
-    """Rules 1 to 4. `up` is every hero who is up, in id order, and is never empty."""
+    """Rules 1 to 4. `up` is every hero who is up and not hidden, in id order,
+    and is never empty. `warden` is None if the Warden is hidden."""
     if "taunt" in enemy.stacks and warden is not None:
         return warden
     puller = _puller(state, enemy)
     if puller is not None:
         return puller
-    if held(state, enemy):
+    if held(state, enemy) and warden is not None:
         return warden
     if enemy.spec.prefers == "nearest":
         return min(up, key=lambda hero: (distance(enemy.pos, hero.pos), hero.id))
@@ -68,7 +77,7 @@ def can_move(state: FightState, enemy: Enemy) -> bool:
     """False when the enemy must stay where it is this turn.
 
     A hold keeps it next to the Warden, unless a pull is dragging it away
-    (a pull by a hero who is down or out counts for nothing). Rooted cards
+    (a pull by a hero who is down, out or hidden counts for nothing). Rooted cards
     keep it in place, and so does a stun, sap or sheep.
     """
     if held(state, enemy) and _puller(state, enemy) is None:
@@ -76,10 +85,15 @@ def can_move(state: FightState, enemy: Enemy) -> bool:
     return "rooted" not in enemy.stacks and not enemy.controlled
 
 
+def seen_heroes(state: FightState) -> list[Hero]:
+    """Every hero an enemy can pick: up, and not hidden."""
+    return [hero for hero in state.up_heroes() if not hero.hidden]
+
+
 def _puller(state: FightState, enemy: Enemy) -> Hero | None:
-    """The hero who pulled `enemy`, if that hero is up. Otherwise None."""
+    """The hero who pulled `enemy`, if that hero is up and not hidden. Otherwise None."""
     hero = state.heroes.get(enemy.pulled_by) if enemy.pulled_by else None
-    return hero if hero is not None and hero.up else None
+    return hero if hero is not None and hero.up and not hero.hidden else None
 
 
 def apply_loud(state: FightState, hero_id: str, enemy: Enemy) -> None:

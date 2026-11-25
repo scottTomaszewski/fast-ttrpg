@@ -20,7 +20,7 @@ stun. A throw is not announced: it happens at once, in the boss's turn.
 from fastcombat.combat import add_stack, damage_hero, tick_stacks
 from fastcombat.grid import adjacent, approach, distance, nearest_free, within
 from fastcombat.numbers import ScriptStep
-from fastcombat.targeting import can_move, choose_target
+from fastcombat.targeting import can_move, choose_target, seen_heroes
 from fastcombat.units import Announced, Enemy, FightState, Hero
 
 
@@ -95,14 +95,14 @@ def announce(state: FightState) -> None:
 def throw(state: FightState, boss: Enemy, step: ScriptStep) -> None:
     """The boss throws something (like the boulder) at one hero not next to it.
 
-    A die with one side for each hero who is up and not next to the boss
-    picks who, counting them in id order. Taunts make no difference: a
-    throw is not the boss's attack, so it gives a Warden no grit either. If
-    every hero who is up is next to the boss, nothing is thrown and no die
-    is rolled.
+    A die with one side for each hero who is up, not hidden, and not next
+    to the boss picks who, counting them in id order. Taunts make no
+    difference: a throw is not the boss's attack, so it gives a Warden no
+    grit either. If there is no such hero, nothing is thrown and no die is
+    rolled.
     """
     far = sorted(
-        (hero for hero in state.up_heroes() if not adjacent(hero.pos, boss.pos)),
+        (hero for hero in seen_heroes(state) if not adjacent(hero.pos, boss.pos)),
         key=lambda hero: hero.id,
     )
     if not far:

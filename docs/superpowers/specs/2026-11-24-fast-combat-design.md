@@ -226,6 +226,7 @@ Auto-attack hit: 1 combo point. Crit: 2. Maximum 5. **(call)**
    next move is a hard opener or a Sap. **(call)** The opener is not a new
    button: a Backstab from hiding works on any enemy and does double damage.
    Hiding ends when you act.
+   While hidden, enemies cannot pick you as a target (blasts still hit you).
 
 ### Druid (healer). d6 ranged. Energy and Seeds (hold 2).
 
