@@ -4,6 +4,7 @@ Every hit and every heal in the game goes through this file, so the tally of
 who did what is always right.
 """
 
+from fastcombat.casting import drop_cast
 from fastcombat.targeting import apply_loud
 from fastcombat.units import Enemy, FightState, Hero, Stack
 
@@ -107,8 +108,7 @@ def go_down(state: FightState, hero: Hero) -> None:
     left to give, the hero is out at once.
     """
     hero.down = True
-    hero.cast = None
-    state.marked.pop(hero.id, None)  # a blast they were casting will not land
+    drop_cast(state, hero)  # a blast they were casting will not land
     hero.hidden = False
     hero.stacks.clear()
     state.tally.times_down[hero.id] += 1
