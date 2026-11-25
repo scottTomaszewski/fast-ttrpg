@@ -1,8 +1,20 @@
+import re
 import pytest
+from dataclasses import FrozenInstanceError, fields, replace
 from pathlib import Path
 from fastcombat.numbers import load_numbers, load_fight, NumbersError
 
 GAME = Path(__file__).parent.parent / "game"
+
+def without(text, table, key):
+    """The file's text with the `key = ...` line taken out of one [table]."""
+    lines = text.splitlines(keepends=True)
+    start = next(i for i, line in enumerate(lines) if line.startswith(f"[{table}]"))
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("[")), len(lines))
+    found = [i for i in range(start + 1, end) if lines[i].startswith(f"{key} =")]
+    assert len(found) == 1, f"[{table}] should have one {key} line"
+    del lines[found[0]]
+    return "".join(lines)
 
 def test_the_real_files_load():
     n = load_numbers(GAME / "numbers.toml")
@@ -42,11 +54,58 @@ def test_names_come_from_tables_and_left_out_numbers_take_defaults():
     assert n.abilities["disrupt"].hero == "shared"
     assert n.rules["max_rounds"] == 60
     goblin = f.enemy_types["goblin"]
-    assert (goblin.type, goblin.tier, goblin.hp, goblin.range) == ("goblin", "fodder", 1, 1)
+    assert (goblin.type, goblin.tier, goblin.dice, goblin.shielded) == ("goblin", "fodder", (0, 0), 0)
     assert f.spawns[0].pos == (11, 6) and f.spawns[0].round == 0
     assert f.extra_starts[0] == (2, 7)
     assert [step.kind for step in f.boss_script] == ["blast", "heavy", "throw"]
     assert f.boss_script[0].dice == (3, 6) and f.boss_script[1].radius == 0
+
+def test_every_enemy_states_its_hp_move_and_range():
+    f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    got = {name: (e.hp, e.move, e.range) for name, e in f.enemy_types.items()}
+    assert got == {
+        "ogre": (320, 4, 1), "shaman": (24, 4, 8), "wolf": (16, 7, 1),
+        "brute": (30, 4, 1), "goblin": (1, 5, 1),
+    }
+
+@pytest.mark.parametrize("key", ["hp", "move", "range"])
+@pytest.mark.parametrize("name", ["ogre", "shaman", "wolf", "brute", "goblin"])
+def test_an_enemy_without_hp_move_or_range_names_the_place(tmp_path, name, key):
+    text = (GAME / "fights" / "ogre_warlord.toml").read_text()
+    p = tmp_path / "f.toml"; p.write_text(without(text, f"enemy_types.{name}", key))
+    with pytest.raises(NumbersError, match=rf"enemy_types\.{name}\.{key}: missing"):
+        load_fight(p)
+
+def test_an_ability_with_no_range_needs_no_reach():
+    n = load_numbers(GAME / "numbers.toml")
+    def reach(r): return {name for name, a in n.abilities.items() if a.range == r}
+    assert reach(0) == {"war_cry", "bulwark", "unbroken", "vanish", "shadowmeld", "frost_ring", "quicken"}
+    assert reach(1) == {"backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "disrupt"}
+
+@pytest.mark.parametrize("load", [load_numbers, load_fight])
+def test_a_file_that_is_not_toml_names_the_file(tmp_path, load):
+    p = tmp_path / "broken.toml"; p.write_text("[rules\nhero_move = 6\n")
+    with pytest.raises(NumbersError, match=re.escape(str(p))):
+        load(p)
+
+def test_the_records_cannot_be_changed_by_mistake():
+    n = load_numbers(GAME / "numbers.toml")
+    f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    records = [n, n.heroes["mage"], n.abilities["meteor"],
+               f, f.enemy_types["ogre"], f.spawns[0], f.boss_script[0]]
+    for record in records:
+        with pytest.raises(FrozenInstanceError):
+            setattr(record, fields(record)[0].name, None)
+
+def test_replace_makes_a_changed_copy_of_an_enemy_and_a_fight():
+    f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    brute = f.enemy_types["brute"]
+    tough = replace(brute, hp=10**6, damage=0)
+    assert (tough.hp, tough.damage, tough.shielded, tough.move) == (10**6, 0, 5, 4)
+    small = replace(f, hero_starts={"warden": (3, 6)}, enemy_types={**f.enemy_types, "brute": tough})
+    assert small.hero_starts == {"warden": (3, 6)} and small.enemy_types["brute"].hp == 10**6
+    assert small.spawns == f.spawns and small.name == f.name
+    assert brute.hp == 30 and f.enemy_types["brute"].hp == 30   # the old ones are untouched
 
 def test_an_override_can_set_dice_and_they_become_a_pair():
     n = load_numbers(GAME / "numbers.toml", {"abilities.meteor.dice": [9, 6]})

@@ -54,7 +54,7 @@ class AbilitySpec:
     cost: int = 0
     cast: int = 0  # rounds to cast; 0 means it happens at once
     hits: int = 0  # how many hits a channel makes; 0 means not a channel
-    range: int = 1
+    range: int = 0  # 0 means it needs no reach: used on yourself, or around you
     radius: int = 0
     dice: tuple[int, int] = (0, 0)  # (how many dice, sides on each)
     bonus: int = 0
@@ -76,16 +76,19 @@ class Numbers:
 
 @dataclass(frozen=True)
 class EnemySpec:
-    """One kind of enemy in a fight."""
+    """One kind of enemy in a fight.
+
+    `hp`, `move` and `range` have no default: the fight file has to say them.
+    """
 
     type: str  # its name, from its table in the fight file
+    hp: int
+    move: int  # squares it walks in a turn
+    range: int  # how far its attack reaches; 1 means next to it
     tier: str = "normal"  # one of TIERS
-    hp: int = 1
     damage: int = 0  # a plain hit; most enemies do not roll
     dice: tuple[int, int] = (0, 0)  # for enemies that do roll, like the boss
     bonus: int = 0
-    move: int = 4
-    range: int = 1
     prefers: str = "nearest"  # who it goes for, one of PREFERS
     shielded: int = 0  # ignores any single hit below this
     poison_cards: int = 0
@@ -225,7 +228,10 @@ def load_fight(path: Path) -> FightDef:
 
 def _read(path: Path) -> dict:
     with open(path, "rb") as file:
-        return tomllib.load(file)
+        try:
+            return tomllib.load(file)
+        except tomllib.TOMLDecodeError as error:
+            raise NumbersError(f"{path}: this is not a TOML file ({error})") from error
 
 
 def _override(raw: dict, key: str, value: object) -> None:

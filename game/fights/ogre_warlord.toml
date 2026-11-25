@@ -15,11 +15,13 @@ hp = 320
 dice = [2, 6]          # the boss rolls its melee hit
 bonus = 2
 move = 4
+range = 1
 prefers = "nearest"
 
 [enemy_types.shaman]   # stands back, poisons, and heals the boss unless stopped
 hp = 24
 damage = 3
+move = 4
 range = 8
 prefers = "random"
 poison_cards = 3
@@ -32,18 +34,23 @@ cast_heal = 25
 hp = 16
 damage = 4
 move = 7
+range = 1
 prefers = "backline"
 
 [enemy_types.brute]    # Shielded: ignores hits below 5
 hp = 30
 damage = 6
+move = 4
+range = 1
 prefers = "nearest"
 shielded = 5
 
 [enemy_types.goblin]
 tier = "fodder"
+hp = 1
 damage = 2
 move = 5
+range = 1
 prefers = "backline"
 
 [[spawns]]

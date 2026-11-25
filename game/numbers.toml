@@ -53,6 +53,8 @@ crit_gain = 2          # mana
 # Ability fields: cost, cast (rounds), hits (channel), range, radius,
 # dice = [count, sides], bonus, cards (how long it lasts), value (what each
 # card is worth), alt (a second number, explained per ability), loud, cooldown.
+# A field left out is 0 (or false). An ability with no range needs no reach:
+# it is used on yourself, or around you. Range 1 means next to you.
 
 [abilities.challenge]
 hero = "warden"
@@ -93,28 +95,33 @@ cards = 1
 [abilities.backstab]
 hero = "rogue"
 cost = 4
+range = 1
 dice = [2, 6]
 
 [abilities.eviscerate]
 hero = "rogue"
 cost = 3
+range = 1
 dice = [1, 6]          # per combo point
 loud = true
 
 [abilities.kidney_shot]
 hero = "rogue"
 cost = 3
+range = 1
 cards = 1
 alt = 2                # cards at full combo points
 
 [abilities.cheap_shot]
 hero = "rogue"
 cost = 3
+range = 1
 cards = 1
 
 [abilities.sap]
 hero = "rogue"
 cost = 3
+range = 1
 cards = 4
 
 [abilities.shadowstep]
