@@ -191,6 +191,16 @@ def resolve(state: FightState, hero: Hero, spec: AbilitySpec, action: Action) ->
     return True
 
 
+def target_enemy(state: FightState, action: Action) -> Enemy | None:
+    """The living enemy `action` is aimed at.
+
+    None if it is aimed at a hero, at nobody, or at an enemy that is dead.
+    The class files use it in their extra rules.
+    """
+    enemy = state.enemies.get(action.target) if action.target else None
+    return None if enemy is None or enemy.dead else enemy
+
+
 def _target(state: FightState, unit_id: str) -> Hero | Enemy | None:
     """The unit called `unit_id`, or None if there is none, or it is dead or out.
 

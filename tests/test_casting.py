@@ -93,6 +93,14 @@ def mage_and_wolf():
     s = state(party=("mage",)); enemy(s, "wolf", (6, 5))
     return s, s.heroes["mage"]
 
+def test_target_enemy_is_the_living_enemy_the_action_names():
+    s, m = mage_and_wolf(); w = s.enemies["wolf1"]
+    assert ab.target_enemy(s, Action("ability", "firebolt", "wolf1")) is w
+    assert ab.target_enemy(s, Action("ability", "firebolt", "mage")) is None
+    assert ab.target_enemy(s, Action("ability", "firebolt")) is None
+    w.dead = True
+    assert ab.target_enemy(s, Action("ability", "firebolt", "wolf1")) is None
+
 def test_an_ability_with_no_reach_works_at_any_distance(new_ability):
     s = state(party=("mage",)); m = s.heroes["mage"]; enemy(s, "wolf", (15, 11))
     new_ability(s, "t_far", range=0)

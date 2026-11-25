@@ -22,14 +22,19 @@ def add_stack(unit: Hero | Enemy, name: str, cards: int, value: int = 0) -> None
 def control(state: FightState, enemy: Enemy, name: str, cards: int) -> None:
     """Stun, sap or sheep `enemy` for `cards` cards. `name` says which one.
 
-    While it has those cards, the enemy does nothing on its turn. A boss
-    never gets them: it cannot be stunned, sapped or sheeped. But a stun
-    breaks the cast an enemy has announced, and that goes for a boss too.
-    Every ability that stuns, saps or sheeps comes through here.
+    While it has those cards, the enemy does nothing on its turn. A new one
+    never shortens one already there: if the enemy has more cards of that
+    name than `cards`, it keeps the ones it has. A boss never gets them: it
+    cannot be stunned, sapped or sheeped. But a stun breaks the cast an
+    enemy has announced, and that goes for a boss too. Every ability that
+    stuns, saps or sheeps comes through here.
     """
     if name == "stun":
         enemy.announced = None
-    if enemy.spec.tier != "boss":
+    if enemy.spec.tier == "boss":
+        return
+    old = enemy.stacks.get(name)
+    if old is None or old.cards < cards:
         add_stack(enemy, name, cards)
 
 

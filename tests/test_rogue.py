@@ -1,3 +1,4 @@
+from dataclasses import replace
 from tests.helpers import state, enemy
 from tests.test_warden import use
 from fastcombat.combat import add_stack
@@ -102,3 +103,29 @@ def test_shadowstep_from_next_to_the_enemy_stays_put():
 def test_vanish_lets_go_only_of_the_rogues_own_pulls():
     s = state(); w = near(s); w.pulled_by = "mage"
     assert use(s, "rogue", "vanish") and w.pulled_by == "mage"
+
+def test_a_melee_ability_is_refused_from_two_squares_away():
+    s = state(party=("rogue",)); r = s.heroes["rogue"]
+    w = enemy(s, "wolf", (4, 5))                        # two squares from the rogue at (2, 5)
+    assert not use(s, "rogue", "backstab", "wolf1")
+    assert w.hp == 16 and r.resource == 10 and r.hidden
+
+def test_eviscerate_adds_its_bonus_once():
+    s = state(rolls=[2, 2, 2]); r = s.heroes["rogue"]; r.combo = 3; w = near(s)
+    s.numbers.abilities["eviscerate"] = replace(s.numbers.abilities["eviscerate"], bonus=3)
+    assert use(s, "rogue", "eviscerate", "wolf1") and w.hp == 16 - 6 - 3
+
+def test_backstab_takes_its_hiding_multiplier_and_combo_point_from_the_rules():
+    s = state(party=("rogue",), rolls=[3, 4]); r = s.heroes["rogue"]; b = enemy(s, "brute", (3, 5))
+    s.numbers.rules["backstab_hidden_multiplier"] = 3; s.numbers.rules["combo_per_hit"] = 2
+    assert use(s, "rogue", "backstab", "brute1") and b.hp == 30 - 21 and r.combo == 2
+
+# --- A new stun never shortens an old one ---------------------------------------
+
+def test_cheap_shot_leaves_a_longer_stun_as_it_is():
+    s = state(); w = near(s); add_stack(w, "stun", 2)
+    assert use(s, "rogue", "cheap_shot", "wolf1") and w.stacks["stun"].cards == 2
+
+def test_kidney_shot_makes_a_shorter_stun_as_long_as_its_own():
+    s = state(); s.heroes["rogue"].combo = 5; w = near(s); add_stack(w, "stun", 1)
+    assert use(s, "rogue", "kidney_shot", "wolf1") and w.stacks["stun"].cards == 2

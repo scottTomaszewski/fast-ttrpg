@@ -24,6 +24,11 @@ def test_rogue_builds_combo_points_and_a_crit_gives_two():
     auto_attack(s, r, w); assert r.combo == 1 and w.hp == 13
     auto_attack(s, r, w); assert r.combo == 3 and w.hp == 5
 
+def test_the_combo_points_for_a_hit_come_from_the_rules():
+    s = state(rolls=[3]); r = s.heroes["rogue"]; w = enemy(s, "wolf", (3, 5))
+    s.numbers.rules["combo_per_hit"] = 2
+    auto_attack(s, r, w); assert r.combo == 2
+
 def test_quicken_rolls_two_dice():
     s = state(rolls=[3, 4]); r = s.heroes["rogue"]; w = enemy(s, "wolf", (3, 5))
     add_stack(r, "quicken", 2); auto_attack(s, r, w); assert w.hp == 9

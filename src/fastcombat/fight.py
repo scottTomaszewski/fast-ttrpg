@@ -102,8 +102,9 @@ def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
     """`hero` auto-attacks `enemy`, if it is alive and in reach.
 
     One die, or two added together into one hit with a Quicken card. A
-    Rogue gets a combo point for each die that did not miss. Each crit also
-    gives the class's crit bonus. Attacking gives a hidden hero away.
+    Rogue gets combo points (`combo_per_hit`) for each die that did not
+    miss. Each crit also gives the class's crit bonus. Attacking gives a
+    hidden hero away.
     """
     spec = state.numbers.heroes[hero.cls]
     if enemy.dead or distance(hero.pos, enemy.pos) > spec.attack_range:
@@ -115,7 +116,7 @@ def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
     rules = state.numbers.rules
     for roll in rolls:
         if hero.cls == "rogue" and not roll.miss:
-            hero.combo = min(rules["combo_max"], hero.combo + 1)
+            hero.combo = min(rules["combo_max"], hero.combo + rules["combo_per_hit"])
         if roll.crit:
             _crit_bonus(state, hero, spec)
     hero.hidden = False

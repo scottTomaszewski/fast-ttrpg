@@ -2,8 +2,10 @@
 combo points, and spends them on one big hit or a long stun.
 
 Each ability's numbers (what it costs, how far it reaches, its dice and how
-many cards it gives) are in the numbers file. The most combo points a Rogue
-can hold is `combo_max`, in the rules.
+many cards it gives) are in the numbers file. Three more are in the rules
+there: the most combo points a Rogue can hold (`combo_max`), how many one
+hit gives (`combo_per_hit`), and how many times bigger a Backstab from
+hiding is (`backstab_hidden_multiplier`).
 
 Three words used below. Hidden: the Rogue starts a fight hidden, and Vanish
 hides them again. Using any other ability gives them away, once it has
@@ -14,7 +16,7 @@ them all. A free square is one on the map where nobody stands; the Rogue's
 own square counts as free.
 """
 
-from fastcombat.abilities import Action, check, effect, keeps_hiding
+from fastcombat.abilities import Action, check, effect, keeps_hiding, target_enemy
 from fastcombat.combat import control, damage_enemy
 from fastcombat.grid import Pos, free_next_to
 from fastcombat.numbers import AbilitySpec
@@ -31,7 +33,7 @@ def _backstab_needs_an_enemy_busy_with_someone_else(
     Busy means: it is going for another hero, the Warden is holding it, or
     it has Taunt cards.
     """
-    enemy = _enemy(state, action)
+    enemy = target_enemy(state, action)
     if enemy is None:
         return False
     if rogue.hidden:
@@ -42,31 +44,36 @@ def _backstab_needs_an_enemy_busy_with_someone_else(
 
 @effect("backstab")
 def backstab(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> None:
-    """Hit the enemy with the Backstab dice, and get a combo point.
+    """Hit the enemy with the Backstab dice, and get `combo_per_hit` combo points.
 
-    From hiding the hit is twice as big.
+    From hiding the hit is `backstab_hidden_multiplier` times as big.
     """
+    rules = state.numbers.rules
     amount = state.dice.roll_many(*spec.dice, spec.bonus)
     if rogue.hidden:
-        amount *= 2
+        amount *= rules["backstab_hidden_multiplier"]
     damage_enemy(state, rogue.id, state.enemies[action.target], amount, loud=spec.loud)
-    rogue.combo = min(state.numbers.rules["combo_max"], rogue.combo + 1)
+    rogue.combo = min(rules["combo_max"], rogue.combo + rules["combo_per_hit"])
 
 
 @check("eviscerate")
 def _eviscerate_needs_a_combo_point(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    return _enemy(state, action) is not None and rogue.combo >= 1
+    return target_enemy(state, action) is not None and rogue.combo >= 1
 
 
 @effect("eviscerate")
 def eviscerate(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> None:
-    """Spend every combo point on one hit: the Eviscerate dice once for each point."""
+    """Spend every combo point on one hit.
+
+    The Eviscerate dice are rolled once for each point, and the bonus is
+    added once to the total.
+    """
     count, sides = spec.dice
-    amount = state.dice.roll_many(count * rogue.combo, sides)
+    amount = state.dice.roll_many(count * rogue.combo, sides, spec.bonus)
     damage_enemy(state, rogue.id, state.enemies[action.target], amount, loud=spec.loud)
     rogue.combo = 0
 
@@ -75,7 +82,7 @@ def eviscerate(
 def _kidney_shot_needs_a_combo_point_and_no_boss(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    enemy = _enemy(state, action)
+    enemy = target_enemy(state, action)
     return enemy is not None and enemy.spec.tier != "boss" and rogue.combo >= 1
 
 
@@ -99,7 +106,7 @@ def _cheap_shot_needs_an_enemy(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     """Any enemy, a boss too: the stun does not stop a boss, but breaks its cast."""
-    return _enemy(state, action) is not None
+    return target_enemy(state, action) is not None
 
 
 @effect("cheap_shot")
@@ -114,7 +121,7 @@ def cheap_shot(
 def _sap_only_from_hiding_and_not_on_a_boss(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    enemy = _enemy(state, action)
+    enemy = target_enemy(state, action)
     return rogue.hidden and enemy is not None and enemy.spec.tier != "boss"
 
 
@@ -128,7 +135,7 @@ def sap(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) -> No
 def _shadowstep_needs_a_free_square_by_the_enemy(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    enemy = _enemy(state, action)
+    enemy = target_enemy(state, action)
     return enemy is not None and _landing(state, rogue, enemy) is not None
 
 
@@ -148,11 +155,6 @@ def vanish(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) ->
     """Every enemy pulled by the Rogue lets go of them, and the Rogue hides."""
     drop_pulls(state, rogue.id)
     rogue.hidden = True
-
-
-def _enemy(state: FightState, action: Action) -> Enemy | None:
-    """The enemy `action` is aimed at, or None if it is not aimed at an enemy."""
-    return state.enemies.get(action.target) if action.target else None
 
 
 def _landing(state: FightState, rogue: Hero, enemy: Enemy) -> Pos | None:

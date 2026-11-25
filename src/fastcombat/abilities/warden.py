@@ -9,7 +9,7 @@ is one on the map where nobody stands; the one being moved does not get in
 their own way, so their own square counts as free.
 """
 
-from fastcombat.abilities import Action, check, effect
+from fastcombat.abilities import Action, check, effect, target_enemy
 from fastcombat.combat import add_stack
 from fastcombat.grid import Pos, behind, free_next_to, within
 from fastcombat.numbers import AbilitySpec
@@ -20,7 +20,7 @@ from fastcombat.units import Enemy, FightState, Hero
 def _challenge_needs_an_enemy(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    return _enemy(state, action) is not None
+    return target_enemy(state, action) is not None
 
 
 @effect("challenge")
@@ -76,7 +76,7 @@ def _chain_hook_needs_an_enemy_it_can_pull(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     """Not the boss, and there has to be a free square next to the Warden."""
-    enemy = _enemy(state, action)
+    enemy = target_enemy(state, action)
     if enemy is None or enemy.spec.tier == "boss":
         return False
     return _hook_square(state, warden, enemy) is not None
@@ -133,11 +133,6 @@ def _taunt(enemy: Enemy, cards: int) -> None:
     old = enemy.stacks.get("taunt")
     if old is None or old.cards < cards:
         add_stack(enemy, "taunt", cards)
-
-
-def _enemy(state: FightState, action: Action) -> Enemy | None:
-    """The enemy `action` is aimed at, or None if it is not aimed at an enemy."""
-    return state.enemies.get(action.target) if action.target else None
 
 
 def _hook_square(state: FightState, warden: Hero, enemy: Enemy) -> Pos | None:
