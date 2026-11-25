@@ -28,7 +28,7 @@ def challenge(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Taunt cards on one enemy: while they last, it must attack the Warden."""
-    add_stack(state.enemies[action.target], "taunt", spec.cards)
+    _taunt(state.enemies[action.target], spec.cards)
 
 
 @effect("war_cry")
@@ -37,7 +37,7 @@ def war_cry(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) 
     near = within(warden.pos, spec.radius, state.fight.width, state.fight.height)
     for enemy in state.living_enemies():
         if enemy.pos in near:
-            add_stack(enemy, "taunt", spec.cards)
+            _taunt(enemy, spec.cards)
 
 
 @check("intercede")
@@ -122,6 +122,17 @@ def unbroken(
 ) -> None:
     """While the card lasts, nothing can take the Warden below 1 HP."""
     add_stack(warden, "unbroken", spec.cards)
+
+
+def _taunt(enemy: Enemy, cards: int) -> None:
+    """Give `enemy` `cards` Taunt cards. A new taunt never shortens an old one.
+
+    If the enemy already has as many Taunt cards as that, or more, it keeps
+    the ones it has.
+    """
+    old = enemy.stacks.get("taunt")
+    if old is None or old.cards < cards:
+        add_stack(enemy, "taunt", cards)
 
 
 def _enemy(state: FightState, action: Action) -> Enemy | None:

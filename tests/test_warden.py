@@ -1,7 +1,7 @@
 from tests.helpers import state, enemy
 from fastcombat.abilities import Action, use_ability
 from fastcombat.targeting import choose_target
-from fastcombat.combat import damage_hero
+from fastcombat.combat import add_stack, damage_hero
 from fastcombat.grid import adjacent
 
 def use(s, hero, ability, target=None, pos=None):
@@ -96,3 +96,14 @@ def test_bulwark_covers_the_warden_but_not_an_ally_in_front():
     s.heroes["rogue"].pos = (4, 6)                      # between the Warden and the blast
     use(s, "warden", "bulwark", pos=(6, 6))
     assert "bulwark" in s.heroes["warden"].stacks and "bulwark" not in s.heroes["rogue"].stacks
+
+# --- A new taunt never shortens an old one ------------------------------------
+
+def test_war_cry_leaves_a_longer_taunt_as_it_is():
+    s = state(); s.heroes["warden"].resource = 10; w = enemy(s, "wolf", (5, 6))
+    add_stack(w, "taunt", 3)
+    assert use(s, "warden", "war_cry") and w.stacks["taunt"].cards == 3
+
+def test_challenge_makes_a_shorter_taunt_as_long_as_a_challenge():
+    s = state(); w = enemy(s, "wolf", (8, 6)); add_stack(w, "taunt", 1)
+    assert use(s, "warden", "challenge", "wolf1") and w.stacks["taunt"].cards == 3
