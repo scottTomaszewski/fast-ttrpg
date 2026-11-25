@@ -135,6 +135,19 @@ def walk_away(
     return best
 
 
+def nearest_free(square: Pos, taken: set[Pos], width: int, height: int) -> Pos | None:
+    """The free square closest to `square`; `square` itself when it is free.
+
+    If several are just as close, the one the search finds first wins. Taken
+    squares do not get in the way of the search, because nobody walks there:
+    this is for putting something down. None when the whole map is taken.
+    """
+    for spot, _ in _spread(square, set(), width, height, {}):
+        if spot not in taken:
+            return spot
+    return None
+
+
 def _path_to(
     start: Pos,
     goal: Pos,
