@@ -252,12 +252,17 @@ def test_the_result_says_who_played_and_how_it_ended():
     assert r.party == party and r.seed == 3 and set(r.end_resource) == set(party)
     assert all(len(seen) == r.rounds for seen in r.tally.resource_by_round.values())
 
-def test_heroes_with_no_policy_given_play_the_default():
-    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], policies={"mage": Plays()}, seed=1)
+def test_each_hero_plays_the_policy_given_for_them():
+    plays = {"warden": AutoOnly(), "rogue": AutoOnly(), "druid": AutoOnly(), "mage": Plays()}
+    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], policies=plays, seed=1)
     assert r.tally.damage["mage"] == 0 and r.tally.damage["druid"] > 0
 
+def test_heroes_with_no_policy_given_play_their_class_policy():
+    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], policies={"mage": Plays()}, seed=1)
+    assert r.tally.damage["mage"] == 0 and r.tally.healing["druid"] > 0   # only the Druid's own policy heals
+
 def test_the_fight_is_lost_when_nobody_is_up():
-    r = run_fight(N, WOLF_ONLY, ["mage"], seed=1)
+    r = run_fight(N, WOLF_ONLY, ["mage"], policies={"mage": AutoOnly()}, seed=1)
     assert not r.won and not r.timeout and r.rounds < N.rules["max_rounds"]
 
 def test_the_party_has_not_won_while_an_enemy_is_still_to_come():

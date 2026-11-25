@@ -1,0 +1,198 @@
+from dataclasses import replace
+
+from tests.helpers import state, enemy, GAME
+from fastcombat.policies import default_policy, POLICIES
+from fastcombat.combat import damage_hero, add_stack
+from fastcombat.enemy_ai import announce
+from fastcombat.fight import run_fight
+from fastcombat.numbers import load_numbers, load_fight
+
+def act(s, hero):
+    return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
+
+def test_warden_challenges_an_untaunted_boss():
+    s = state(); enemy(s, "ogre", (4, 6))
+    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
+
+def test_warden_hooks_the_wolf_heading_for_the_mage():
+    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3); enemy(s, "wolf", (5, 3))
+    a = act(s, "warden"); assert (a.ability, a.target) == ("chain_hook", "wolf1")
+
+def test_rogue_saps_the_brute_on_round_one():
+    s = state(); enemy(s, "brute", (3, 4))
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
+
+def test_druid_drops_everything_for_a_downed_ally():
+    s = state(); s.heroes["druid"].seeds = 1; damage_hero(s, s.heroes["mage"], 99, attacker=None)
+    a = act(s, "druid"); assert (a.ability, a.target) == ("swiftmend", "mage")
+
+def test_rogue_hauls_up_when_the_druid_has_no_seed():
+    s = state(); m = s.heroes["mage"]; m.pos = (1, 5); damage_hero(s, m, 99, attacker=None)
+    a = act(s, "rogue"); assert (a.kind, a.target) == ("haul_up", "mage")
+
+def test_mage_interrupts_the_shaman_before_anything_else():
+    s = state(); enemy(s, "ogre", (11, 6)); enemy(s, "shaman", (9, 5)); s.round = 2; announce(s)
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "shaman1")
+
+def test_heroes_walk_out_of_an_announced_blast():
+    s = state(); enemy(s, "ogre", (4, 5)); s.round = 3; announce(s)
+    r = s.heroes["rogue"]; dest = default_policy("rogue").move(s, r)
+    assert dest not in s.danger_squares()
+
+def test_any_party_plays_the_real_fight_to_an_end():
+    n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    for party in (["warden", "rogue", "druid", "mage"], ["rogue", "rogue", "mage"],
+                  ["warden", "druid"], ["mage"], ["warden", "rogue", "druid", "mage", "mage"]):
+        for seed in range(5):
+            r = run_fight(n, f, party, seed=seed)
+            assert 1 <= r.rounds <= n.rules["max_rounds"]     # it ended, without an error
+
+# The numbers are first guesses and nobody wins the whole fight yet; winning
+# it is the tuning task's job. So the kit is checked two other ways.
+def kit_against_auto(f, seeds=30):
+    n = load_numbers(GAME / "numbers.toml"); party = ["warden", "rogue", "druid", "mage"]
+    auto = {h: POLICIES["auto"]() for h in party}
+    smart = [run_fight(n, f, party, seed=i) for i in range(seeds)]
+    dumb = [run_fight(n, f, party, policies=auto, seed=i) for i in range(seeds)]
+    return smart, dumb
+
+def test_the_full_kit_outlasts_and_outdamages_auto_attacks():
+    smart, dumb = kit_against_auto(load_fight(GAME / "fights" / "ogre_warlord.toml"))
+    def damage(results): return sum(sum(r.tally.damage.values()) for r in results) / len(results)
+    def rounds(results): return sum(r.rounds for r in results) / len(results)
+    assert damage(smart) > damage(dumb)
+    assert rounds(smart) > rounds(dumb)
+
+def test_the_full_kit_wins_more_of_a_smaller_fight():
+    f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    small = replace(f, spawns=[s for s in f.spawns if s.type in ("ogre", "brute", "wolf")])
+    assert [s.type for s in small.spawns] == ["ogre", "brute", "wolf", "wolf"]
+    smart, dumb = kit_against_auto(small)
+    assert sum(r.won for r in smart) > sum(r.won for r in dumb)
+
+
+# --- More tests: the shared rules and the edges of the lists -----------------
+
+from fastcombat.abilities import can_use
+from fastcombat.policies import AutoOnly, WardenPolicy, RoguePolicy, DruidPolicy, MagePolicy
+from fastcombat.units import Announced, Cast
+
+def test_the_registry_and_the_default_for_a_class_with_no_policy():
+    assert POLICIES == {"warden": WardenPolicy, "rogue": RoguePolicy, "druid": DruidPolicy,
+                        "mage": MagePolicy, "auto": AutoOnly}
+    assert isinstance(default_policy("bard"), AutoOnly)
+    assert isinstance(default_policy("druid"), DruidPolicy)
+
+def test_no_policy_ever_asks_for_an_ability_it_cannot_use():
+    n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
+    refused = []
+
+    class Checked:
+        def __init__(self, cls): self.policy = default_policy(cls)
+        def move(self, s, hero): return self.policy.move(s, hero)
+        def act(self, s, hero):
+            a = self.policy.act(s, hero)
+            if a.kind == "ability" and not can_use(s, hero, a.ability, a):
+                refused.append((s.round, hero.id, a))
+            return a
+
+    party = ["warden", "rogue", "druid", "mage", "mage"]
+    for seed in range(10):
+        policies = {h: Checked(h.rstrip("2")) for h in ("warden", "rogue", "druid", "mage", "mage2")}
+        run_fight(n, f, party, policies=policies, seed=seed)
+    assert refused == []
+
+def heavy_on_warden(s, dice=(6, 6)):
+    o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
+    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "warden", frozenset(), dice)
+
+def test_warden_braces_with_unbroken_only_when_the_heavy_hit_could_drop_them():
+    s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.resource = 10
+    w.hp = 36; assert act(s, "warden").ability == "unbroken"         # 6d6 can roll 36
+    w.hp = 37; assert act(s, "warden").ability != "unbroken"
+    add_stack(w, "guarded", 1, 4)                                    # each hit 4 smaller: at most 32
+    w.hp = 32; assert act(s, "warden").ability == "unbroken"
+    w.hp = 33; assert act(s, "warden").ability != "unbroken"
+
+def test_warden_without_the_grit_for_unbroken_reads_on():
+    s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.hp = 10; w.resource = 4
+    assert act(s, "warden").ability != "unbroken"
+
+def test_a_hero_mid_cast_stays_put_unless_standing_in_danger():
+    s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (12, 2))
+    m.cast = Cast("meteor", None, (12, 2), 1, 0, False)
+    assert default_policy("mage").move(s, m) == m.pos
+    s.marked["druid"] = frozenset({m.pos})                         # a blast is coming down on her
+    dest = default_policy("mage").move(s, m)
+    assert dest != m.pos and dest not in s.danger_squares()
+
+def test_a_hero_next_to_a_downed_ally_stays_to_haul_them_up():
+    s = state(); enemy(s, "wolf", (12, 2)); damage_hero(s, s.heroes["mage"], 99, attacker=None)
+    r = s.heroes["rogue"]                                           # at (2, 5), next to the mage at (1, 5)
+    assert default_policy("rogue").move(s, r) == r.pos
+    s.heroes["druid"].seeds = 1                                     # now the Druid will heal her
+    assert default_policy("rogue").move(s, r) != r.pos
+
+def test_mage_never_drops_a_meteor_on_a_hero():
+    s = state()
+    for square in ((8, 4), (8, 5), (8, 6), (9, 5)):
+        enemy(s, "goblin", square)
+    a = act(s, "mage")
+    assert (a.ability, a.pos) == ("meteor", (7, 4))                 # the first square, in (x, y) order, that covers all four
+    s.heroes["rogue"].pos = (6, 2)                                  # 2 from (7, 4): that square is out now
+    a = act(s, "mage")
+    assert a.ability == "meteor" and a.pos != (7, 4) and all(
+        max(abs(a.pos[0] - h.pos[0]), abs(a.pos[1] - h.pos[1])) > 2 for h in s.heroes.values())
+
+def test_druid_centres_wild_growth_to_cover_the_most_hurt_allies():
+    s = state()
+    for name in ("warden", "rogue", "druid", "mage"):
+        h = s.heroes[name]; h.hp = h.max_hp * 7 // 10                # every one at 70% or less
+        add_stack(h, "rejuvenation", 2, 4)                          # so rule 9 does not come first
+    s.heroes["druid"].resource = 10
+    a = act(s, "druid")
+    assert a.ability == "wild_growth"
+    covered = [h for h in s.heroes.values()
+               if max(abs(a.pos[0] - h.pos[0]), abs(a.pos[1] - h.pos[1])) <= 2]
+    assert len(covered) == 4
+
+
+# --- The controller's rulings: Shadowstep, Shadowmeld, and fodder ------------
+
+def test_rogue_shadowsteps_to_a_focus_past_her_move_but_in_reach():
+    s = state()                                                     # the Rogue is at (2, 5); move 6, Shadowstep range 8
+    w = enemy(s, "wolf", (9, 5))                                    # 7 away
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("shadowstep", "wolf1")
+    w.pos = (8, 5)                                                  # 6 away: she can walk there
+    assert act(s, "rogue").ability != "shadowstep"
+    w.pos = (11, 5)                                                 # 9 away: out of Shadowstep's range
+    assert act(s, "rogue").ability != "shadowstep"
+
+def test_druid_shadowmelds_only_from_an_enemy_that_can_reach_her():
+    s = state(); w = enemy(s, "wolf", (2, 8))                       # next to the Druid at (1, 7)
+    assert act(s, "druid").ability == "shadowmeld"
+    add_stack(w, "rooted", 1)                                       # rooted: it cannot come at her
+    assert act(s, "druid").ability != "shadowmeld"
+    del w.stacks["rooted"]; add_stack(w, "sap", 2)                  # controlled: it does nothing
+    assert act(s, "druid").ability != "shadowmeld"
+    del w.stacks["sap"]; w.pos = (15, 0); w.pulled_by = "druid"     # pulled, but 14 away: move 7 + range 1 is too short
+    assert act(s, "druid").ability != "shadowmeld"
+    w.pos = (9, 7)                                                  # pulled, 8 away: it can just reach her
+    assert act(s, "druid").ability == "shadowmeld"
+
+def test_rogue_auto_attacks_fodder_and_saves_eviscerate_for_a_real_enemy():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
+    enemy(s, "goblin", (3, 4))                                      # next to the Rogue at (2, 5)
+    a = act(s, "rogue"); assert (a.kind, a.target) == ("auto", "goblin1")
+    enemy(s, "brute", (3, 5))                                       # also next to her, more HP than the goblin
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("eviscerate", "brute1")
+
+def test_rogue_does_not_backstab_fodder_from_hiding():
+    s = state(); enemy(s, "goblin", (3, 4))                         # the Rogue starts hidden
+    a = act(s, "rogue"); assert (a.kind, a.target) == ("auto", "goblin1")
+
+def test_mage_auto_attacks_fodder_and_firebolts_a_real_enemy():
+    s = state(); enemy(s, "goblin", (8, 5))                         # 7 from the Mage at (1, 5)
+    a = act(s, "mage"); assert (a.kind, a.target) == ("auto", "goblin1")
+    enemy(s, "ogre", (11, 6))                                       # 10 away: in Firebolt's range
+    a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "ogre1")
