@@ -4,6 +4,7 @@ Every hit and every heal in the game goes through this file, so the tally of
 who did what is always right.
 """
 
+from fastcombat.targeting import apply_loud
 from fastcombat.units import Enemy, FightState, Hero, Stack
 
 # Cards that heal their value at the top of each party turn.
@@ -34,12 +35,16 @@ def damage_enemy(
 ) -> int:
     """`hero_id` hits `enemy` for `amount`. Gives back the HP really taken off.
 
-    `auto` means it was an auto-attack, for the tally. `loud` is taken now;
-    what a Loud hit does comes with the rules for who an enemy attacks.
+    `auto` means it was an auto-attack, for the tally. `loud` means it was a
+    Loud hit: if the enemy is still alive afterwards, it loses a Taunt card
+    or is pulled toward the hero (see `targeting.apply_loud`). That happens
+    even when a shield turned the whole hit aside.
     """
-    if enemy.dead or amount < enemy.spec.shielded:
+    if enemy.dead:
         return 0
-    if enemy.spec.tier == "fodder" and amount >= 1:
+    if amount < enemy.spec.shielded:
+        done = 0  # the shield turns the whole hit aside
+    elif enemy.spec.tier == "fodder" and amount >= 1:
         done = enemy.hp  # any hit kills fodder
     else:
         done = min(amount, enemy.hp)
@@ -52,6 +57,8 @@ def damage_enemy(
     state.tally.damage[hero_id] += done
     if auto:
         state.tally.auto_damage[hero_id] += done
+    if loud and not enemy.dead:
+        apply_loud(state, hero_id, enemy)
     return done
 
 
