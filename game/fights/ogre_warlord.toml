@@ -45,11 +45,11 @@ range = 1
 prefers = "nearest"
 shielded = 5
 
-[enemy_types.goblin]    # slow, so a Meteor cast on them still catches them
+[enemy_types.goblin]    # comes late and runs at the back line
 tier = "fodder"
 hp = 1
 damage = 2
-move = 1
+move = 3
 range = 1
 prefers = "backline"
 
@@ -69,31 +69,27 @@ pos = [10, 3]
 type = "wolf"
 pos = [10, 9]
 
-# one wave of six goblins on the far edge
+# one wave of five goblins on the far edge, in round 10
 [[spawns]]
 type = "goblin"
 pos = [15, 3]
-round = 6
+round = 10
 [[spawns]]
 type = "goblin"
 pos = [15, 4]
-round = 6
+round = 10
 [[spawns]]
 type = "goblin"
 pos = [15, 5]
-round = 6
+round = 10
 [[spawns]]
 type = "goblin"
 pos = [15, 6]
-round = 6
+round = 10
 [[spawns]]
 type = "goblin"
 pos = [15, 7]
-round = 6
-[[spawns]]
-type = "goblin"
-pos = [15, 8]
-round = 6
+round = 10
 
 # The boss announces at most one of these per turn; the first that is due wins.
 # The timings matter for how long a fight lasts: a Ground Slam makes the

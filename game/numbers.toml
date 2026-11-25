@@ -10,10 +10,10 @@ combo_per_hit = 1      # combo points a Rogue gets for each auto-attack die that
 backstab_hidden_multiplier = 2   # a Backstab from hiding hits this many times as hard
 seeds_max = 2
 grit_per_attack = 1
-max_rounds = 200       # the simulator gives up after this many
+max_rounds = 60        # the simulator gives up after this many
 
 [heroes.warden]
-hp = 90
+hp = 100
 die = 8
 attack_range = 1
 resource = "grit"
