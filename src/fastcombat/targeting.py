@@ -58,7 +58,7 @@ def _first_rule_that_names_a_hero(
     and is never empty. `warden` is None if the Warden is hidden."""
     if "taunt" in enemy.stacks and warden is not None:
         return warden
-    puller = _puller(state, enemy)
+    puller = puller_of(state, enemy)
     if puller is not None:
         return puller
     if held(state, enemy) and warden is not None:
@@ -80,7 +80,7 @@ def can_move(state: FightState, enemy: Enemy) -> bool:
     (a pull by a hero who is down, out or hidden counts for nothing). Rooted cards
     keep it in place, and so does a stun, sap or sheep.
     """
-    if held(state, enemy) and _puller(state, enemy) is None:
+    if held(state, enemy) and puller_of(state, enemy) is None:
         return False
     return "rooted" not in enemy.stacks and not enemy.controlled
 
@@ -90,7 +90,7 @@ def seen_heroes(state: FightState) -> list[Hero]:
     return [hero for hero in state.up_heroes() if not hero.hidden]
 
 
-def _puller(state: FightState, enemy: Enemy) -> Hero | None:
+def puller_of(state: FightState, enemy: Enemy) -> Hero | None:
     """The hero who pulled `enemy`, if that hero is up and not hidden. Otherwise None."""
     hero = state.heroes.get(enemy.pulled_by) if enemy.pulled_by else None
     return hero if hero is not None and hero.up and not hero.hidden else None

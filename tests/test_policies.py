@@ -2,6 +2,7 @@ from dataclasses import replace
 
 from tests.helpers import state, enemy, GAME
 from fastcombat.policies import default_policy, POLICIES
+from fastcombat.abilities import Action
 from fastcombat.combat import damage_hero, add_stack
 from fastcombat.enemy_ai import announce
 from fastcombat.fight import run_fight
@@ -10,13 +11,29 @@ from fastcombat.numbers import load_numbers, load_fight
 def act(s, hero):
     return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
 
-def test_warden_challenges_an_untaunted_boss():
-    s = state(); enemy(s, "ogre", (4, 6))
+def test_warden_challenges_the_boss_only_when_it_is_about_to_reach_someone_else():
+    s = state(); o = enemy(s, "ogre", (5, 8))                         # 2 from the warden at (3, 6): not held
+    o.pulled_by = "druid"                                             # 4 from the druid at (1, 7): it can get there
     a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
+    o.pos = (9, 7)                                                    # 8 from the druid: move 4 + range 1 is too short
+    assert act(s, "warden").ability != "challenge"
+    o.pos = (5, 8); o.pulled_by = "rogue"                             # the rogue is hidden: her pull counts for nothing
+    assert act(s, "warden").ability != "challenge"
+    o.pos = (4, 6); o.pulled_by = None                                # held by the warden, and nobody pulled it
+    assert act(s, "warden") == Action("auto", target="ogre1")
 
-def test_warden_hooks_the_wolf_heading_for_the_mage():
-    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3); enemy(s, "wolf", (5, 3))
-    a = act(s, "warden"); assert (a.ability, a.target) == ("chain_hook", "wolf1")
+def test_warden_challenges_an_add_that_is_not_coming_for_him():
+    s = state(); enemy(s, "ogre", (4, 6)); w = enemy(s, "wolf", (5, 3))   # the ogre is held
+    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "wolf1")
+    w.target = "warden"                                               # it is coming for him anyway
+    assert act(s, "warden") == Action("auto", target="ogre1")
+    g = enemy(s, "goblin", (5, 4)); assert act(s, "warden").ability != "challenge"   # fodder: any hit kills it
+
+def test_warden_hooks_a_caster_that_shoots_him_from_afar():
+    s = state(); enemy(s, "ogre", (4, 6)); sh = enemy(s, "shaman", (6, 2)); sh.target = "warden"
+    a = act(s, "warden"); assert (a.ability, a.target) == ("chain_hook", "shaman1")
+    sh.target = "mage"                                                # after the mage: a Taunt first, it is cheaper
+    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "shaman1")
 
 def test_rogue_saps_the_brute_on_round_one():
     s = state(); enemy(s, "brute", (3, 4))

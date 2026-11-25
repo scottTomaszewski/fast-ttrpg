@@ -40,7 +40,7 @@ from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
 from fastcombat.grid import Pos, adjacent, approach, distance, within
-from fastcombat.targeting import held
+from fastcombat.targeting import held, puller_of
 from fastcombat.units import Enemy, FightState, Hero
 
 # How the policies play. These are not game rules: they are how careful or
@@ -120,6 +120,12 @@ class WardenPolicy(_ClassPolicy):
     """The Warden. Move: to a square next to the boss (or to the nearest
     enemy if there is no boss), out of danger if possible.
 
+    An enemy next to the Warden is already held: it must attack him. So the
+    Warden spends a turn on a Taunt or a pull only for an enemy that would
+    otherwise go for someone else. Anything else costs him an auto-attack
+    and does nothing. A loose enemy is one that is neither held, taunted
+    nor controlled.
+
     1. Haul up.
     2. A boss heavy hit is announced on me and it could take me to 0 at its
        maximum roll: Unbroken.
@@ -129,14 +135,20 @@ class WardenPolicy(_ClassPolicy):
        stunned, sapped or sheeped enemy's cast never lands): Disrupt.
     5. An ally (not a Warden) at half HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
-    6. The boss has no Taunt cards: Challenge the boss.
-    7. Three or more enemies that are neither held nor taunted nor
-       controlled are within War Cry's radius: War Cry.
-    8. An enemy that is not a boss, and is neither held, taunted nor
-       controlled, is in range: Chain Hook the one closest to any ally who
-       is not a Warden.
-    9. Auto-attack the focus if it is next to me, or else the lowest-HP
-       enemy next to me that is not controlled.
+    6. The boss has no Taunt cards and is pulled by an ally who is up and
+       not hidden, and it could reach that ally this GM turn (they are no
+       farther than its move plus its reach): Challenge the boss.
+    7. Three or more loose enemies are within War Cry's radius: War Cry.
+    8. A loose enemy that is not a boss and not fodder, and is not already
+       going for me, is in Challenge's range: Challenge the one closest to
+       any ally who is not a Warden. (Fodder dies to any hit, so it is not
+       worth the grit.)
+    9. A loose enemy that is not a boss and attacks from farther than one
+       square away (like the shaman) is in Chain Hook's range: Chain Hook
+       the one closest to any ally who is not a Warden. Next to me it is
+       held, and I can Disrupt its casts.
+    10. Auto-attack the focus if it is next to me, or else the lowest-HP
+        enemy next to me that is not controlled.
     """
 
     def where_to(self, state: FightState, warden: Hero) -> Pos:
@@ -148,6 +160,8 @@ class WardenPolicy(_ClassPolicy):
     def act(self, state: FightState, warden: Hero) -> Action:
         boss = _boss(state)
         allies = [h for h in _up_heroes(state) if h.cls != "warden"]
+        spots = [a.pos for a in allies]
+        abilities = state.numbers.abilities
 
         # 1. Haul up.
         if action := _haul_up(state, warden):
@@ -186,38 +200,53 @@ class WardenPolicy(_ClassPolicy):
             if action := _ability(state, warden, "intercede", guard.id):
                 return action
 
-        # 6. The boss has no Taunt cards: Challenge the boss.
+        # 6. The boss is pulled by an ally it could reach this GM turn: Challenge it.
         if boss is not None and "taunt" not in boss.stacks:
-            if action := _ability(state, warden, "challenge", boss.id):
-                return action
+            puller = puller_of(state, boss)
+            if puller is not None and puller is not warden:
+                if distance(boss.pos, puller.pos) <= boss.spec.move + boss.spec.range:
+                    if action := _ability(state, warden, "challenge", boss.id):
+                        return action
 
         # 7. Three or more loose enemies near me: War Cry.
         near = within(
-            warden.pos,
-            state.numbers.abilities["war_cry"].radius,
-            state.fight.width,
-            state.fight.height,
+            warden.pos, abilities["war_cry"].radius, state.fight.width, state.fight.height
         )
         loose = [e for e in state.living_enemies() if _loose(state, e)]
         if sum(1 for e in loose if e.pos in near) >= WAR_CRY_ENEMIES:
             if action := _ability(state, warden, "war_cry"):
                 return action
 
-        # 8. A loose enemy that is not a boss is in range: Chain Hook the one
+        # 8. A loose add (not fodder) that is not coming for me: Challenge the one
         # closest to an ally.
-        reach = state.numbers.abilities["chain_hook"].range
+        reach = abilities["challenge"].range
+        hunting = [
+            e
+            for e in loose
+            if e.spec.tier not in ("boss", "fodder")
+            and e.target != warden.id
+            and distance(warden.pos, e.pos) <= reach
+        ]
+        if hunting:
+            add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
+            if action := _ability(state, warden, "challenge", add.id):
+                return action
+
+        # 9. A loose enemy that hits from afar: Chain Hook the one closest to an ally.
+        reach = abilities["chain_hook"].range
         hookable = [
             e
             for e in loose
-            if e.spec.tier != "boss" and distance(warden.pos, e.pos) <= reach
+            if e.spec.tier != "boss"
+            and e.spec.range > 1
+            and distance(warden.pos, e.pos) <= reach
         ]
         if hookable:
-            spots = [a.pos for a in allies]
             hook = min(hookable, key=lambda e: (_gap(e.pos, spots), e.id))
             if action := _ability(state, warden, "chain_hook", hook.id):
                 return action
 
-        # 9. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
+        # 10. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
         if action := _auto(state, warden, _focus(state, warden)):
             return action
         return _auto(state, warden, _weakest_next_to(state, warden)) or Action("none")
