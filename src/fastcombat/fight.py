@@ -35,6 +35,7 @@ class FightResult:
     heroes_out: list[str]  # ids of the heroes who were out at the end
     tally: Tally
     end_resource: dict[str, int]  # each hero's resource at the end, by hero id
+    pool: dict[str, int]  # the most resource each hero can hold, by hero id
 
 
 def run_fight(
@@ -229,4 +230,5 @@ def _result(
         heroes_out=[hero.id for hero in state.heroes.values() if hero.out],
         tally=state.tally,
         end_resource={hero.id: hero.resource for hero in state.heroes.values()},
+        pool={hero.id: state.numbers.heroes[hero.cls].pool for hero in state.heroes.values()},
     )
