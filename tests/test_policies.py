@@ -603,6 +603,26 @@ def test_rogue_waits_hidden_for_an_elite_out_of_reach_only_so_long():
     b.pos = (12, 5)
     assert p.act(s, r) == Action("none")
 
+def test_rogue_waits_again_for_a_new_elite_after_giving_up_on_another():
+    s = state(); r = s.heroes["rogue"]; p = RoguePolicy()
+    b = elite(s, "brute", (12, 5)); enemy(s, "wolf", (3, 4))
+    for s.round in (1, 2, 3):
+        p.act(s, r)
+    a = p.act(s, r); assert a.ability == "backstab"                  # she gave up on the brute
+    b.dead = True; elite(s, "brute", (12, 6))                        # a new elite, as far away
+    assert p.act(s, r) == Action("none")                            # it gets its own wait
+
+def test_rogue_forgets_her_waits_when_a_new_fight_starts():
+    s = state(); r = s.heroes["rogue"]; p = RoguePolicy()
+    b = elite(s, "brute", (12, 5)); enemy(s, "wolf", (3, 4))
+    for s.round in (2, 3, 4):
+        p.act(s, r)
+    assert p.act(s, r).ability == "backstab"                        # gave up on brute1, in round 4
+    s.round = 1; b.dead = True                                      # a new fight, with no elite at first
+    p.act(s, r)
+    s.round = 4; b.dead = False                                     # the elite turns up in round 4
+    assert p.act(s, r) == Action("none")                            # a fresh wait, not the old one
+
 def test_rogue_stops_a_cast_with_kidney_shot_when_disrupt_is_cooling_down():
     s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
     sh = mending_shaman(s, (3, 4))                                  # next to the Rogue at (2, 5)

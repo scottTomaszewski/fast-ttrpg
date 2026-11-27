@@ -98,7 +98,13 @@ VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with t
 class Policy(Protocol):
     """How one hero plays. A policy may also have `opening(state, hero)`,
     which gives back the Rogue's `Opening` before round 1 (see
-    `opening.py`). A policy without it opens with none."""
+    `opening.py`). A policy without it opens with none.
+
+    A policy is made fresh for each fight (`run_fight` and the `fastcombat`
+    command both do this), so nothing it remembers carries over. A policy
+    that remembers something still forgets it if it sees the round go
+    back down, in case someone plays two fights with one policy.
+    """
 
     def move(self, state: FightState, hero: Hero) -> Pos: ...
     def act(self, state: FightState, hero: Hero) -> Action: ...
@@ -382,12 +388,15 @@ class RoguePolicy(_ClassPolicy):
 
     This is the one policy that remembers something from round to round:
     how long the Rogue has waited hidden (rule 3). It is kept for each hero
-    id, so one policy can play two Rogues.
+    id and each elite, so one policy can play two Rogues, and a new elite
+    gets its own wait after she gave up on another. It is forgotten when
+    the round number goes down (a new fight).
     """
 
     def __init__(self) -> None:
-        # By hero id: the first and the last round of her wait in rule 3.
-        self._waiting: dict[str, tuple[int, int]] = {}
+        # By (hero id, elite id): the first and the last round of her wait in rule 3.
+        self._waiting: dict[tuple[str, str], tuple[int, int]] = {}
+        self._last_round = 0  # the last round seen, to tell when a new fight starts
 
     def opening(self, state: FightState, rogue: Hero) -> Opening:
         """Before round 1: get next to the elite worth opening on, if there is one.
@@ -439,6 +448,7 @@ class RoguePolicy(_ClassPolicy):
         return dest
 
     def act(self, state: FightState, rogue: Hero) -> Action:
+        self._memory(state)  # sees every round, so a new fight is never missed
         focus = _ability_focus(state, rogue)  # for the abilities aimed at the focus
         full = _full_combo(state, rogue)
 
@@ -469,8 +479,8 @@ class RoguePolicy(_ClassPolicy):
             elif action := _shadowstep(state, rogue, elite):
                 return action
             else:
-                self._wait(state, rogue)
-                if not self._gave_up(state, rogue):
+                self._wait(state, rogue, elite)
+                if not self._gave_up(state, rogue, elite):
                     return Action("none")
 
         # 4. Pulled, chased by the boss, or low and chased: Vanish.
@@ -550,7 +560,7 @@ class RoguePolicy(_ClassPolicy):
         in reach: a walk ends next to it, or Shadowstep can take her there.
         """
         elite = _hidden_elite(state, rogue)
-        if elite is None or not self._gave_up(state, rogue):
+        if elite is None or not self._gave_up(state, rogue, elite):
             return elite
         if adjacent(_go(state, rogue, elite.pos, reach=1), elite.pos):
             return elite
@@ -558,20 +568,29 @@ class RoguePolicy(_ClassPolicy):
             return elite
         return None
 
-    def _wait(self, state: FightState, rogue: Hero) -> None:
-        """Write down that this round she is hidden and her elite is out of reach."""
+    def _wait(self, state: FightState, rogue: Hero, elite: Enemy) -> None:
+        """Write down that this round she is hidden and `elite` is out of reach."""
         now = state.round
-        first, last = self._waiting.get(rogue.id, (now, now))
+        waiting = self._memory(state)
+        first, last = waiting.get((rogue.id, elite.id), (now, now))
         if last not in (now - 1, now):
             first = now  # a new wait: the last one did not go on to this round
-        self._waiting[rogue.id] = (first, now)
+        waiting[(rogue.id, elite.id)] = (first, now)
 
-    def _gave_up(self, state: FightState, rogue: Hero) -> bool:
-        """True once she has waited `HIDDEN_WAIT_ROUNDS` rounds in a row before this one."""
-        first, last = self._waiting.get(rogue.id, (0, -1))
+    def _gave_up(self, state: FightState, rogue: Hero, elite: Enemy) -> bool:
+        """True once she has waited `HIDDEN_WAIT_ROUNDS` rounds in a row for `elite`
+        before this one."""
+        first, last = self._memory(state).get((rogue.id, elite.id), (0, -1))
         if last not in (state.round - 1, state.round):
             return False
         return state.round - first >= HIDDEN_WAIT_ROUNDS
+
+    def _memory(self, state: FightState) -> dict[tuple[str, str], tuple[int, int]]:
+        """The waits written down, forgotten first if the round went down (a new fight)."""
+        if state.round < self._last_round:
+            self._waiting.clear()
+        self._last_round = state.round
+        return self._waiting
 
 
 class DruidPolicy(_ClassPolicy):
