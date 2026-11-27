@@ -56,6 +56,7 @@ from dataclasses import replace
 from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
+from fastcombat.combat import BROKEN_BY_DAMAGE
 from fastcombat.grid import Pos, adjacent, approach, behind, distance, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.targeting import held
@@ -73,6 +74,8 @@ REGROWTH_AT = 0.60  # Druid: Regrowth an ally at 60% HP or less
 REJUVENATION_AT = 0.80  # Druid: Rejuvenation on an ally at 80% HP or less...
 REJUVENATION_ENERGY = 6  # ...when the Druid has this much energy or more
 VANISH_AT = 0.40  # Rogue: Vanish at 40% HP or less when something is after her
+SAP_ABOVE = 0.50  # Rogue: Sap an elite only above half its HP; a hurt one gets a Backstab
+HIDDEN_WAIT_ROUNDS = 2  # Rogue: wait hidden this many rounds at most for an elite out of reach
 CHEAP_SHOT_AT = 0.50  # Rogue: Cheap Shot an add on a squishy hero at half HP or less
 MAGE_SAFE_GAP = 5  # Mage: likes to stand this far from every enemy; farther is no better
 METEOR_ENEMIES = 3  # Mage: Meteor when it would hit this many enemies
@@ -151,12 +154,13 @@ class GuardianPolicy(_ClassPolicy):
     that is neither held, taunted nor controlled.
 
     He keeps grit for his emergency buttons. While an ally (not a Guardian)
-    is at 60% HP or less, he keeps enough for Intercede. While the boss is
-    taunted and its script will announce a heavy hit this GM turn that
-    could take him to 0 (see rule 2), he keeps enough for Last Stand.
-    Rule 9 is the everyday one: he only uses it if the grit left after
-    paying is still that much. (Rules 7 and 8 are not everyday: they take
-    adds off his allies.)
+    is at 60% HP or less, he keeps enough for Intercede. Rule 9 is the
+    everyday one: he only uses it if the grit left after paying is still
+    that much. (Rules 7 and 8 are not everyday: they take adds off his
+    allies.) He keeps nothing back for Last Stand ahead of time: like
+    every hero, he plays only on what a player at the table can see, and
+    nobody knows a heavy hit is coming until the boss announces it. Once
+    it is announced, rule 2 comes first and spends the grit.
 
     1. Haul up.
     2. A boss heavy hit is announced on me and it could take me to 0: its
@@ -278,7 +282,7 @@ class GuardianPolicy(_ClassPolicy):
             and e.target != guardian.id
             and distance(guardian.pos, e.pos) <= reach
         ]
-        spare = guardian.resource - abilities["taunt"].cost >= _grit_to_keep(state, guardian)
+        spare = guardian.resource - abilities["taunt"].cost >= _grit_to_keep(state)
         if hunting and spare:
             add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
             if action := _ability(state, guardian, "taunt", add.id):
@@ -303,28 +307,37 @@ class GuardianNoBossTaunt(GuardianPolicy):
 class RoguePolicy(_ClassPolicy):
     """The Rogue. Move: next to the enemy her abilities are after, a square
     also out of danger if possible. That enemy is, the first that applies:
-    the elite to Sap (rule 3), while she has one; while she has full combo
-    points, the nearest enemy worth an Eviscerate (an elite, or the boss
-    while it has Taunt cards; rule 8); or else the focus her abilities aim
-    at (not fodder), or the normal focus if there is no such enemy. If walking cannot take her next to it, but Shadowstep can (from
+    the elite to go for from hiding (rule 3), while she has one; while she
+    has full combo points, the nearest enemy worth an Eviscerate (an elite,
+    or the boss while it has Taunt cards; rule 8); or else the focus her
+    abilities aim at (not fodder), or the normal focus if there is no such
+    enemy. If walking cannot take her next to it, but Shadowstep can (from
     the square she stays on, it is farther than her move, within
     Shadowstep's range, and Shadowstep can be used), she stays put
     (stepping out of danger if she must) and Shadowsteps in the act step.
 
-    The elite to Sap: while I am hidden, the most dangerous elite that is
-    awake (not stunned, sapped or sheeped), the one that hits hardest, then
-    the one with the most HP, then the nearest. I am hidden at the start of
-    every fight, and again after a Vanish.
+    The elite to go for from hiding: while I am hidden, an elite that is
+    awake (not stunned, sapped or sheeped). First one with more than half
+    its HP (worth a Sap), then the one that hits hardest, then the one with
+    the most HP, then the nearest. I am hidden at the start of every fight,
+    and again after a Vanish. If I have already waited 2 rounds in a row
+    for it (rule 3) and still cannot get there, I give up on it until I am
+    seen again or it comes in reach, and play the rest of the list.
 
     1. Haul up.
     2. An enemy next to me has an announced cast that is not answered, and
-       is not controlled: Disrupt, else Cheap Shot.
-    3. I am hidden and there is an elite to Sap: Sap it if it is next to me;
-       else Shadowstep next to it (that keeps me hidden); else wait (do
-       nothing, so I stay hidden) while I walk to it.
-    4. I am not hidden, and: an enemy is pulled by me; or the boss went for
-       me on its last turn; or I am at 40% HP or less and an enemy that is
-       not controlled went for me or is next to me: Vanish.
+       is not controlled: Disrupt; else, with full combo points and the
+       caster an add that is not fodder, Kidney Shot (the longer stun);
+       else Cheap Shot.
+    3. I am hidden and there is an elite to go for: if it is next to me,
+       Sap it if it has more than half its HP, else Backstab it (a Sap on
+       an elite that is nearly dead is wasted); else Shadowstep next to it
+       (that keeps me hidden); else wait (do nothing, so I stay hidden)
+       while I walk to it.
+    4. I am not hidden, and: the boss or an elite that is not controlled is
+       pulled by me; or the boss went for me on its last turn; or I am at
+       40% HP or less and an enemy that is not controlled went for me or is
+       next to me: Vanish. (A goblin pulled onto me is not worth it.)
     5. Hidden: Backstab the focus.
     6. Full combo points, and an add next to me that is not fodder and not
        controlled is going for someone who is not a Guardian: Kidney Shot
@@ -342,10 +355,18 @@ class RoguePolicy(_ClassPolicy):
     11. Auto-attack the normal focus (fodder too) if it is next to me; or
         else the focus my abilities aim at, if it is next to me; or else the
         lowest-HP enemy next to me that is not controlled.
+
+    This is the one policy that remembers something from round to round:
+    how long the Rogue has waited hidden (rule 3). It is kept for each hero
+    id, so one policy can play two Rogues.
     """
 
+    def __init__(self) -> None:
+        # By hero id: the first and the last round of her wait in rule 3.
+        self._waiting: dict[str, tuple[int, int]] = {}
+
     def where_to(self, state: FightState, rogue: Hero) -> Pos:
-        target = _sap_target(state, rogue)
+        target = self._elite_to_go_for(state, rogue)
         if target is None and _full_combo(state, rogue):
             target = _eviscerate_target(state, rogue)
         if target is None:
@@ -374,24 +395,31 @@ class RoguePolicy(_ClassPolicy):
             return action
 
         # 2. An enemy next to me has an announced cast nobody answered:
-        # Disrupt, else Cheap Shot.
+        # Disrupt, else Kidney Shot with full combo points, else Cheap Shot.
         casting = _first(_casting(state, _enemies_next_to(state, rogue)))
         if casting is not None:
             if action := _ability(state, rogue, "disrupt", casting.id):
                 return action
+            if full and casting.spec.tier not in ("boss", "fodder"):
+                if action := _ability(state, rogue, "kidney_shot", casting.id):
+                    return action
             if action := _ability(state, rogue, "cheap_shot", casting.id):
                 return action
 
-        # 3. Hidden, with an elite to Sap: Sap it, else Shadowstep to it, else wait.
-        sap = _sap_target(state, rogue)
-        if sap is not None:
-            if adjacent(rogue.pos, sap.pos):
-                if action := _ability(state, rogue, "sap", sap.id):
+        # 3. Hidden, with an elite to go for: Sap it (or Backstab it if it is
+        # nearly dead), else Shadowstep to it, else wait.
+        elite = _hidden_elite(state, rogue)
+        if elite is not None:
+            if adjacent(rogue.pos, elite.pos):
+                ability = "sap" if _enemy_share(elite) > SAP_ABOVE else "backstab"
+                if action := _ability(state, rogue, ability, elite.id):
                     return action
-            elif action := _shadowstep(state, rogue, sap):
+            elif action := _shadowstep(state, rogue, elite):
                 return action
             else:
-                return Action("none")
+                self._wait(state, rogue)
+                if not self._gave_up(state, rogue):
+                    return Action("none")
 
         # 4. Pulled, chased by the boss, or low and chased: Vanish.
         if not rogue.hidden and _should_vanish(state, rogue):
@@ -462,6 +490,36 @@ class RoguePolicy(_ClassPolicy):
         if action := _auto(state, rogue, focus):
             return action
         return _auto(state, rogue, _weakest_next_to(state, rogue)) or Action("none")
+
+    def _elite_to_go_for(self, state: FightState, rogue: Hero) -> Enemy | None:
+        """The move step's elite to go for from hiding (rule 3), or None.
+
+        None also once she has given up waiting for it, unless it has come
+        in reach: a walk ends next to it, or Shadowstep can take her there.
+        """
+        elite = _hidden_elite(state, rogue)
+        if elite is None or not self._gave_up(state, rogue):
+            return elite
+        if adjacent(_go(state, rogue, elite.pos, reach=1), elite.pos):
+            return elite
+        if _shadowstep(state, replace(rogue, pos=_stay(state, rogue)), elite):
+            return elite
+        return None
+
+    def _wait(self, state: FightState, rogue: Hero) -> None:
+        """Write down that this round she is hidden and her elite is out of reach."""
+        now = state.round
+        first, last = self._waiting.get(rogue.id, (now, now))
+        if last not in (now - 1, now):
+            first = now  # a new wait: the last one did not go on to this round
+        self._waiting[rogue.id] = (first, now)
+
+    def _gave_up(self, state: FightState, rogue: Hero) -> bool:
+        """True once she has waited `HIDDEN_WAIT_ROUNDS` rounds in a row before this one."""
+        first, last = self._waiting.get(rogue.id, (0, -1))
+        if last not in (state.round - 1, state.round):
+            return False
+        return state.round - first >= HIDDEN_WAIT_ROUNDS
 
 
 class DruidPolicy(_ClassPolicy):
@@ -611,13 +669,17 @@ class MagePolicy(_ClassPolicy):
        alive that are not controlled, not a boss and not fodder: Polymorph
        the one of them with the most HP that nobody is next to.
     7. Some square in range has three or more enemies that are not
-       controlled within Meteor's radius, and no hero there who could not
-       walk out before it lands: Meteor on the square that covers the most.
-       Everyone sees the marked squares and walks out (see Moving), so a
-       hero standing there now is no reason to wait, unless they cannot
-       walk out: me (I stand still to cast), a downed hero, a hero in the
-       middle of a longer cast, or the Guardian when an enemy it would hit
-       is next to him (he is holding it there).
+       controlled within Meteor's radius, no sapped or sheeped enemy there,
+       and no hero there who could not walk out before it lands: Meteor on
+       the square that covers the most. A sapped or sheeped enemy wakes up
+       when it is hit, so Meteor never goes where it would wake one: the
+       Sap or the sheep keeps a dangerous add out of the fight for longer
+       than Meteor's extra damage on it is worth. Everyone sees the marked
+       squares and walks out (see Moving), so a hero standing there now is
+       no reason to wait, unless they cannot walk out: me (I stand still to
+       cast), a downed hero, a hero in the middle of a longer cast, or the
+       Guardian when an enemy it would hit is next to him (he is holding it
+       there).
     8. Nobody has Quicken cards, every hero is up, I have Quickened fewer
        than 2 times this fight, and: it is round 5 or later, I have not
        Quickened yet, and the boss has Taunt cards (or there is no boss);
@@ -883,38 +945,17 @@ def _answered(state: FightState, enemy: Enemy) -> bool:
 # --- The Guardian's grit -------------------------------------------------------
 
 
-def _grit_to_keep(state: FightState, guardian: Hero) -> int:
-    """How much grit the Guardian keeps for an emergency button (see his list)."""
-    abilities = state.numbers.abilities
-    keep = 0
+def _grit_to_keep(state: FightState) -> int:
+    """How much grit the Guardian keeps for an emergency button (see his list).
+
+    Only what a player at the table can see counts: the HP of his allies.
+    The boss's script is the GM's secret, so it is never read here.
+    """
     if any(
         _share(a) <= INTERCEDE_AT for a in state.up_heroes() if a.cls != "guardian"
     ):
-        keep = max(keep, abilities["intercede"].cost)
-    heavy = _heavy_due(state)
-    if heavy is not None and _heavy_could_drop(state, guardian, heavy):
-        keep = max(keep, abilities["last_stand"].cost)
-    return keep
-
-
-def _heavy_due(state: FightState) -> tuple[int, int] | None:
-    """The dice of the heavy hit the boss will announce on the Guardian this GM
-    turn, or None.
-
-    The fight file's script says when the boss announces what. It announces
-    the first move that is due, and only while it has no cast waiting. The
-    heavy hit goes at whoever it attacks, and with Taunt cards that is the
-    Guardian.
-    """
-    boss = _boss(state)
-    if boss is None or boss.announced is not None or "taunt" not in boss.stacks:
-        return None
-    for step in state.fight.boss_script:
-        due = state.round >= step.first and (state.round - step.first) % step.every == 0
-        if not due or step.kind == "throw":
-            continue
-        return step.dice if step.kind == "heavy" else None
-    return None
+        return state.numbers.abilities["intercede"].cost
+    return 0
 
 
 def _heavy_could_drop(state: FightState, guardian: Hero, dice: tuple[int, int]) -> bool:
@@ -942,8 +983,10 @@ def _full_combo(state: FightState, rogue: Hero) -> bool:
     return rogue.combo >= state.numbers.rules["combo_max"]
 
 
-def _sap_target(state: FightState, rogue: Hero) -> Enemy | None:
-    """While the Rogue is hidden: the elite to Sap (see her list), or None."""
+def _hidden_elite(state: FightState, rogue: Hero) -> Enemy | None:
+    """While the Rogue is hidden: the elite to go for from hiding (see her
+    list), or None. This does not know if she has given up waiting for it:
+    `RoguePolicy._elite_to_go_for` does."""
     if not rogue.hidden:
         return None
     elites = [
@@ -951,7 +994,13 @@ def _sap_target(state: FightState, rogue: Hero) -> Enemy | None:
     ]
     return min(
         elites,
-        key=lambda e: (-_hit_size(e), -e.hp, distance(rogue.pos, e.pos), e.id),
+        key=lambda e: (
+            _enemy_share(e) <= SAP_ABOVE,
+            -_hit_size(e),
+            -e.hp,
+            distance(rogue.pos, e.pos),
+            e.id,
+        ),
         default=None,
     )
 
@@ -971,11 +1020,11 @@ def _worth_eviscerating(enemy: Enemy) -> bool:
 
 
 def _should_vanish(state: FightState, rogue: Hero) -> bool:
-    """Rogue rule 4: pulled, chased by the boss, or low and chased."""
-    enemies = state.living_enemies()
-    if any(e.pulled_by == rogue.id for e in enemies):
+    """Rogue rule 4: pulled by the boss or an elite, chased by the boss, or low and chased."""
+    enemies = [e for e in state.living_enemies() if not e.controlled]
+    if any(e.pulled_by == rogue.id and e.spec.tier in ("boss", "elite") for e in enemies):
         return True
-    chasers = [e for e in enemies if e.target == rogue.id and not e.controlled]
+    chasers = [e for e in enemies if e.target == rogue.id]
     if any(e.spec.tier == "boss" for e in chasers):
         return True
     if _share(rogue) > VANISH_AT:
@@ -1000,11 +1049,17 @@ def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
     """Mage rule 7: the best square for Meteor and how many enemies it would hit.
 
     Only enemies that are not controlled are counted. A square is left out
-    if a hero who could not walk out stands within Meteor's radius of it.
+    if a hero who could not walk out stands within Meteor's radius of it,
+    or a sapped or sheeped enemy does (the hit would wake it up).
     """
     spec = state.numbers.abilities["meteor"]
     guardians = [h for h in state.up_heroes() if h.cls == "guardian"]
     enemies = [e for e in state.living_enemies() if not e.controlled]
+    sleeping = [
+        e.pos
+        for e in state.living_enemies()
+        if any(name in e.stacks for name in BROKEN_BY_DAMAGE)
+    ]
     stuck = [
         h.pos
         for h in state.heroes.values()
@@ -1014,7 +1069,7 @@ def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
     ]
 
     def allowed(square: Pos) -> bool:
-        if _gap(square, stuck) <= spec.radius:
+        if _gap(square, stuck) <= spec.radius or _gap(square, sleeping) <= spec.radius:
             return False
         for guardian in guardians:
             if distance(square, guardian.pos) <= spec.radius and any(
@@ -1320,6 +1375,11 @@ def _best_centre(
 def _share(hero: Hero) -> float:
     """The hero's HP as a share of their max HP: 1.0 is full."""
     return hero.hp / hero.max_hp
+
+
+def _enemy_share(enemy: Enemy) -> float:
+    """The enemy's HP as a share of its max HP: 1.0 is full."""
+    return enemy.hp / enemy.spec.hp
 
 
 def _lowest(heroes) -> Hero | None:

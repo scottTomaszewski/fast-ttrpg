@@ -626,6 +626,41 @@ to change any of them.
 - Bosses ignore the hold: only Taunt cards make a boss attack the Guardian
   (owner's decision).
 
+How the heroes play (the priority lists in `src/fastcombat/policies.py`,
+2026-11-27). These are calls about play, not game numbers:
+
+- Heroes play only on what a player at the table can see: announced
+  casts, cards, HP, positions and the round number. The boss's script is
+  the GM's secret. So the Guardian keeps no grit back for Last Stand
+  before a heavy hit is announced; once it is announced, Last Stand comes
+  first on his list.
+- Nobody Disrupts a heavy hit aimed at a Guardian who holds a Last Stand
+  card: he has answered it. The same goes for a blast once he has planted
+  his shield.
+- Arcane Volley is no longer Loud. Measured with 500 fights: Loud gave 78%
+  wins and passed the length check, but then Firebolt became the Mage's
+  go-to spell and 11 checks failed. Quiet gave 73% wins and 7 failed. The
+  owner asked for Volley as the go-to spell, so it is quiet.
+- The shield plan: when the boss's blast is about to land on a Guardian
+  who will plant his shield, he stays put, and allies stand behind him
+  (out of the blast's reach behind the shield) instead of running out.
+- The Guardian Intercedes for an ally at 60% HP or less, and keeps enough
+  grit for Intercede while one is that low.
+- Cheap Shot (outside stopping a cast) goes only on an add hitting a
+  squishy hero (Druid or Mage) at half HP or less.
+- Kidney Shot stops a cast only with full combo points, when Disrupt is
+  cooling down. With fewer it gives the same one-card stun as Cheap Shot
+  and wastes the combo points, so Cheap Shot does it instead.
+- The Rogue Saps an elite only while it has more than half its HP. A
+  nearly dead elite gets a Backstab from hiding instead.
+- The Rogue waits hidden for an elite she cannot reach for 2 rounds at
+  most, then plays the rest of her list.
+- The Rogue Vanishes from a pull only when the boss or an elite is pulled
+  onto her. A goblin or a wolf she just fights (unless she is low on HP).
+- Meteor never goes where its area would cover a sapped or sheeped enemy:
+  the hit would wake it, and keeping a dangerous add out of the fight is
+  worth more than Meteor's damage on it.
+
 ## Final (before the rename; being retuned)
 
 These are the numbers after the fourth look: bosses ignore the hold, the

@@ -421,16 +421,15 @@ def test_guardian_keeps_grit_for_intercede_while_an_ally_is_low():
     g.resource = 3
     a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
 
-def test_guardian_keeps_grit_for_last_stand_before_a_heavy_hit_he_could_not_take():
-    s = state(); s.round = 5                                        # the script announces Skull Crusher this GM turn
+def test_guardian_keeps_no_grit_for_a_heavy_hit_nobody_has_announced():
+    # Round 5: the script will announce Skull Crusher this GM turn, but only the GM knows that.
+    s = state(); s.round = 5
     o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
     w = enemy(s, "wolf", (6, 2)); w.target = "mage"
     g = s.heroes["guardian"]; g.resource = 5; g.hp = 50             # 36 and then 14 could drop him
-    assert act(s, "guardian") == Action("auto", target="ogre1")     # a Taunt would leave 4: too few for Last Stand
-    g.hp = 51
     a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
-    g.hp = 50; s.round = 6                                          # nothing heavy is due this round
-    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "guardian", frozenset(), (6, 6))
+    assert act(s, "guardian").ability == "last_stand"               # now everyone can see it coming
 
 def test_guardian_intercedes_for_an_ally_at_sixty_percent():
     s = state(); o = enemy(s, "ogre", (1, 8)); o.target = "druid"   # no Taunt cards, after the Druid
@@ -557,3 +556,84 @@ def test_mage_quickens_once_when_the_boss_is_taunted_and_again_for_the_burn():
     assert act(s, "mage").ability == "quicken"
     s.tally.count_use("mage", "quicken")
     assert act(s, "mage").ability != "quicken"                      # never a third
+
+
+# --- The D3 review: only what the table sees, and the gaps it found ----------------
+
+from fastcombat.grid import behind
+from fastcombat.policies import HIDDEN_WAIT_ROUNDS
+
+def test_rogue_saps_an_elite_with_more_than_half_its_hp_and_backstabs_a_hurt_one():
+    s = state(); s.round = 7; r = s.heroes["rogue"]                 # hidden (as after a Vanish), at (2, 5)
+    b = elite(s, "brute", (3, 4))                                   # 30 HP
+    b.hp = 16; a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
+    b.hp = 15; a = act(s, "rogue"); assert (a.ability, a.target) == ("backstab", "brute1")   # half: not worth a Sap
+    w = elite(s, "wolf", (2, 4))                                    # a healthy elite is worth the Sap more
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "wolf1")
+
+def test_rogue_waits_hidden_for_an_elite_out_of_reach_only_so_long():
+    s = state(); r = s.heroes["rogue"]; p = RoguePolicy()           # hidden at (2, 5); move 6, Shadowstep 8
+    b = elite(s, "brute", (12, 5))                                  # 10 away: too far to Shadowstep
+    w = enemy(s, "wolf", (3, 4))                                    # her focus, next to her
+    assert HIDDEN_WAIT_ROUNDS == 2
+    for s.round in (1, 2):
+        assert distance(p.move(s, r), b.pos) == 4                   # she walks toward the elite...
+        assert p.act(s, r) == Action("none")                        # ...and waits, hidden
+    s.round = 3                                                     # two rounds waited: she gives up on it
+    assert p.move(s, r) == r.pos                                    # she stays by her focus instead
+    a = p.act(s, r); assert (a.ability, a.target) == ("backstab", "wolf1")
+    s.round = 4; b.pos = (8, 5)                                     # the elite came in reach of a walk
+    assert adjacent(p.move(s, r), b.pos)
+    s.round = 6                                                     # hidden again later: a new wait
+    b.pos = (12, 5)
+    assert p.act(s, r) == Action("none")
+
+def test_rogue_stops_a_cast_with_kidney_shot_when_disrupt_is_cooling_down():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
+    sh = mending_shaman(s, (3, 4))                                  # next to the Rogue at (2, 5)
+    assert act(s, "rogue").ability == "disrupt"
+    add_stack(r, "cd:disrupt", 2)                                   # Disrupt is cooling down
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("kidney_shot", "shaman1")
+    r.combo = 4                                                     # not full: a Kidney Shot is no better
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("cheap_shot", "shaman1")
+
+def test_rogue_never_kidney_shots_fodder():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
+    gob = enemy(s, "goblin", (3, 4)); gob.target = "druid"          # next to her, going for the Druid
+    assert act(s, "rogue").ability != "kidney_shot"
+    gob.announced = Announced("mend", "mend", s.round + 1, None, frozenset(), (0, 0), 25)
+    add_stack(r, "cd:disrupt", 2)                                   # a casting goblin, and no Disrupt
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("cheap_shot", "goblin1")
+
+def test_rogue_vanishes_from_a_pull_only_when_it_is_dangerous():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False             # at (2, 5), full HP
+    gob = enemy(s, "goblin", (3, 4)); gob.pulled_by = "rogue"
+    w = enemy(s, "wolf", (2, 4)); w.pulled_by = "rogue"
+    assert act(s, "rogue").ability != "vanish"                      # a goblin and a wolf: she fights them
+    b = elite(s, "brute", (1, 4)); b.pulled_by = "rogue"
+    assert act(s, "rogue").ability == "vanish"                      # an elite is dangerous
+    add_stack(b, "stun", 1)
+    assert act(s, "rogue").ability != "vanish"                      # not while it is stunned
+    r.hp = 14                                                       # 40% or less, with enemies next to her
+    assert act(s, "rogue").ability == "vanish"
+
+def test_mage_never_meteors_a_sapped_or_sheeped_enemy_awake():
+    s = state()
+    for square in ((8, 4), (8, 5), (9, 5)):
+        enemy(s, "goblin", square)
+    w = enemy(s, "wolf", (9, 4)); add_stack(w, "sap", 4)           # every square that covers the goblins covers it
+    assert act(s, "mage").ability != "meteor"
+    del w.stacks["sap"]; add_stack(w, "sheep", 4)
+    assert act(s, "mage").ability != "meteor"
+    del w.stacks["sheep"]; add_stack(w, "stun", 1)                  # a stun does not break when it is hit
+    a = act(s, "mage"); assert (a.ability, a.pos) == ("meteor", (7, 3))
+
+def test_the_druid_moves_before_the_guardian_and_still_stays_behind_his_shield():
+    s = state(); slam_coming(s); g = s.heroes["guardian"]; g.resource = 4
+    d = s.heroes["druid"]; d.pos = (3, 6)                           # in the slam, behind the Guardian at (4, 6)
+    assert d.pos in s.danger_squares() and d.pos in behind(g.pos, (5, 6), s.numbers.abilities["shield_plant"].radius, 16, 12)
+    d.cast = Cast("regrowth", "guardian", None, 1, 0, False)        # mid-cast: she stays put if she is safe
+    assert sorted(s.heroes).index("druid") < sorted(s.heroes).index("guardian")
+    assert default_policy("druid").move(s, d) == (3, 6)             # the plan covers her: she stays
+    g.resource = 3                                                  # no shield coming: she gets out
+    assert default_policy("druid").move(s, d) not in s.danger_squares()
