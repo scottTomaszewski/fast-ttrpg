@@ -108,6 +108,27 @@ def test_every_kind_of_unknown_placeholder_is_an_error(game, placeholder):
         render(placeholder, game, "core.md")
 
 
+@pytest.mark.parametrize(
+    "text",
+    ["HP {heroes.mage.hp", "HP heroes.mage.hp}", "{# a note that never ends\n\nHP {heroes.mage.hp}."],
+)
+def test_a_brace_left_over_is_an_error_naming_the_file(game, text):
+    # An unclosed placeholder or note would end up in the rules as it is.
+    with pytest.raises(RulesError, match=r"classes/mage\.md.*left over"):
+        render(text, game, "classes/mage.md")
+
+
+def test_how_many_enemies_a_fight_has_in_all(game):
+    # The frozen fight: an ogre, a brute, two shamans, two wolves and twelve
+    # goblins.
+    assert render("{fight.enemies}", game, "core.md") == "18"
+
+
+def test_the_biggest_roll_is_written_like_dice(game):
+    # The frozen Meteor is 8d6, the most dice rolled at once.
+    assert render("{dice.biggest} {dice.most}", game, "core.md") == "8d6 8"
+
+
 def test_a_fight_can_be_named(game):
     assert render("{fights.ogre_warlord.enemy.brute.shielded}", game, "core.md") == "5"
 

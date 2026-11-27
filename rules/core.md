@@ -28,9 +28,9 @@ A round is a **party turn**, then a **GM turn**.
 ### The party turn
 
 1. **Top of the turn.** Everyone at once, in this order:
-   1. **Cards.** Turn in one card from each stack you hold. A heal card
-      heals you as you turn it in, and a poison card hurts you. (Bleeding
-      cards are different: they wait for the end of the turn.)
+   1. **Cards.** Turn in one card from each stack you hold. Heal cards
+      heal you first, and then poison cards hurt you. (Bleeding cards are
+      different: they wait for the end of the turn.)
    2. **Resource.** Get back your mana or energy for the round.
    3. **Casts.** A cast that has finished lands now (section 4).
 2. **Move.** Everyone moves at the same time, up to 6
@@ -47,8 +47,9 @@ A round is a **party turn**, then a **GM turn**.
 1. **Casts land.** Enemy casts the GM announced last GM turn happen now.
 2. **New enemies arrive,** if the fight says some come in this round.
 3. **Enemies act.** One at a time, each enemy picks who to attack
-   (section 8), moves, and attacks. Then the boss throws something, if
-   the fight says a throw is due.
+   (section 8), moves, and attacks. If the fight says a throw is due, the
+   boss throws in its own turn, right after its attack, before the next
+   enemy takes its turn.
 4. **Announce.** The GM announces any new enemy casts, and marks their
    areas on the map.
 5. **Enemy cards.** One card comes off every stack on every enemy.
@@ -72,55 +73,63 @@ Druid goes first.
 
 ### One round, worked out
 
-This round has all four heroes, the Ogre Warlord (the boss) and one wolf.
+This is round 5 of a fight with all four heroes,
+the Ogre Warlord (the boss) and one wolf. The heroes are told in their
+order: Druid, Mage, Rogue, Warden.
 
 At the end of the last GM turn the Ogre **announced a Ground Slam**, so
 the GM marked every square within 2 of him. The
 Ogre has no Taunt cards. The Warden is next to the Ogre, inside the marked
-squares. The wolf went for the Mage last turn and bit her. The Warden still
-has 2 Rejuvenation heal cards, and the Mage started a Firebolt on the Ogre
-last turn.
+squares. The wolf went for the Mage last turn and bit her for
+3, so she has 25 of her
+28 HP. The Mage started a Firebolt on the Ogre last turn. The
+Rogue is **not hidden**: she came out of hiding when she attacked earlier
+in the fight. The Warden still has 2 Rejuvenation heal cards.
 
 **Top of the turn.**
 
 - Cards: the Warden turns in a heal card and heals
   4 HP. He has 1 heal card left.
-- Resource: the Rogue and the Druid get back 3 energy
-  each (never more than 10). The Mage gets back
-  1 mana. The Warden's grit does not come back this way.
+- Resource: the Druid gets back 3 energy (never more
+  than 10), the Mage 1 mana (never more
+  than 30), and the Rogue 3 energy
+  (never more than 10). The Warden's grit does not come
+  back this way.
 - Casts: the Mage's Firebolt lands. She rolls 4d6
   and gets 15, so the Ogre loses 15 HP. She pays the
   4 mana for it now.
 
 **Move.** Everyone at once.
 
-- The Warden steps 3 squares away from the
-  Ogre, out of the marked squares.
-- The Rogue steps next to the wolf.
-- The Mage steps back.
 - The Druid stays where she can reach everyone
   (8 squares).
+- The Mage steps back.
+- The Rogue steps next to the wolf.
+- The Warden steps 3 squares away from the
+  Ogre, out of the marked squares.
 
-**Act.** Everyone at once.
+**Act.** Everyone at once, but told in order.
 
+- The Druid: **Nourish** on the Mage. She rolls 1d6
+  and gets the top face. That is more than the 3 HP the
+  Mage is missing, so the Mage heals 3 HP and is back to
+  her full 28 (a heal never goes past full HP). The top face
+  also gives the Druid 2 energy back.
+- The Mage: an **auto-attack** on the wolf with her d4.
+  She rolls a 4, the top face: a crit! She rolls again and
+  gets a 2, so the hit is 6. The wolf had
+  16 HP and now has 10. The
+  crit also gives her 2 mana.
+- The Rogue: the wolf is busy with someone else (it went for the Mage), so
+  she can **Backstab** it. She rolls 2d6 and gets a 5
+  and a 3, so 8. She is not hidden, so it is not made bigger. The
+  wolf is down to 2 HP. She
+  gets 1 combo point.
 - The Warden: the Ogre has no Taunt cards, and standing next to a boss
   does not hold it, so nothing keeps the Ogre on him. He uses
   **Challenge** on it (it reaches 6 squares), so
   the Ogre gets 3 Taunt cards. He pays
   2 grit.
-- The Rogue: the wolf is busy with someone else (the Mage), so she can
-  **Backstab** it. She rolls 2d6 and gets 8. The wolf
-  had 16 HP and now has 8. She gets
-  1 combo point.
-- The Mage: an **auto-attack** on the wolf with her d4.
-  She rolls a 4, the top face: a crit! She rolls again and
-  gets a 2, so the hit is 6. The wolf is down to
-  2 HP. The crit also gives her
-  2 mana.
-- The Druid: **Nourish** on the Mage. She rolls 1d6
-  and gets the top face, so the Mage heals that much (never past her full
-  HP) and the Druid gets
-  2 energy back.
 
 **End of the turn.** Nobody is down, so there are no Bleeding cards to
 take off.
@@ -132,17 +141,19 @@ take off.
 2. No new enemies come in this round.
 3. The Ogre goes first (alphabetical order). It has Taunt cards, so it
    must go for the Warden. It moves up to 4 squares to him
-   and hits: 2d6+4, and the GM rolls 12. The Warden loses 12
-   HP, and gains 1 grit for being attacked. Then the
-   wolf: no Taunt cards, it is not next to the Warden, and nobody pulled
-   it, so it goes where wolves like to go, the back line. It runs at the
-   Mage and bites her for 3.
+   and hits for 2d6+4: the GM rolls a 3 and a 5, and adds
+   4, so 12. The Warden loses
+   12 HP, and gains 1 grit
+   for being attacked. Then the wolf: no Taunt cards, it is not next to
+   the Warden, and nobody pulled it, so it goes where wolves like to go,
+   the back line. It runs at the Mage and bites her for
+   3.
 4. Nothing new is announced this round.
 5. One Taunt card comes off the Ogre. It has
    2 left.
 
-Next round the wolf, with 2 HP left,
-will not last long.
+Next round the wolf, with 2 HP
+left, will not last long.
 
 ## 3. Auto-attacks and abilities
 
@@ -160,8 +171,9 @@ one enemy in reach:
 
 - A **1 misses.** No damage.
 - The **top face is a crit.** Roll the die again and add it. If that is
-  the top face too, keep going. A Warden who rolls 8, then 8, then 3 hits
-  for 19.
+  the top face too, keep going. A Warden who rolls 8,
+  then 8, then 3 hits for
+  19.
 - Anything else hits for what it shows. There is no roll to hit and no
   roll to dodge.
 - A crit also gives your hero a **crit bonus**: the Warden gets
@@ -237,9 +249,6 @@ Your sheet says how long each ability takes:
   channel). Doing anything else in your act step ends either one. A
   cancelled cast costs nothing: you only lose the time.
 - **What breaks a cast:** going down. Plain damage never breaks a cast.
-  Later fights may have enemies that stun heroes or push them around; a
-  stun or a push would break your cast too. No enemy in the test fight
-  can do that.
 
 Enemies cast too: see section 10.
 
@@ -356,9 +365,16 @@ a hero who is up and not hidden wins.
    Warden, and cannot move away. **Bosses ignore the hold.**
 4. **What it likes.** Otherwise each kind of enemy goes for whoever it
    likes best: the **nearest** hero, the **back line** (the hero with the
-   fewest max HP who is not the Warden), or a **random** hero (roll a die).
-   The fight sheet says which. Ties go to the hero first in alphabetical
-   order.
+   fewest max HP who is not the Warden; if the Warden is the only hero who
+   is up and not hidden, it goes for him), or a **random** hero (see
+   below). The fight sheet says which. Ties go to the hero first in
+   alphabetical order.
+
+**Picking a random hero.** Number the heroes who can be picked, 1, 2, 3
+and so on, in alphabetical order. Roll a die with at least that many
+sides, and roll again if it shows a number with no hero. With three
+heroes, roll a d4 and roll again on a 4. With only one, there is nothing
+to roll.
 
 Then one last check: if the hero it picked holds a **Guarded card from
 Intercede**, and the enemy has no Taunt cards, the Warden steps in and is
@@ -377,8 +393,8 @@ are the only thing that keeps a boss on the Warden.
 
 Some big abilities are **Loud**. Your sheet says which.
 
-- A Loud hit on an enemy **with Taunt cards** takes one Taunt card off it
-  (1 off a boss).
+- A Loud hit on an enemy **with Taunt cards** takes Taunt cards off it:
+  a boss loses 1, and any other enemy loses 1.
 - A Loud hit on an enemy **with no Taunt cards** pulls it: on its next
   turn it goes for you, even if it is next to the Warden.
 - It still counts as Loud if a shield turned the whole hit aside. It does
@@ -509,8 +525,9 @@ reaches 10 squares.
 
 ### Throws
 
-A boss may also **throw** something in its turn, after its attack. A throw
-is not announced. It goes at a random hero who is up, not hidden and not
+A boss may also **throw** something in its own turn, right after its
+attack and before the next enemy takes its turn. A throw is not
+announced. It goes at a random hero who is up, not hidden and not
 next to the boss. Taunt cards make no difference, and it is not an attack
 on the Warden, so it gives him no grit.
 
@@ -518,8 +535,8 @@ on the Warden, so it gives him no grit.
 
 | | |
 |---|---|
-| **Party turn** | 1. Top: cards, then resource, then casts land. 2. Move (up to 6). 3. Act (one thing). 4. End: downed heroes take one Bleeding card off. |
-| **GM turn** | 1. Announced casts land. 2. New enemies arrive. 3. Each enemy picks, moves, attacks; boss throws. 4. Announce new casts. 5. One card off each enemy stack. |
+| **Party turn** | 1. Top: cards (heals, then poison), then resource, then casts land. 2. Move (up to 6). 3. Act (one thing). 4. End: downed heroes take one Bleeding card off. |
+| **GM turn** | 1. Announced casts land. 2. New enemies arrive. 3. Each enemy picks, moves, attacks; the boss throws in its own turn, right after its attack. 4. Announce new casts. 5. One card off each enemy stack. |
 | **Order** | Heroes: Druid, Mage, Rogue, Warden. Enemies: alphabetical. |
 | **Auto-attack** | One die. 1 misses. Top face rolls again and adds, and gives the crit bonus. |
 | **Abilities** | Never miss, never crit. Pay when it happens. |
@@ -527,7 +544,7 @@ on the Warden, so it gives him no grit.
 | **Channels** | One hit each act step. May move. Pay each hit. |
 | **Cards** | Hero cards: top of party turn. Bleeding: end of party turn. Enemy cards: end of GM turn. A new stack replaces the old (Taunt, stun, sap and sheep never get shorter). |
 | **Who enemies attack** | Taunt cards, then a pull, then the hold (not bosses), then what it likes. Guarded from Intercede sends it to the Warden. Hidden heroes are never picked. |
-| **Loud** | Takes a Taunt card off (1 from a boss), or pulls an enemy with none. |
+| **Loud** | Takes Taunt cards off (a boss loses 1, any other enemy 1), or pulls an enemy with none. |
 | **Moving** | Corners cost 1. No opportunity attacks. Enemies walk around bodies. |
 | **Going down** | 3 Bleeding cards, one fewer per Wound. Any heal or a haul up (5 HP) gets you up, and gives you a Wound. |
 | **Losing** | No hero is up. |

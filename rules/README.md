@@ -12,10 +12,13 @@ three slow ones.
 - A grid map with squares, at least 16 squares wide and
   12 tall for the test fight. Squared paper works.
 - A mini or a token for each hero and each enemy. The test fight has
-  10
-  enemies.
-- Dice: d4, d6 and d8. Have plenty of d6s: the biggest roll in the game is
-  8 of them at once.
+  10 enemies in all.
+- Dice: d4, d6 and d8. A roll is written like 8d6: the first
+  number says how many dice to roll, and the number after the "d" says
+  which die (d6 is the usual six-sided one). Roll them all and add them up.
+  A "+" number after it, like the 4 in 2d6+4, is added on too.
+  8d6 is the biggest roll in the game, so have at least
+  8 dice of that kind.
 - A stack of index cards, cut in half. Everything that lasts in this game
   is a little pile of cards.
 - A pencil and paper for each player, for HP and resource, and a few
@@ -24,7 +27,8 @@ three slow ones.
 ## Who plays
 
 One person is the GM and runs the enemies. Everyone else plays one hero.
-There are four kinds of hero: the Warden (the tank), the Rogue, the Druid
+There are four kinds of hero: the Warden (the tank: the tough one who
+makes the enemies fight him instead of the others), the Rogue, the Druid
 (the healer) and the Mage. The test fight is made for one of each, but any
 mix works.
 

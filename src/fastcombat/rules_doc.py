@@ -16,16 +16,18 @@ What a placeholder can name:
   An ability also has `timing` ("Instant", "Cast, 1 round", "Channel, 3 hits")
   and `loud_tag` (" · **Loud**" for a Loud ability, and nothing for others).
 - `enemy.TYPE.FIELD`, `boss.MOVE.FIELD`, `spawns.TYPE.count` and
-  `spawns.TYPE.round`, `fight.name`, `fight.width`, `fight.height` and
-  `fight.map`: the fight. A boss move also has `rounds` (the rounds it comes
+  `spawns.TYPE.round`, `fight.name`, `fight.width`, `fight.height`,
+  `fight.enemies` (how many enemies come in all) and `fight.map`: the fight. A boss move also has `rounds` (the rounds it comes
   up), and so does an enemy that casts (`cast_rounds`).
 - `fights.FIGHT.` and any of the above, to name the fight. Without it, a
   template in `templates/fights/` means the fight with its name, and any
   other template means the only fight there is.
-- `dice.sides` ("d4, d6 and d8") and `dice.most` (the most dice rolled at once).
+- `dice.sides` ("d4, d6 and d8"), `dice.most` (the most dice rolled at once)
+  and `dice.biggest` (that roll, like "8d6").
 
 Dice are written like `8d6`, or `2d6+4` with a bonus. Yes-or-no fields are
-written "yes" and "no".
+written "yes" and "no". A brace left over once everything is filled in (a
+placeholder or a note that was never closed) is an error too.
 """
 
 import re
@@ -97,7 +99,14 @@ def render(text: str, game: Game, name: str, fight: str | None = None) -> str:
         except _Unknown as why:
             raise RulesError(f"{name}: unknown placeholder {match.group(0)} ({why})") from None
 
-    return _PLACEHOLDER.sub(fill, _NOTE.sub("", text))
+    made = _PLACEHOLDER.sub(fill, _NOTE.sub("", text))
+    for line in made.splitlines():
+        if "{" in line or "}" in line:
+            raise RulesError(
+                f"{name}: a brace is left over in {line.strip()!r} "
+                "(a placeholder or a note that was never closed)"
+            )
+    return made
 
 
 def render_all(rules_dir: Path, game: Game) -> dict[Path, str]:
@@ -200,13 +209,19 @@ def _term(part: str, game: Game, fight: str | None) -> object:
         extra = {"timing": _timing(ability), "loud_tag": " · **Loud**" if ability.loud else ""}
         return _field(ability, rest[1:], extra)
     if head == "dice":
-        return _one(rest, {"sides": _sides(game), "most": _most(game)}, "dice placeholder")
+        about = {"sides": _sides(game), "most": _biggest(game).count, "biggest": _biggest(game)}
+        return _one(rest, about, "dice placeholder")
     raise _Unknown(f"{head!r} is not something a placeholder can name")
 
 
 def _in_fight(game: Game, fight: FightDef, part: str, rest: list[str]) -> object:
     if part == "fight":
-        about = {"name": fight.name, "width": fight.width, "height": fight.height}
+        about = {
+            "name": fight.name,
+            "width": fight.width,
+            "height": fight.height,
+            "enemies": len(fight.spawns),
+        }
         return _one(rest, about | {"map": _Text(_map(fight))}, "fight placeholder")
     if part == "enemy":
         enemy = _one(rest[:1], fight.enemy_types, "enemy")
@@ -300,8 +315,9 @@ def _sides(game: Game) -> _Text:
     return _Text(", ".join(names[:-1]) + " and " + names[-1])
 
 
-def _most(game: Game) -> int:
-    return max(count for count, _ in _all_dice(game))
+def _biggest(game: Game) -> _Dice:
+    """The roll with the most dice in it (the one with bigger dice, if two tie)."""
+    return _Dice(*max(_all_dice(game)))
 
 
 def _map(fight: FightDef) -> str:

@@ -8,7 +8,8 @@ hits, then spends them all on one huge blow or a long stun.
 - **Resource:** energy. At most {heroes.rogue.pool}, you start a fight with
   {heroes.rogue.start}, and you get {heroes.rogue.regen} back at the top of
   each party turn.
-- **Combo points:** at most {rules.combo_max}. You get
+- **Combo points:** at most {rules.combo_max}, and you start a fight with
+  none. You get
   {rules.combo_per_hit} for each auto-attack die that hits, and for each
   Backstab. Eviscerate and Kidney Shot spend them all. Keep them with
   coins or a die.
@@ -106,8 +107,9 @@ hits, then spends them all on one huge blow or a long stun.
   cast, Disrupt it, or Cheap Shot it if Disrupt is cooling down.
 - **If something is coming for you because of your Loud hit, Vanish.**
 - **At {rules.combo_max} combo points, Eviscerate.** On the boss, only while
-  it has Taunt cards: Eviscerate is Loud and takes one off. If an add next
-  to you is chasing the Druid or the Mage, Kidney Shot it instead.
+  it has Taunt cards: Eviscerate is Loud, so then the boss loses
+  {rules.boss_loud_cards} of its Taunt cards instead of being pulled onto
+  you. If an add (an extra enemy that fights alongside the boss) next to you is chasing the Druid or the Mage, Kidney Shot it instead.
 - **Otherwise Backstab** whatever is busy with someone else. If your target
   is too far to walk to, Shadowstep to it. Hit the enemy casting a mend
   first, then the add with the least HP, and the boss last.

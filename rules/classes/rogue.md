@@ -10,7 +10,8 @@ hits, then spends them all on one huge blow or a long stun.
 - **Resource:** energy. At most 10, you start a fight with
   10, and you get 3 back at the top of
   each party turn.
-- **Combo points:** at most 5. You get
+- **Combo points:** at most 5, and you start a fight with
+  none. You get
   1 for each auto-attack die that hits, and for each
   Backstab. Eviscerate and Kidney Shot spend them all. Keep them with
   coins or a die.
@@ -108,8 +109,9 @@ hits, then spends them all on one huge blow or a long stun.
   cast, Disrupt it, or Cheap Shot it if Disrupt is cooling down.
 - **If something is coming for you because of your Loud hit, Vanish.**
 - **At 5 combo points, Eviscerate.** On the boss, only while
-  it has Taunt cards: Eviscerate is Loud and takes one off. If an add next
-  to you is chasing the Druid or the Mage, Kidney Shot it instead.
+  it has Taunt cards: Eviscerate is Loud, so then the boss loses
+  1 of its Taunt cards instead of being pulled onto
+  you. If an add (an extra enemy that fights alongside the boss) next to you is chasing the Druid or the Mage, Kidney Shot it instead.
 - **Otherwise Backstab** whatever is busy with someone else. If your target
   is too far to walk to, Shadowstep to it. Hit the enemy casting a mend
   first, then the add with the least HP, and the boss last.

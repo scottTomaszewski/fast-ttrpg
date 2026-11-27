@@ -8,9 +8,11 @@
     fastcombat rules   makes the player rules in rules/ from their templates,
                        with the numbers from the game files
 
-All three read the real game files (`game/numbers.toml` and `game/fights/`)
-unless told to read others. `--set` changes one number for one run, so an
-idea can be tried without editing the numbers file.
+`run` and `check` read the real game files (`game/numbers.toml` and
+`game/fights/`) unless told to read others. `--set` changes one number for
+one run, so an idea can be tried without editing the numbers file. `rules`
+always reads the real game files, so the rules in the repo always match
+them.
 """
 
 import argparse

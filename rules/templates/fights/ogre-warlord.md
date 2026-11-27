@@ -1,8 +1,8 @@
 # The test fight: {fight.name}
 
 This sheet is for the GM. It is one big fight that uses every rule in the
-game: a boss who must be taunted, adds that run for the back line, a healer
-to stop, a shielded brute, and a wave of goblins halfway through.
+game: a boss who must be taunted, adds (extra enemies that fight
+alongside the boss) that run for the back line, a healer to stop, a shielded brute, and a wave of goblins halfway through.
 
 ## The map
 
@@ -26,7 +26,8 @@ walls. The heroes start on the left, the enemies on the right.
 "The back line" is the hero with the fewest max HP who is not the Warden:
 the Mage ({heroes.mage.hp} HP) while she is up, then the Druid or the Rogue
 ({heroes.druid.hp} each; the Druid first, being first in alphabetical
-order). Remember the order for every enemy (core rules, section 8): Taunt
+order). If the Warden is the only hero who is up and not hidden, they go
+for him. Remember the order for every enemy (core rules, section 8): Taunt
 cards first, then a pull, then the Warden's hold (not the Ogre), then what
 it likes.
 
@@ -41,8 +42,10 @@ it likes.
 - **Shaman.** Stands back and hits from {enemy.shaman.range} squares away.
   Each of his hits also gives the hero {enemy.shaman.poison_cards} poison
   cards worth {enemy.shaman.poison_value} each, unless the hit took them
-  down. He picks a random hero each turn: roll a die with one side for each
-  hero who is up and not hidden. And he heals the Ogre (below).
+  down. He picks a random hero each turn from the heroes who are up and
+  not hidden: number them in alphabetical order, roll a die with at least
+  that many sides, and roll again on a number with no hero (core rules,
+  section 8). And he heals the Ogre (below).
 - **Wolves.** Fast. They run straight past the Warden for the Mage.
 - **Goblins.** Fodder: any hit kills one. **{spawns.goblin.count} goblins
   come in at step 2 of the GM turn in round {spawns.goblin.round}**, on
@@ -61,7 +64,7 @@ move lands in step 1 of the next GM turn.
 |---|---|---|
 | **Ground Slam** | {boss.ground_slam.rounds} | A blast: every square within {boss.ground_slam.radius} of where the Ogre stands when he announces it. Mark them. When it lands, roll {boss.ground_slam.dice} once; every hero who is up on a marked square takes it all. |
 | **Skull Crusher** | {boss.skull_crusher.rounds} | A heavy hit of {boss.skull_crusher.dice} on the hero he went for this turn. It lands on that hero wherever they go. If he went for nobody this turn, or that hero is no longer up, he has no Crusher to announce. |
-| **Boulder** | {boss.boulder.rounds} | Not announced. In his turn, after his attack, he throws a boulder at a random hero who is up, not hidden and not next to him (roll a die with one side for each). It hits for {boss.boulder.dice}. If no hero fits, he throws nothing. |
+| **Boulder** | {boss.boulder.rounds} | Not announced. In his own turn, right after his attack and before the next enemy goes, he throws a boulder at a random hero who is up, not hidden and not next to him (pick one the way the shaman does). It hits for {boss.boulder.dice}. If no hero fits, he throws nothing. |
 
 Heroes can stop an announced move with **Disrupt**, or with a stun such as
 **Cheap Shot**. Taunt cards make no difference to the boulder, and neither
@@ -106,8 +109,8 @@ When a move lands, say what it did: "CRASH! Everyone on those squares takes
 2. **In round {spawns.goblin.round}:** bring in the goblins.
 3. **Each enemy acts,** in alphabetical order: brute, goblins, Ogre,
    shaman, wolves. Pick its target, move it, attack. A stunned, sapped or
-   sheeped enemy does nothing. After the Ogre's attack, throw the boulder
-   if it is due.
+   sheeped enemy does nothing. Right after the Ogre's attack, before the
+   next enemy goes, throw the boulder if it is due.
 4. **Announce** the Ogre's next move and the shaman's mend, if due. Mark
    the Ground Slam's squares.
 5. **Take one card** off every stack on every enemy: Taunt, stun, sap,

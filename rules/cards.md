@@ -37,7 +37,7 @@ holds.
 
 | Card | Written on it | Who holds it | Where it comes from |
 |---|---|---|---|
-| **Taunt** | "Attack the Warden." | The enemy | Warden's Challenge: 3 cards. War Cry: 1 card. A Loud hit takes one off (1 off a boss). |
+| **Taunt** | "Attack the Warden." | The enemy | Warden's Challenge: 3 cards. War Cry: 1 card. A Loud hit takes Taunt cards off: a boss loses 1, any other enemy 1. |
 | **Stun** | "Do nothing this turn. Any cast you announced is broken." | The enemy (not a boss) | Rogue's Kidney Shot: 1 card, or 2 at full combo points. Cheap Shot: 1 card. |
 | **Sap** | "Do nothing. Wake up the moment you are hurt." | The enemy (not a boss) | Rogue's Sap: 4 cards |
 | **Sheep** | "You are a sheep: do nothing. Turn back the moment you are hurt." | The enemy (not a boss). Only one sheep at a time. | Mage's Polymorph: 4 cards |

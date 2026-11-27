@@ -9,7 +9,8 @@ fall, and hands out heal cards that keep everyone going round after round.
 - **Resource:** energy. At most {heroes.druid.pool}, you start a fight with
   {heroes.druid.start}, and you get {heroes.druid.regen} back at the top of
   each party turn.
-- **Seeds:** at most {rules.seeds_max}. You get one each time a Regrowth
+- **Seeds:** at most {rules.seeds_max}, and you start a fight with none.
+  You get one each time a Regrowth
   lands, and one from an auto-attack crit. Swiftmend spends one.
 - **Crit bonus:** {heroes.druid.crit_gain} Seed.
 

@@ -9,10 +9,12 @@ placeholder, filled in from the game files: {heroes.warden.hp} and
 Dice come out like 8d6, or 2d6+4 with a bonus; yes-or-no settings come out
 "yes" or "no"; {abilities.meteor.timing} says Instant, Cast or Channel;
 {boss.ground_slam.rounds} lists the rounds a boss move comes up; and
-{fight.map} draws the map. Names and whole numbers joined with + or -
+{fight.map} draws the map and {fight.enemies} counts every enemy in the
+fight. Names and whole numbers joined with + or -
 make a sum, like {heroes.mage.hp - enemy.wolf.damage}. A name the game
 files do not have stops the command with a message naming the file and
-the placeholder, and nothing is written. Anything inside a pair of a brace
+the placeholder, and nothing is written; so does a brace left over, from a
+placeholder or a note that was never closed. Anything inside a pair of a brace
 and a hash, like the one around this paragraph, is a note for whoever
 edits the template, and is left out. The full list of names is at the top
 of src/fastcombat/rules_doc.py. Never change the files in rules/ by hand:
@@ -30,10 +32,13 @@ three slow ones.
 - A grid map with squares, at least {fight.width} squares wide and
   {fight.height} tall for the test fight. Squared paper works.
 - A mini or a token for each hero and each enemy. The test fight has
-  {spawns.ogre.count + spawns.brute.count + spawns.shaman.count + spawns.wolf.count + spawns.goblin.count}
-  enemies.
-- Dice: {dice.sides}. Have plenty of d6s: the biggest roll in the game is
-  {dice.most} of them at once.
+  {fight.enemies} enemies in all.
+- Dice: {dice.sides}. A roll is written like {dice.biggest}: the first
+  number says how many dice to roll, and the number after the "d" says
+  which die (d6 is the usual six-sided one). Roll them all and add them up.
+  A "+" number after it, like the 4 in 2d6+4, is added on too.
+  {dice.biggest} is the biggest roll in the game, so have at least
+  {dice.most} dice of that kind.
 - A stack of index cards, cut in half. Everything that lasts in this game
   is a little pile of cards.
 - A pencil and paper for each player, for HP and resource, and a few
@@ -42,7 +47,8 @@ three slow ones.
 ## Who plays
 
 One person is the GM and runs the enemies. Everyone else plays one hero.
-There are four kinds of hero: the Warden (the tank), the Rogue, the Druid
+There are four kinds of hero: the Warden (the tank: the tough one who
+makes the enemies fight him instead of the others), the Rogue, the Druid
 (the healer) and the Mage. The test fight is made for one of each, but any
 mix works.
 

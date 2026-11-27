@@ -87,14 +87,13 @@ and make the whole party fight faster.
 ## How to play the Mage
 
 - **Stand back.** Stay within {abilities.firebolt.range} squares of your
-  target and at least 5 squares from every enemy. Stand still while you
-  cast.
+  target, but well back from every enemy. Stand still while you cast.
 - **Something reached you? Frost Ring,** then step away next turn.
 - **You are the best at Disrupt:** yours reaches
   {abilities.disrupt.alt} squares. Break the shaman's mend and the boss's
   big moves.
-- **Sheep the biggest add nobody is fighting** (when there are at least
-  two adds that are not the boss). **Meteor** a spot with four or more
-  enemies and no heroes. From round 5, **Quicken** when everyone is up.
+- **Sheep the biggest add nobody is fighting** (an add is an extra enemy
+  that fights alongside the boss), when there are at least two adds. **Meteor** a spot with four or more
+  enemies and no heroes. Once the fight is going, **Quicken** when everyone is up.
 - **Otherwise Firebolt.** Hit the enemy casting a mend first, then the add
   with the least HP, and the boss last.
