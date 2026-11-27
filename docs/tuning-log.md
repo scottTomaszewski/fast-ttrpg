@@ -884,6 +884,161 @@ owner's "only when everything is going super well", and then every Slam
 takes an auto-attack's place and the auto share check fails. Left as "Not
 met".
 
+## D4b: the owner's calls, and honest buttons, 2026-11-27
+
+The owner looked at D4 and decided six things. A review of D4 also found
+numbers that were tuned to pass a check rather than to play well. This
+step applies the decisions and undoes those numbers. Tuning runs used
+seeds below 100000 (2000 fights from `--seed 0` unless it says so); the
+confirm runs are under "Final".
+
+### The owner's decisions (2026-11-27)
+
+1. **The Guardian starts with 4 grit: accepted.** The numbers file and the
+   design say so now.
+2. **Shield Slam's band is now 0.5 to 1.5** (it was 2 to 3; the owner's
+   change in `game/usage_targets.toml`). It stays the rare "everything is
+   going very well" filler. Why 2 to 3 could not work: every Slam takes an
+   auto-attack's place. No reading of the rule reached 2 to 3 without
+   pushing auto-attacks under 20% of all damage (D4, "Shield Slam cannot
+   reach 2 to 3 a fight": with no HP line at all it was in band, with
+   auto-attacks at 16%).
+3. **Ice Block's band is now 0.1 to 1.5** (the owner's). Evocation's 0.3 to 2
+   is still only proposed.
+4. **Combo points at most 3: accepted** (it was 5).
+5. **Arcane Volley must be a good button in its own right**, not only
+   because the Mage's rules say so. The owner: "The advantage of Arcane
+   Volley is channelling ... and it can be partially used. A mage can let
+   the spell hit twice and then cancel the cast to skip the third hit to
+   kick off another, more urgent spell or interrupt. Firebolt is more
+   all-or-nothing. If the mage needs to interrupt in the middle of a
+   Firebolt cast, they lose the entire cast with no damage dealt." So a
+   whole Volley should do about what a Firebolt does for its mana. This is
+   in the design and in the Mage's tips now.
+6. **The auto-attack floor may go down to 15%, only if needed** ("We can
+   lower if needed"). It was needed; see below.
+
+### Arcane Volley: as good for its mana as Firebolt
+
+| | dice | damage on the mean | mana | damage for each mana | act steps | damage for each act step |
+|---|---|---|---|---|---|---|
+| Arcane Volley, D4 | 2d4 a hit, 3 hits | 15 | 6 | 2.5 | 3 | 5 |
+| **Arcane Volley, now** | **2d6 a hit, 3 hits** | **21** | **6** | **3.5** | **3** | **7** |
+| Firebolt | 4d6 | 14 | 4 | 3.5 | 1 | 14 |
+
+Does the Mage really use Volley's edge? Measured at the final numbers
+(2000 fights, seeds 0 to 1999), per fight:
+
+- She starts 4.37 Volleys. 2.56 run all three hits. 0.80 end early
+  because the enemy died or got out of reach.
+- **0.40 she stops herself, and keeps the hits that landed:** 0.39 to
+  Disrupt (0.24 after one hit, 0.16 after two), and about 0.01 to Frost
+  Nova, Blink or haul someone up. That is about one Volley in eleven.
+- 0.23 are ended by a stun, going down or her own Ice Block, again keeping
+  the hits that landed.
+- Firebolt, for comparison: 0.67 started, 0.65 landed. The 0.025 that did
+  not (a stun or going down in the GM turn between) did no damage at all.
+
+So no policy change was needed. Her rules 1, 2, 4 and 5 (Ice Block, haul
+up, Frost Nova or Blink, Disrupt) come before rule 6 (keep channelling),
+and doing anything else ends a channel (`fight._act`). A test already
+checks it (`test_mage_breaks_her_channel_to_disrupt_a_mend_before_a_boss_cast`).
+
+One thing the owner should know: in the simulator a Firebolt has no turn
+"in the middle". Its cast is 1 round: she starts it in the act step and it
+lands at the top of her next party turn, before she moves. So she never
+has to choose between a Firebolt and a Disrupt mid-cast; only a stun or
+going down in between can lose it. Per act step a Firebolt does twice what
+a Volley does (14 against 7). The Mage still Volleys by default because
+her rules say so. See "Needs a decision", item 17.
+
+### Kept changes
+
+Each row: what changed, why, and what putting just that number back does
+(2000 fights, seeds 0 to 1999, everything else at the final numbers). The
+final numbers there: wins 84.7%, 67.1% of fights in 18 to 22 rounds,
+auto-attacks 16.2% of damage, every check passes (Shield Slam 0.50, Kidney
+Shot 0.52, right on their lines).
+
+| Change | Old → new | Why | With the old number instead |
+|---|---|---|---|
+| Arcane Volley dice | 2d4 → 2d6 | the owner: a whole Volley does as much for its mana as a Firebolt (table above). 2d4 was there to hold auto share at 20% | wins 73.5%, length 59.3% (fails), Challenging Shout 0.47 and Shield Slam 0.36 (fail), auto share 17.2% |
+| Backstab cost | 7 → 5 | it gives one combo point, like an auto-attack that hits; at 7 it was barely better than an auto-attack. 5 is the cheapest that keeps auto-attacks over 15% | at 4: auto share 13.8% (fails even at 15%), wins 88.3%, Kidney Shot 0.46, Vanish 0.18. At 6: auto 17.6%, Kidney Shot 0.47. At 7: auto 19.1%, wins 79.3%, Kidney Shot 0.49 |
+| Auto-share floor (`report.py`, `AUTO_SHARE`) | 20% → 15% | the owner's "we can lower if needed". With Volley at 2d6, auto-attacks are under 20% whatever Backstab costs (19.1% even at 7), so honest buttons cannot hold 20% | (at 20% the `auto_share` check fails at every Backstab cost) |
+| Ogre HP | 115 → 130 | with Volley at 2d6 and Backstab at 5 the party won 94% of fights | wins 93.6% (fails), the Guardian ends up and full 53%, Intercede 0.98, Eviscerate 1.93, Kidney Shot 0.46, Vanish 0.16, Ice Block 0.09 |
+| Challenging Shout radius | 5 → 4 | 5 covers 121 of the 192 squares, close to the whole map. 4 covers 81 (9 by 9). 3 is too small for its band | at 5: Shout 0.68, Kidney Shot 0.47 (fails), length 70.8%, taunting the boss worth 24 points of wins instead of 40. At 3: Shout 0.45 (fails), length 65.2% |
+| Blink range | 5 → 6 | 5 was only there to feed Ice Block's old band (0.2); its band is 0.1 now. 5 is not better play: the same wins | at 5: wins 85.0%, Ice Block 0.20, Blink 0.18 |
+| `ICE_BLOCK_AT` (Mage policy) | 0.35 → 0.5 | it was not rethought for the ogre's 2d6+9 (16 on the mean, 21 at most). At half HP she has 14, so one plain hit downs her | at 0.35: Ice Block 0.14 (0.16 at 0.5), the same wins. 0.45 and 0.6 are the same as 0.5 |
+
+Looked at again and kept from D4:
+
+- **Cheap Shot cost 2.** Its reason was Backstab at 7. At 3 (with Backstab
+  at 5) the Rogue is starved 21.0% of rounds, over the 20% line.
+- No other D4 number gave "to keep auto share up" as its reason. (The ogre
+  +9 row lists auto share among what the old number did, but its reason is
+  the held boss.) Grip 2, Intercede 2, wolf HP 20, brute shield 3 and the
+  rest stay.
+
+### A play fix: who Disrupts the Stomp
+
+`_stomp_disrupter` (who will Disrupt the Stomp, so the melee heroes stay
+in) counted the Guardian next to the boss, but his rule 4 Disrupts the
+first caster next to him by id, which can be another enemy. Now both ask
+one helper, `_disrupt_pick`: the cast that hero's Disrupt rule goes for
+(the Guardian and the Rogue: the first caster next to them by id; the
+Mage: a mend first, then by id, the first she can reach). A hero counts
+only if that is the boss. A test with a casting brute ("brute1" comes
+before "ogre1") checks it. In this fight the ogre comes first by id, so
+for the Guardian nothing changes; for the Mage it is a little looser than
+before (she was left out whenever any other enemy had a cast, even one her
+list would get to after the ogre's). At the D4 numbers: wins 81.6% → 81.3%,
+Disrupt 2.20 → 2.14 a fight. Noise.
+
+### Shield Slam and Kidney Shot pull against each other
+
+After the changes above, these two were the thin ones, and every number
+that moved one moved the other the wrong way. Shield Slam needs every ally
+above 75% HP and no add loose. Kidney Shot needs full combo points and an
+add next to the Rogue going for someone who is not the Guardian: about half
+are on the brute when it wakes late in a long fight, half on a wolf (0.27
+and 0.25 a fight). So a harder fight or adds on the back line give more
+Kidney Shots and fewer Slams, and an easier one the other way.
+
+On 4000 fights (seeds 40000 to 43999), everything else at the final
+numbers:
+
+| Ogre HP | wins | Shield Slam | Kidney Shot |
+|---|---|---|---|
+| 125 | 87.6% | 0.51 | 0.49 |
+| 127 | 86.2% | 0.49 | 0.50 |
+| 130 (kept) | 84.1% | 0.47 | 0.51 |
+
+130 was kept: wins in the middle of the band, and Kidney Shot (the check
+the review found failing) holds on two of the three confirm ranges. Shield
+Slam goes under "Not met".
+
+Tried and not kept (2000 fights, seeds 0 to 1999, all with Volley 2d6,
+Backstab 5 and Blink 6; most also with Shout 4 and Ice Block at half HP):
+
+- Ogre melee +10 or +11 at HP 115: wins 91.1% and 90.0%, Shield Slam 0.49
+  and 0.39. Ogre HP 135: Shield Slam 0.46. HP 135 with +8: Kidney Shot 0.48.
+- Wolf HP 24: wins 49% to 56%. A whole Volley (21 on the mean) no longer
+  kills a wolf, so the wolves live much longer.
+- Wolf damage 4: Kidney Shot up, Shield Slam and Vanish down (with a
+  softer boulder too: Slam 0.49, Vanish 0.18).
+- Goblin damage 2 with ogre +10 or +11: Shield Slam 0.42 and 0.34,
+  Challenging Shout 0.50 and 0.42. Goblin move 2 with +10: Kidney Shot
+  0.41, Frost Nova 0.18.
+- Boulder 1d6 or 2d4: Shield Slam 0.81 and 0.62, but wins 93% and 90%,
+  Kidney Shot 0.41 and 0.46, Vanish 0.11 and 0.14. With ogre +10 as well:
+  Slam 0.65 and 0.50, Kidney Shot 0.50 and 0.53, Intercede or Vanish fail.
+- Rejuvenation 5 a card: Shield Slam 0.60, Kidney Shot 0.43.
+- Kidney Shot cost 2: no change (0.52). She is not short of energy for it;
+  she waits for the moment.
+- Rogue HP 32 (with a 2d4 boulder): Vanish 0.38, Kidney Shot 0.41.
+- Shield Slam cooldown 1, only to see if the cooldown holds it back: 0.57
+  (from 0.50). Not a candidate: a free button needs some limit.
+
 ## Needs a decision
 
 These are things numbers alone could not fix well. Each needs a change
@@ -1016,39 +1171,40 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    wins, and a failed Sneak is worse than no opening (D4, "The opening").
    Sneak would only be worth it with an easier stealth check or a fight
    where the Sap matters less.
-9. **The Guardian starts with 4 grit (D4).** The design says he starts
-   with none. With none, the round-1 Sap keeps the brute off him, the boss
-   goes for the back line, and he never gets the grit to Taunt it: wins
-   52%, starved 42% of rounds (D4). Start 2 also passes every other check,
-   but he is starved 18% of rounds, near the 20% line; 4 leaves room. A
-   grit a round (`regen = 1`) instead was tried: starved 27%. The owner
-   should accept start grit (and how much), or pick another way for a tank
-   to open a fight (say, a free first Taunt).
+9. (Settled 2026-11-27: the owner accepted 4 grit at the start.)
 
 10. (Done in D4: whoever can Disrupt the Stomp does, and the melee heroes
     stay in. It was worth about 8 points of wins and 8 of length.)
-11. **Shield Slam is pressed about 0.6 times a fight, not 2 to 3** (see
-    "Not met"). The Guardian reaches the Slam rule about 5.7 turns a
-    fight, and on most of them an ally is at 75% HP or less. Only a rule
-    with no HP line at all gets into the band, and then auto-attacks fall
-    under a fifth of the damage. Either the band moves (say 0.5 to 2), or
-    Shield Slam stops being a filler that takes an auto-attack's place.
-12. **Ice Block is pressed 0.21 times a fight** with the D4 trigger (low,
-    the boss or an elite on her, no Blink out), just inside the proposed
-    0.2 to 1.5. Blink reaches 5 squares now so that it does not always get
-    her out of the ogre's reach. Confirm the band, or the trigger.
+11. (Settled 2026-11-27: the owner lowered Shield Slam's band to 0.5 to 1.5.
+    It is still just under it; see item 16 and "Not met".)
+12. (Settled 2026-11-27: the owner set Ice Block's band to 0.1 to 1.5.
+    Evocation's 0.3 to 2 is still only proposed.)
 13. (Done in D4: nobody Disrupts a blast or a Stomp with nobody in it.)
 14. **The Rogue spends full combo points on Kidney Shot when an add is on
     her** (rule 6), even when it is the last enemy and an Eviscerate would
     kill it. That made a rare stalemate with the brute (D4, the brute's
     shield). The numbers end it today (the shield stops hits below 3,
     not 5); the rule could also skip Kidney Shot on the last enemy.
-15. **Auto-attacks are 20.9% of all damage**, just over the 20% line. With
-    the boss held, the Guardian auto-attacks much less, and the Mage's
-    spells do half of all damage. Backstab costs 7 and Arcane Volley hits
-    for 2d4 to keep autos over the line. Each Shield Slam also takes an
-    auto-attack's place. If the owner wants more room, lower the check or
-    make spells cost turns, not mana.
+15. (Settled 2026-11-27: the owner let the auto-attack floor go down to 15%.
+    It is about 16% now, with honest Volley and Backstab numbers; D4b.)
+16. **Shield Slam and Kidney Shot cannot both clear their lines** (D4b).
+    Shield Slam needs every ally above 75% and no add loose; Kidney Shot
+    needs an add on someone who is not the Guardian. Every number that
+    raised one lowered the other, and both sit at 0.47 to 0.53 a fight,
+    against 0.5. Choices: a slightly lower floor for one of them (say 0.4),
+    or a Shield Slam rule that does not need every ally above 75% (say, the
+    allies the Druid is already healing count as fine). Both are the
+    owner's call.
+17. **Firebolt has no turn "in the middle"** (D4b). Its cast is 1 round: it
+    starts in the act step and lands at the top of the next party turn,
+    before the move step. So the owner's "interrupt in the middle of a
+    Firebolt cast" never comes up in the simulator; only a stun or going
+    down in the GM turn between can lose it (0.025 of 0.67 a fight). Per
+    act step a Firebolt does twice a Volley's damage (14 against 7); per
+    mana they are the same. The Mage Volleys by default only because her
+    rules say so. If the owner wants the trade to be real, a Firebolt cast
+    could take her next move step too, or Volley could cost less mana; cast
+    times are frozen for the tuner.
 
 ## Rules the simulator had to decide
 
@@ -1073,8 +1229,8 @@ to change any of them.
   mage, rogue), not truly all at once. So a hero who acts before the
   Mage in that order gets one quickened turn fewer than one who acts
   after her: Quicken lands after they have already attacked that turn.
-- The Guardian starts a fight with 4 grit (D4; it was 0, see "Needs a
-  decision", item 9).
+- The Guardian starts a fight with 4 grit (D4; it was 0. The owner
+  accepted it on 2026-11-27).
 - Bosses ignore the hold: only Taunt cards make a boss attack the Guardian
   (owner's decision).
 
@@ -1178,7 +1334,9 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - (D4) The Stomp and Disrupt. When the Stomp lands this round and someone
   will Disrupt it (`_stomp_disrupter`: the Guardian next to the boss first,
   then the others by id, each only if they can Disrupt the boss from where
-  they stand and their list will get to it), the Guardian and the Rogue
+  they stand and their list will get to it, and since D4b only if their
+  Disrupt rule goes for the boss's cast, not another enemy's:
+  `_disrupt_pick`), the Guardian and the Rogue
   stay next to the boss and keep hitting, and that hero Disrupts it. Only
   when nobody will do they step out. The Guardian also takes it when a
   Druid is up to Cleanse him (D3c), and now walks next to the boss to take
@@ -1196,8 +1354,8 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - (D3c, D4) The Mage Ice Blocks (her rule 1) an announced hit or blast that
   lands this GM turn, could take her to 0 at its biggest roll, that she is
   still in after moving, and that she cannot Disrupt (she Disrupts first if
-  she can). Since D4 also, as a mage in an MMO does: at 35% HP or less
-  (`ICE_BLOCK_AT`) with the boss or an elite next to her and on her (it
+  she can). Since D4 also, as a mage in an MMO does: at half HP or less
+  (`ICE_BLOCK_AT`; 35% in D4, half since D4b, under the ogre's average hit) with the boss or an elite next to her and on her (it
   went for her last turn and has no Taunt cards), when her rule 4 will not
   get her out of its reach: she cannot Blink to a square it cannot reach
   (stunned, in the middle of a cast, no mana, no square), or she would
@@ -1232,122 +1390,161 @@ The Rogue's opening (D3b), rules the owner left open:
 - The enemies' tally: a sapped, sheeped or stunned enemy "loses" each GM
   turn it spends with those cards (`rounds_out` in the summary).
 
-## Final (D4, 2026-11-27)
+## Final (D4b, 2026-11-27)
 
-These are the numbers after D4: the full kit (Shield Slam, Ice Block,
-Evocation, the Stomp, the Rogue's opening, Sap 20, Polymorph 12, Quicken
-benched), the five D4 play fixes, and the D4 numbers (see "D4", "Kept
-changes"). Shadowstep costs 5 (the owner's number).
+These are the numbers after D4b: the full kit, the D4 play fixes, the D4
+numbers with D4b's changes (Arcane Volley 2d6, Backstab 5, Blink 6,
+Challenging Shout radius 4, ogre HP 130), the Mage's Ice Block at half
+HP, the Stomp's Disrupter fix, the owner's bands for Shield Slam (0.5 to
+1.5) and Ice Block (0.1 to 1.5), and the auto-attack floor at 15%.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
 used while tuning). The simulator gives up after 60 rounds.
 
 ```
 Fights played:          3000
-Wins:                   80%
+Wins:                   85%
 Ran out of rounds:      0%
-Rounds:                 median 20, most between 18 and 25
-Lasted 18 to 22 rounds: 67%
-A hero in danger:       90% (down to 25% HP, or went down)
-Auto-attack damage:     21% of all damage
+Rounds:                 median 20, most between 18 and 26
+Lasted 18 to 22 rounds: 68%
+A hero in danger:       92% (down to 25% HP, or went down)
+Auto-attack damage:     16% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-guardian       12%       0%       3%          43%        50%        10%
-rogue          35%       0%      12%          22%        20%        51%
-druid           1%     100%       1%          34%        21%        45%
-mage           51%       0%       0%           0%        43%        17%
+guardian       10%       0%       2%          42%        52%         9%
+rogue          35%       0%      14%          32%        15%        51%
+druid           1%     100%       1%          33%        15%        46%
+mage           54%       0%       0%           0%        42%        16%
 
-Uses per fight: taunt 4.33, challenging_shout 0.67, intercede 1.27,
-grip 1.01, shield_plant 1.41, last_stand 0.77, shield_slam 0.61,
-backstab 4.66, eviscerate 2.16, kidney_shot 0.52, cheap_shot 0.59,
-sap 1.05, shadowstep 1.08, vanish 0.27, rejuvenation 4.53,
-regrowth 4.43, swiftmend 2.13, wild_growth 1.95, cleanse 0.50,
-shadowmeld 0.88, nourish 3.45, arcane_volley 4.44, firebolt 0.94,
-meteor 1.61, frost_nova 0.35, blink 0.20, polymorph 0.86,
-ice_block 0.21, evocation 0.39, disrupt 2.20, haul_up 0.11
+Uses per fight (all heroes of a class together):
+guardian
+  taunt                4.4
+  challenging_shout    0.6
+  intercede            1.4
+  grip                 1.0
+  shield_plant         1.5
+  last_stand           0.8
+  shield_slam          0.5
+rogue
+  backstab             6.4
+  eviscerate           2.2
+  kidney_shot          0.5
+  cheap_shot           0.5
+  sap                  1.0
+  shadowstep           1.1
+  vanish               0.2
+druid
+  rejuvenation         4.5
+  regrowth             4.4
+  swiftmend            2.2
+  wild_growth          2.2
+  cleanse              0.5
+  shadowmeld           0.9
+  nourish              3.5
+mage
+  arcane_volley        4.4
+  firebolt             0.7
+  meteor               1.9
+  frost_nova           0.4
+  blink                0.2
+  polymorph            0.9
+  ice_block            0.2
+  evocation            0.5
+anyone
+  disrupt              2.1
+  haul_up              0.1
 
-Rogue opening: shadowstep in 1.00 a fight. Rounds an enemy spent sapped
-17.8 (still sapped at the end of 15% of fights); as a sheep 9.6.
+Rogue opening (per fight, all Rogues together):
+  sneak 0.00, shadowstep in 1.00, none 0.00
+  stealth checks that worked: -
+  rounds an enemy spent sapped: 17.9 (still sapped at the end of 11% of fights)
+  rounds an enemy spent as a sheep: 9.8 (still a sheep at the end of 0% of fights)
 
-PASS  length                 67.3% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
-PASS  win_rate               80.2%  (wanted: 70.0% to 90.0%)
+PASS  length                 67.7% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
+PASS  win_rate               85.1%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts            0.0%  (wanted: none)
-PASS  danger                 90.3% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
-PASS  auto_share             20.9% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:guardian      starved 2.7% of rounds, ended up and full 42.9% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:rogue         starved 12.5% of rounds, ended up and full 22.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:druid         starved 1.1% of rounds, ended up and full 34.2% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:mage          starved 0.5% of rounds, ended up and full 0.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  needed:guardian        wins 80.2% with, 0.2% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:rogue           wins 80.2% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:druid           wins 80.2% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:mage            wins 80.2% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  kit:guardian           wins 80.2% with the kit, 47.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:rogue              wins 80.2% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:druid              wins 80.2% with the kit, 21.8% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:mage               wins 80.2% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss             wins 80.2% with, 54.6% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
-PASS  use:taunt              4.33 per fight  (wanted: 3 to 10 per fight)
-PASS  use:challenging_shout  0.67 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:intercede          1.27 per fight  (wanted: 1 to 4 per fight)
-PASS  use:grip               1.01 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:shield_plant       1.41 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:last_stand         0.77 per fight  (wanted: 0.2 to 2 per fight)
-FAIL  use:shield_slam        0.61 per fight  (wanted: 2 to 3 per fight)
-PASS  use:backstab           4.66 per fight  (wanted: at least 4 per fight)
-PASS  use:eviscerate         2.16 per fight  (wanted: at least 2 per fight)
-PASS  use:kidney_shot        0.52 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:cheap_shot         0.59 per fight  (wanted: 0.3 to 3 per fight)
-PASS  use:sap                1.05 per fight  (wanted: 0.7 to 2 per fight)
-PASS  use:shadowstep         1.08 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:vanish             0.27 per fight  (wanted: 0.2 to 2 per fight)
-PASS  use:rejuvenation       4.53 per fight  (wanted: at least 4 per fight)
-PASS  use:regrowth           4.43 per fight  (wanted: 1 to 6 per fight)
-PASS  use:swiftmend          2.13 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:wild_growth        1.95 per fight  (wanted: 0.5 to 4 per fight)
+PASS  danger                 91.9% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
+PASS  auto_share             16.2% of damage  (wanted: 15.0% to 50.0%)
+PASS  resource:guardian      starved 1.8% of rounds, ended up and full 42.4% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:rogue         starved 14.5% of rounds, ended up and full 31.5% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:druid         starved 1.4% of rounds, ended up and full 33.4% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:mage          starved 0.4% of rounds, ended up and full 0.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  needed:guardian        wins 85.1% with, 0.3% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:rogue           wins 85.1% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:druid           wins 85.1% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:mage            wins 85.1% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  kit:guardian           wins 85.1% with the kit, 42.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:rogue              wins 85.1% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:druid              wins 85.1% with the kit, 19.1% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:mage               wins 85.1% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  taunt:boss             wins 85.1% with, 45.6% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+PASS  use:taunt              4.40 per fight  (wanted: 3 to 10 per fight)
+PASS  use:challenging_shout  0.57 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:intercede          1.38 per fight  (wanted: 1 to 4 per fight)
+PASS  use:grip               1.02 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:shield_plant       1.50 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:last_stand         0.80 per fight  (wanted: 0.2 to 2 per fight)
+FAIL  use:shield_slam        0.49 per fight  (wanted: 0.5 to 1.5 per fight)
+PASS  use:backstab           6.35 per fight  (wanted: at least 4 per fight)
+PASS  use:eviscerate         2.18 per fight  (wanted: at least 2 per fight)
+PASS  use:kidney_shot        0.53 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:cheap_shot         0.49 per fight  (wanted: 0.3 to 3 per fight)
+PASS  use:sap                1.03 per fight  (wanted: 0.7 to 2 per fight)
+PASS  use:shadowstep         1.11 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:vanish             0.24 per fight  (wanted: 0.2 to 2 per fight)
+PASS  use:rejuvenation       4.48 per fight  (wanted: at least 4 per fight)
+PASS  use:regrowth           4.40 per fight  (wanted: 1 to 6 per fight)
+PASS  use:swiftmend          2.21 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:wild_growth        2.24 per fight  (wanted: 0.5 to 4 per fight)
 PASS  use:cleanse            0.50 per fight  (wanted: 0.3 to 4 per fight)
-PASS  use:shadowmeld         0.88 per fight  (wanted: 0.1 to 2 per fight)
-PASS  use:nourish            3.45 per fight  (wanted: at least 2 per fight)
-PASS  use:arcane_volley      4.44 per fight  (wanted: at least 4 per fight)
-PASS  use:firebolt           0.94 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:meteor             1.61 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:frost_nova         0.35 per fight  (wanted: 0.2 to 3 per fight)
-PASS  use:blink              0.20 per fight  (wanted: 0.1 to 3 per fight)
+PASS  use:shadowmeld         0.85 per fight  (wanted: 0.1 to 2 per fight)
+PASS  use:nourish            3.51 per fight  (wanted: at least 2 per fight)
+PASS  use:arcane_volley      4.41 per fight  (wanted: at least 4 per fight)
+PASS  use:firebolt           0.71 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:meteor             1.86 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:frost_nova         0.38 per fight  (wanted: 0.2 to 3 per fight)
+PASS  use:blink              0.22 per fight  (wanted: 0.1 to 3 per fight)
 PASS  use:polymorph          0.86 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:ice_block          0.21 per fight  (wanted: 0.2 to 1.5 per fight)
-PASS  use:evocation          0.39 per fight  (wanted: 0.3 to 2 per fight)
-PASS  use:disrupt            2.20 per fight  (wanted: at least 1 per fight)
-PASS  use:haul_up            0.11 per fight  (wanted: at least 0 per fight)
+PASS  use:ice_block          0.16 per fight  (wanted: 0.1 to 1.5 per fight)
+PASS  use:evocation          0.52 per fight  (wanted: 0.3 to 2 per fight)
+PASS  use:disrupt            2.11 per fight  (wanted: at least 1 per fight)
+PASS  use:haul_up            0.08 per fight  (wanted: at least 0 per fight)
 ```
 
-Every check passes except `use:shield_slam` (see "Not met"). The pinned
-test seeds (`check --n 600 --seed 500000`) give the same: only Shield
-Slam fails, so the slow test is marked xfail with that reason. No fight
-ran out of rounds in 24000 tuning fights (seeds 0 to 23999) either.
+The other two confirm ranges (`check --n 1000`):
 
-Things to keep an eye on (thin margins on the confirm run):
+- `--seed 400000`: every check passes (wins 86.2%, length 66.9%, auto
+  share 16.4%, Shield Slam 0.53, Kidney Shot 0.52).
+- `--seed 700000`: two fail, `use:shield_slam` 0.49 and `use:kidney_shot`
+  0.49 (wins 85.1%, length 69.4%, auto share 16.4%).
 
-- Auto share 20.9% (line 20%), Ice Block 0.21 (line 0.2), Vanish 0.27,
-  Kidney Shot 0.52 and Cleanse 0.50 (lines 0.2, 0.5, 0.3), Blink 0.20
-  (line 0.1), Backstab 4.66 (line 4). A small change anywhere can tip
-  one of these.
-- The Guardian goes down in half the fights (the boss hits him for 2d6+9)
-  and the Mage in 43%. Taunting the boss is worth 26 points of wins.
-- The round-1 Sap is worth about 22 points of wins: this fight is now
-  tuned around it.
-- The Mage does half of all damage.
+The pinned test seeds (`check --n 600 --seed 500000`): only Shield Slam
+fails (0.47), so the slow test stays xfail (strict).
+
+Things to keep an eye on (thin margins on the confirm runs):
+
+- Shield Slam 0.47 to 0.53 and Kidney Shot 0.49 to 0.53 (line 0.5): see
+  "Not met".
+- Challenging Shout 0.57 to 0.61 (line 0.5), Vanish 0.22 to 0.24 (0.2),
+  Eviscerate 2.13 to 2.18 (2), auto share 16.2% to 16.4% (15%), Ice Block
+  0.16 (0.1), Firebolt 0.67 to 0.71 (0.5).
+- The Mage does more than half of all damage (54%), and the Guardian goes
+  down in about half the fights.
+- Taunting the boss is worth about 40 points of wins (85.1% against 45.6%).
 
 ## Not met
 
-After D4 (`check --n 3000 --seed 100000`), one check fails:
+After D4b, on the three confirm ranges (`check --n 3000 --seed 100000`,
+`--n 1000 --seed 400000`, `--n 1000 --seed 700000`):
 
-- **`use:shield_slam`: 0.61 a fight, wanted 2 to 3.** The Guardian gets
-  to his Shield Slam rule (the one before his auto-attack) only about 5.7
-  turns a fight, and on about 4.4 of those an ally is at 75% HP or less;
-  on 1.8 an add is loose. With the HP line at 60% it is 1.57 a fight and
-  at 50% 1.91; it gets into the band only with no HP line at all, which
-  is not the owner's "only when everything is going super well", and then
-  auto-attacks fall to 16% of damage (the `auto_share` check fails),
-  because every Slam takes an auto-attack's place. The check is not
-  loosened. The slow targets test is marked xfail with this reason. See
-  "Needs a decision", item 11.
+- **`use:shield_slam`: 0.49, 0.53 and 0.49 a fight, wanted 0.5 to 1.5.**
+  It fails on two of the three (and at 0.47 on the pinned test seeds).
+- **`use:kidney_shot`: 0.53, 0.52 and 0.49 a fight, wanted 0.5 to 3.** It
+  fails on one of the three.
+
+The two pull against each other: Shield Slam wants a calm fight with every
+ally above 75% HP and no add loose, Kidney Shot wants an add on someone who
+is not the Guardian (D4b, "Shield Slam and Kidney Shot pull against each
+other"). No number tried got both over 0.5 on every range. The checks are
+not loosened. The slow targets test stays xfail (strict) with this reason.
+See "Needs a decision", item 16.

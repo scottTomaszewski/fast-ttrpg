@@ -31,33 +31,33 @@ Delete or rewrite this file when the work below is done.
   Evocation 0.3-2. Design rule: no class has more than 1.5 times another's buttons.
   Results and every rule call: tuning log, "D3c".
 
-- D4 (done, not pushed): the retune. Five play fixes (whoever can Disrupt
-  the Stomp does and the melee heroes stay in; the Guardian walks in to
-  take a Stomp; Shield Slam on 1 Taunt card; Ice Block when low with the
-  boss or an elite on her and no Blink out; nobody Disrupts a blast nobody
-  is in), then numbers: the Guardian starts with 4 grit and gets 2 per
-  attack, ogre 2d6+9 and 115 HP, Grip and Intercede 2, Challenging Shout
-  radius 5, combo points 3, Backstab 7, Cheap Shot 2, Arcane Volley 2d4,
-  Blink 5, wolves 20 HP, brute shield 3, Shadowstep 5 (the owner's).
-  `check --n 3000 --seed 100000`: every check passes but Shield Slam
-  (0.61 a fight, wanted 2 to 3; "Not met"), so the slow test is xfail.
-  Everything is in the tuning log, "D4" and "Final".
+- D4: the retune for the full kit (tuning log, "D4").
+- D4b (done, not pushed): the owner's calls on D4, and honest buttons.
+  Start grit 4 and combo points 3 accepted; Shield Slam band 0.5 to 1.5
+  and Ice Block 0.1 to 1.5 (the owner's); the auto-attack floor is 15%
+  (owner's "if needed": it was). Arcane Volley 2d6 (a whole Volley does
+  as much for its mana as a Firebolt), Backstab 5, Blink back to 6,
+  Challenging Shout radius 4, ogre HP 130. The Mage Ice Blocks at half HP;
+  the Stomp's Disrupter is whoever's Disrupt rule really goes for it. The
+  Mage already breaks a Volley to Disrupt and keeps the hits (0.4 a
+  fight). On the three confirm ranges everything passes but Shield Slam
+  (0.47 to 0.53) and Kidney Shot (0.49 to 0.53), which pull against each
+  other ("Not met"); the slow test stays xfail. All in the tuning log,
+  "D4b" and "Final".
 
 ## Next, in order
-1. **The owner's calls from D4** (tuning log, "Needs a decision"): start
-   grit 4 (item 9), the Shield Slam band (item 11), the Ice Block band
-   (item 12), and the thin auto-attack share (item 15).
-2. **D5:** update rule text and class tips, re-render `rules/`, review, push, refresh the copies in
-   the owner's Obsidian vault (`~/Documents/obsidian/main/fast-ttrpg/`).
+1. **D5:** update rule text and class tips, re-render `rules/`, review, push, refresh the copies in
+   the owner's Obsidian vault (`~/Documents/obsidian/main/fast-ttrpg/`). (The Mage's Volley tip is
+   already written, D4b.)
 
-## Open questions for the owner (also in the tuning log)
-- (D4) The Guardian starts with 4 grit; the design said none. With none
-  the party wins about half its fights. Start 2 also works, just barely.
-- (D4) Shield Slam 0.61 a fight against 2 to 3: the tank is rarely free
-  with every ally above 75%, and a looser rule pushes auto-attacks under
-  a fifth of the damage.
-- (D4) Ice Block 0.21 a fight (proposed band 0.2 to 1.5): confirm.
-- (D4) Auto-attacks are 20.9% of damage, just over the line.
+## Open questions for the owner (also in the tuning log, "Needs a decision")
+- (D4b) Shield Slam and Kidney Shot cannot both clear 0.5 a fight: lower
+  one band a little, or change Shield Slam's "every ally above 75%" rule
+  (item 16).
+- (D4b) Firebolt has no turn in the middle in the simulator, so per act
+  step it does twice what a Volley does; the Mage Volleys only because her
+  rules say so (item 17).
+- (D4b) Evocation's band 0.3 to 2 is still only proposed.
 - (D4) The Rogue's opening: even at Shadowstep 5 the judgement rule always
   Shadowsteps in; the round-1 Sap is worth about 22 points of wins.
 - (D4) The Rogue Kidney Shots the last enemy instead of Eviscerating it
