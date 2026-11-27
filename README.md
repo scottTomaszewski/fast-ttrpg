@@ -57,6 +57,12 @@ another file:
 
     uv run fastcombat check --usage my_targets.toml
 
+A benched ability (`benched = true` in `game/numbers.toml`, like Quicken
+for now) is out of the game: nobody uses it, it is not in the uses table,
+and it has no `use:` check, so it needs no target. Try one back for a run
+with `--set abilities.quicken.benched=false` (it then needs a target in the
+usage file again).
+
 `uv run fastcombat run --help` lists every option: which fight, which
 party (`--party guardian,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.

@@ -10,13 +10,19 @@ When the cards come off:
 
 - **Cards a hero holds** come off one at a time at the top of each party
   turn.
-- **Bleeding cards** come off at the end of the party turn instead.
+- **Bleeding cards and stun cards on a hero** come off at the end of the
+  party turn instead.
 - **Cards on an enemy** come off one at a time at the end of each GM turn.
 - **Wound cards** never come off during a fight.
 
 A new stack of a kind takes the place of the old one, except Taunt, stun,
 sap and sheep, which never get shorter. Going down wipes every card a hero
 holds.
+
+**Bad cards** are stun, poison, rooted, sap and sheep. The Druid's Cleanse
+takes one stack of them off a hero (she picks which), and the Mage's Ice
+Block takes all of them off her. Bleeding and cooldowns are never bad
+cards.
 
 ## Cards heroes hold
 
@@ -27,10 +33,12 @@ holds.
 | **Guarded** | "Take 4 less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Guardian instead." | The ally the Guardian leapt to | Guardian's Intercede: 1 card |
 | **Shield Plant** | "Take 8 less from a blast." | The Guardian, and each ally behind him | Guardian's Shield Plant: 1 card each |
 | **Last Stand** | "You cannot drop below 1 HP." | The Guardian | Guardian's Last Stand: 1 card |
+| **Ice Block** | "Nothing can hurt you or pick you. You cannot move or act." | The Mage | Mage's Ice Block: 1 card. Going in takes every bad card off her. |
+| **Stun** (on a hero) | "Do not move or act this party turn." | Each hero the ogre's Stomp hit | The Stomp: 1 card. It comes off at the end of the party turn. The Druid's Cleanse takes it off. |
 | **Poison** | "Lose 2 HP at the top of your turn." | The hero the shaman hit | The shaman's attack: 3 cards. The Druid's Cleanse takes them all off. |
 | **Bleeding** | "You are down. When the last one goes, you are out." | A downed hero | Going down: 3 cards, one fewer for each Wound. They come off at the end of the party turn. |
 | **Wound** | "Each Wound: one Bleeding card fewer next time you go down." | A hero who got up | Getting up: 1 card, kept for the whole fight |
-| **Cooldown** | "Disrupt is resting." | Put it on the Disrupt line of your sheet | Using Disrupt: 3 cards. You cannot Disrupt while any are there. |
+| **Cooldown** | "(Ability) is resting." | Put it on that ability's line of your sheet | Using Disrupt: 3 cards. Shield Slam: 2. Ice Block: 8. Evocation: 8. You cannot use the ability while any are there. |
 
 ## Cards on enemies
 

@@ -38,13 +38,16 @@ first party turn.
    2. **Resource.** Get back your mana or energy for the round.
    3. **Casts.** A cast that has finished lands now (section 4).
 2. **Move.** Everyone moves at the same time, up to 6
-   squares.
+   squares. A stunned hero does not move.
 3. **Act.** Everyone does one thing at the same time:
    - roll an auto-attack,
    - use one ability (it takes the place of your auto-attack),
    - keep casting a cast or a channel you have going, or
    - haul a downed hero next to you back up (section 9).
-4. **End of the turn.** Every downed hero takes one Bleeding card off.
+
+   A stunned hero does not act (section 6, "Stunned heroes").
+4. **End of the turn.** Every downed hero takes one Bleeding card off,
+   and every stunned hero one stun card.
 
 ### The GM turn
 
@@ -244,7 +247,8 @@ Your sheet says how long each ability takes:
   once more in each act step after that while you keep channelling, until
   it has made all its hits.
 - Pay for each hit as it happens.
-- You **may move** while channelling.
+- You **may move** while channelling, unless your sheet says to stand
+  still (the Mage's Evocation): then moving ends it.
 - Each hit needs its target in range at that moment. If it is not, or you
   cannot pay, the channel ends.
 
@@ -253,7 +257,8 @@ Your sheet says how long each ability takes:
 - **Cancelling:** in any turn you may stop. Moving ends a cast (not a
   channel). Doing anything else in your act step ends either one. A
   cancelled cast costs nothing: you only lose the time.
-- **What breaks a cast:** going down. Plain damage never breaks a cast.
+- **What breaks a cast:** going down, or being stunned. Plain damage
+  never breaks a cast or a channel.
 
 Enemies cast too: see section 10.
 
@@ -300,8 +305,10 @@ cards, and the ally turns in one at the top of each party turn.
 
 - **Hero cards:** one from each stack at the **top of the party turn**. A
   heal card heals and a poison card hurts as it is turned in.
-- **Bleeding cards:** at the **end of the party turn** instead, after
-  everyone has acted. So everyone gets a whole turn to save a downed hero.
+- **Bleeding cards and stun cards:** at the **end of the party turn**
+  instead, after everyone has acted. So everyone gets a whole turn to
+  save a downed hero, and a stun from the GM turn costs the party turn
+  after it.
 - **Enemy cards:** one from each stack at the **end of the GM turn**.
 
 This means a card handed out in the party turn always covers the whole GM
@@ -327,11 +334,27 @@ turn that follows:
 - **Going down wipes every card you hold**: heal cards, Guarded,
   poison, cooldowns, all of them. Then you take Bleeding cards (section
   9).
-- **Cooldowns** use cards too. Only Disrupt has one. When you use it, put
-  3 cooldown cards on it. You cannot use it
-  while any are there. They come off like your other cards, so a hero who
-  Disrupts in round 1 can Disrupt again in round
-  4.
+- **Cooldowns** use cards too. Disrupt has one, and so do Shield Slam, Ice
+  Block and Evocation. When you use one, put its cooldown cards on it
+  (Disrupt: 3). You cannot use it while any are
+  there. They come off like your other cards, so a hero who Disrupts in
+  round 1 can Disrupt again in round 4. A
+  channel (Evocation) puts its cooldown cards on when it starts, not again
+  on later rounds.
+
+### Stunned heroes
+
+The ogre's Stomp stuns heroes. A **stunned** hero holds stun cards:
+
+- You **do not move and do not act** in the party turn. The only thing a
+  stunned hero may do is the Mage's Ice Block.
+- Being stunned ends your cast or channel.
+- Stun cards come off at the **end of the party turn**, like Bleeding. So
+  a 1-card stun handed out in the GM turn costs you exactly the next
+  party turn.
+- The Druid's **Cleanse** takes a stun off. She acts before the others,
+  so if she Cleanses you in the act step, you still act that turn (your
+  move step has gone by). A stunned Druid cannot Cleanse herself.
 
 [`cards.md`](cards.md) lists every card.
 
@@ -425,6 +448,8 @@ Some big abilities are **Loud**. Your sheet says which.
   squares, not at heroes.
 - If every hero who is up is hidden, the enemies have nobody to go for:
   they do not move or attack.
+- A Mage in an **Ice Block** counts as hidden for all of this, and more:
+  nothing can hurt her, a blast neither.
 
 ### Bosses
 
@@ -521,6 +546,9 @@ reaches 10 squares.
 - A **blast** hits the marked squares. The GM rolls once, and every hero
   who is up and still on a marked square takes all of it, hidden heroes
   too. Walk out and you are safe.
+- A **stomp** is a blast on the squares next to the boss that also hands
+  every hero it hits stun cards. A stomp counts as a blast: it gives the
+  Guardian no grit.
 - A **heavy hit** is aimed at one hero, and lands on that hero wherever
   they go, if they are still up. Hiding does not stop it. It counts as an
   attack, so the Guardian gets grit for it.
@@ -541,14 +569,14 @@ on the Guardian, so it gives him no grit.
 
 | | |
 |---|---|
-| **Party turn** | 1. Top: cards (heals, then poison), then resource, then casts land. 2. Move (up to 6). 3. Act (one thing). 4. End: downed heroes take one Bleeding card off. |
+| **Party turn** | 1. Top: cards (heals, then poison), then resource, then casts land. 2. Move (up to 6). 3. Act (one thing). Stunned heroes do neither. 4. End: downed heroes take one Bleeding card off, stunned heroes one stun card. |
 | **GM turn** | 1. Announced casts land. 2. New enemies arrive. 3. Each enemy picks, moves, attacks; the boss throws in its own turn, right after its attack. 4. Announce new casts. 5. One card off each enemy stack. |
 | **Order** | Heroes: Druid, Guardian, Mage, Rogue. Enemies: alphabetical. |
 | **Auto-attack** | One die. 1 misses. Top face rolls again and adds, and gives the crit bonus. |
 | **Abilities** | Never miss, never crit. Pay when it happens. |
 | **Casts** | Land at the top of a party turn. Stand still. Cancelled or broken costs nothing. |
 | **Channels** | One hit each act step. May move. Pay each hit. |
-| **Cards** | Hero cards: top of party turn. Bleeding: end of party turn. Enemy cards: end of GM turn. A new stack replaces the old (Taunt, stun, sap and sheep never get shorter). |
+| **Cards** | Hero cards: top of party turn. Bleeding and hero stuns: end of party turn. Enemy cards: end of GM turn. A new stack replaces the old (Taunt, stun, sap and sheep never get shorter). |
 | **Who enemies attack** | Taunt cards, then a pull, then the hold (not bosses), then what it likes. Guarded from Intercede sends it to the Guardian. Hidden heroes are never picked. |
 | **Loud** | Takes Taunt cards off (a boss loses 1, any other enemy 1), or pulls an enemy with none. |
 | **Moving** | Corners cost 1. No opportunity attacks. Enemies walk around bodies. |

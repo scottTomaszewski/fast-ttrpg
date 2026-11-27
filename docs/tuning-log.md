@@ -653,6 +653,112 @@ alone is fine; it is the Sap before the brute's first swing that starves
 him. This is the retune's (D4) to fix, with grit (the tuner may change
 grit regen or grit per attack) or with the elite. Not tuned around here.
 
+## D3c: Shield Slam, Ice Block, Evocation, Quicken benched, a wider Cleanse, the Stomp, 2026-11-27
+
+The owner's kit decisions of 2026-11-27 (see the design, "The classes").
+No old number was changed; the new ones are start values for the retune.
+Every run here is `--n 500 --seed 100000`, the full party.
+
+### Start values
+
+| What | Numbers (in `game/`) |
+|---|---|
+| Shield Slam (Guardian) | cost 0 grit, range 1, 2d8, gives 1 grit (`alt`, never past his pool), cooldown 2, not Loud |
+| Ice Block (Mage) | cost 0, 1 card, cooldown 8 |
+| Evocation (Mage) | cost 0, a channel of 2 rounds (`hits = 2`), 6 mana a round (`value`), `still = true`, cooldown 8 |
+| Quicken | `benched = true` (in `game/` only) |
+| Stomp (the ogre) | `kind = "stomp"`, rounds 8, 14, 20 (`first = 8`, `every = 6`), radius 1, 1d6, 1 stun card |
+| Usage targets | Shield Slam 2 to 3 (owner's); Ice Block 0.2 to 1.5 and Evocation 0.3 to 2 (proposed, owner to confirm); Quicken commented out |
+
+**Where the Stomp sits.** Rounds 8, 14 and 20 in a 20-round fight: three
+times, and never on a round with the Ground Slam (4, 10, 16, 22) or the
+Skull Crusher (6, 11, 16, 21). It is last in the script, so the first
+clash (round 26, with the Crusher) goes to the Crusher. 9/15/21 would
+meet the Crusher in round 21. Other timings measured below.
+
+**A design rule (owner, 2026-11-27):** no class has more than 1.5 times as
+many buttons as another. The Mage has 8 (Arcane Volley, Firebolt, Meteor,
+Frost Nova, Blink, Polymorph, Ice Block, Evocation), the others 7. Disrupt,
+which everyone has, is not counted; a benched ability is not a button.
+
+### What came out (`check --n 500 --seed 100000`)
+
+| | D3b | D3c |
+|---|---|---|
+| wins | 81.8% | 69.4% |
+| 18 to 22 rounds | 58.6% | 39.8% |
+| median rounds | 22 | 23 |
+| the Guardian on auto (`kit:guardian`) | 79.2% (drop 2.6) | 67.4% (drop 2.0) |
+| never Taunting the boss (`taunt:boss`) | 75.8% (drop 6.0) | 59.6% (drop 9.8) |
+| the Guardian starved | 61.4% | 60.6% |
+| the Mage went down | 74% of fights | 83% |
+
+Uses per fight of the new buttons: Shield Slam 0.48, Ice Block 0.00 (1 in
+500 fights), Evocation 0.46, Cleanse 1.23 (0.59 on poison, 0.64 on a
+stunned Guardian). The Stomp is announced 2.34 times a fight and lands
+2.05 times; it stuns the Guardian 0.85 times a fight, the Mage 0.04, the
+Rogue and the Druid almost never.
+
+**The Stomp is what costs the wins, and not by its hit or its stun.**
+
+| Stomp | wins | 18 to 22 rounds |
+|---|---|---|
+| none | 80.6% | 52.6% |
+| as built (8/14/20, 1d6, 1 stun) | 69.4% | 39.8% |
+| no damage and no stun, same squares | 72.8% | 38.0% |
+| radius 0 (no squares around him) | 79.2% | 52.6% |
+| 9/15/21 | 71.4% | 46.0% |
+| 13/19 | 71.2% | 43.4% |
+| 7/14/21 | 67.8% | 34.2% |
+
+A Stomp that does nothing at all costs almost as much as the real one:
+the cost is the melee heroes stepping out of the squares next to the boss
+for a turn, and the Disrupts spent on it. It is the Ground Slam's old
+problem ("Needs a decision", item 6) again. Not tuned around here: the
+retune (D4) has to take it in, or the owner changes the Stomp.
+
+The Stomp with no change to how heroes play cost the same, and stunned
+nobody (0.05 stuns a fight): everyone stepped out, and the Mage Disrupted
+the rest. So the Guardian now stays to take it when a Druid is up to
+Cleanse him, and nobody spends an interrupt on a Stomp only he is taking.
+That is what gives Cleanse its stuns.
+
+**Shield Slam is pressed far less than the owner's 2 to 3, not more.** The
+Guardian is rarely free: the boss has fewer than 2 Taunt cards, an add is
+loose, or an ally is hurt. How much the rule's lines matter:
+
+| Shield Slam when | uses a fight | wins |
+|---|---|---|
+| boss 2+ Taunt cards, every ally above 75%, no add loose (kept) | 0.48 | 69.4% |
+| ... allies above 60% | 0.74 | 69.4% |
+| ... any ally HP | 1.19 | 69.8% |
+| boss 1+ Taunt card, allies above 75% | 0.69 | 69.0% |
+| boss 1+ Taunt card, any ally HP | 1.56 | 69.2% |
+
+Even with no HP line at all it stays under 2: "no add loose" and "the
+boss held" are what keep him busy. That is a fight finding (the Guardian
+is busy in this fight), not a policy to loosen. It also does little for
+his grit: with Shield Slam benched the Guardian on auto drops wins by 1.4
+points (2.0 with it) and never Taunting the boss by 9.8 (the same), and
+he is still starved 61% of rounds. It does not mend the D3b grit problem
+by itself; the retune has to.
+
+**Ice Block almost never happens** (1 in 500 fights). Its trigger is the
+owner's: a hit or a blast that would down her and that she cannot get
+out of. The heavy hits on her (0.6 a fight) she Disrupts from 10 squares,
+and she is almost never stunned. What downs her is the ogre's plain
+melee hit when it walks to the back line untaunted (1.37 times a fight),
+which is not announced. A wider rule (Ice Block at 35% HP or less with an
+enemy next to her) gives 1.44 uses a fight but 66.2% wins (3 points
+fewer). Left as the owner said; see "Needs a decision".
+
+**Disrupt on a blast nobody stands in.** Found while measuring the
+Stomp: the Mage also Disrupts Ground Slams after everyone has stepped
+out. Counting a blast with nobody in it as answered (as the Stomp now is)
+gives 71.4% wins and 51.0% in 18 to 22 rounds (83.0% and 63.4% with no
+Stomp). Not changed here (it changes an old button's play); for the
+retune or the owner.
+
 ## Needs a decision
 
 These are things numbers alone could not fix well. Each needs a change
@@ -785,6 +891,23 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    and the brute was what hit him early. For the retune, or a rule change
    (grit from something else).
 
+10. **The Stomp costs about 11 points of wins and 13 of length, by
+    making the melee heroes step around it,** not by its hit or its stun
+    (D3c). The retune can take it in, or the Stomp can change (a smaller
+    or no area, with the stun on the boss's target only, say).
+11. **Shield Slam is pressed 0.48 times a fight, not 2 to 3.** The
+    Guardian is rarely free in this fight. Loosening the rule does not get
+    there (1.56 at the loosest). Either the fight leaves the tank more
+    quiet turns, or the band moves.
+12. **Ice Block is almost never pressed** (1 in 500 fights) under the
+    owner's trigger. A wider trigger (low, with an enemy next to her)
+    would press it about 1.4 times a fight and cost about 3 points of
+    wins.
+13. **Disrupting a blast nobody stands in.** The Mage Disrupts Ground
+    Slams everyone has walked out of. Treating those as answered (as
+    the Stomp is) is worth about 2 points of wins and 11 of length today
+    (D3c). It changes how an old button is played, so it was left.
+
 ## Rules the simulator had to decide
 
 The design left these open, or said something the simulator could not
@@ -811,6 +934,52 @@ to change any of them.
 - The Guardian starts a fight with 0 grit.
 - Bosses ignore the hold: only Taunt cards make a boss attack the Guardian
   (owner's decision).
+
+New buttons and the Stomp (D3c, 2026-11-27):
+
+- **Hero stuns.** A stunned hero does not move or act in the party turn;
+  the Mage's Ice Block is the one thing they may do. Stun cards on a hero
+  come off at the end of the party turn (like Bleeding), not the top, so a
+  1-card stun handed out in the GM turn costs exactly the next party turn.
+  A new stun never shortens one already there. A stun ends the hero's cast
+  or channel. A downed hero, or a Mage in an Ice Block, gets none.
+- The Druid acts before the Guardian, the Mage and the Rogue (id order),
+  so her Cleanse in the act step gives a stunned one of them back their
+  act step that turn. Their move step has already gone by.
+- **Bad cards** (one list, `units.BAD_STACKS`): stun, poison, rooted, sap,
+  sheep. Heroes can only get stun and poison today; the rest are there for
+  later. Never Bleeding, never a cooldown. Cleanse takes one stack of the
+  Druid's choice; told no card, it takes the first in that list.
+- **Ice Block timing.** One card, put on in the act step. It comes off at
+  the top of her next party turn, so it covers the GM turn after it, and
+  she is free on her next turn. While she holds it: no damage of any kind
+  (a blast too), no stun, no enemy picks her, her pulls count for
+  nothing, and she cannot move or act. It takes off her bad cards and ends
+  her own cast or channel; heal cards and cooldowns stay.
+- **Evocation** is a channel of 2 rounds: 6 mana when she starts it, 6
+  more on the next act step if she keeps channelling. A new field,
+  `still`: moving ends it (Arcane Volley does not have it). Damage does
+  not end it; a stun does, like any cast.
+- **Cooldowns on channels** start on the first round and are not started
+  again by later rounds. (Before, a cooldown was put on at each hit; no
+  channel had one.)
+- **Shield Slam** is a hit, not an auto-attack: it never misses or crits,
+  and its damage is not auto damage. It is not Loud. The grit it gives is
+  its `alt`. Cooldown 2: used in round 4, again in round 6.
+- **The Stomp** is a new script kind. It is announced like a blast, on the
+  squares within its radius of the boss when it is announced, and lands
+  next GM turn: one roll, every hero who is up there takes it all, then
+  each of them who is still up gets its stun cards. It counts as a blast:
+  Shield Plant takes its value off, and it gives the Guardian no grit.
+  Disrupt, or a stun on the boss, breaks it.
+- **Benched** is a new ability field. A benched ability cannot be used, is
+  not a button in the summary or the `use:` checks, does not count for
+  starving, and is left off the rules pages (a test checks). A usage
+  target for one is allowed and ignored. Only Quicken, in `game/`. The
+  Mage's Quicken rule is kept in her list and never fires.
+- The tests pair the frozen numbers with a frozen copy of the usage
+  targets (`tests/data/usage_targets.toml`), since the real targets now
+  name abilities the old copy did not have, and leave out Quicken.
 
 How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 2026-11-27). These are calls about play, not game numbers:
@@ -854,6 +1023,30 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - (D3b) The Rogue's opening: the elite that hits hardest and that nobody
   stands next to yet. Shadowstep in, unless she could not then pay for the
   Sap in round 1 (then Sneak). With no elite, no opening.
+- (D3c) The Guardian Shield Slams only when he can spare the turn: the
+  boss has 2 or more Taunt cards (`SLAM_TAUNT_CARDS`), every ally is above
+  75% HP (`SLAM_ALLIES_ABOVE`), and no add is loose (fodder too). It is
+  last before his auto-attack: the boss if it is next to him, else the
+  lowest-HP add next to him that is not fodder and not controlled.
+- (D3c) The Guardian stays to take a Stomp when a Druid is up (she will
+  Cleanse him) or when he holds an add that would get loose. Everyone else
+  steps out (it is danger). A Stomp is answered, so nobody Disrupts it,
+  when nobody is in its area or only Guardians are and a Druid is up.
+- (D3c) The Druid Cleanses a stun right after her emergencies (her rule
+  4), the Guardian first, but only a stun that still costs something: the
+  ally acts after her this turn, or it has more than one card. Other bad
+  cards (poison) come where poison did.
+- (D3c) The Mage Ice Blocks (her rule 1) an announced hit or blast that
+  lands this GM turn, could take her to 0 at its biggest roll, that she is
+  still in after moving, and that she cannot Disrupt; or when she is
+  stunned or rooted at 35% HP or less (`ICE_BLOCK_AT`) with an enemy that
+  is not controlled next to her. She Disrupts first if she can.
+- (D3c) The Mage Evokes below 6 mana (`EVOCATION_BELOW`, a whole Volley)
+  when no awake enemy is next to her, no blast or stomp is coming down on
+  her square, no cast in her Disrupt range is waiting, and the boss has
+  Taunt cards. It comes after Meteor, before Firebolt.
+- (D3c) The Mage keeps channelling Arcane Volley on a sapped or sheeped
+  enemy when nothing else is left to hit (the D3b rule ended it).
 
 The Rogue's opening (D3b), rules the owner left open:
 
@@ -960,3 +1153,11 @@ these use bands: Challenging Shout, Intercede, Grip, Shield Plant, Last
 Stand, Eviscerate, Kidney Shot, Arcane Volley, Firebolt and Quicken. The
 slow test fails with them; it is left failing (not marked xfail) because
 D4 is the step that has to make them pass.
+
+After D3c, `check --n 500 --seed 100000` fails `length` (39.8%),
+`win_rate` (69.4%, a hair under 70%), `resource:guardian` (starved
+60.6%), `kit:guardian` (69.4% with the kit, 67.4% on auto), `taunt:boss`
+(69.4% with, 59.6% without), and these use bands: Challenging Shout,
+Intercede, Grip, Shield Plant, Last Stand, Shield Slam (0.48, wanted 2 to
+3), Eviscerate, Kidney Shot, Arcane Volley, Firebolt and Ice Block (0.00,
+wanted 0.2 to 1.5). Quicken has no check now (benched). Still for D4.

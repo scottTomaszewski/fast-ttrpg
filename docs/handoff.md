@@ -21,30 +21,28 @@ Delete or rewrite this file when the work below is done.
   Sneak won 82.8% against 81.8% for Shadowstep in (noise at 500 fights); Shadowstep in was
   kept for the `use:sap` band, a call the owner can see. The Polymorph pick (12) is tied to
   this fight's goblin timing (a sheep that wakes during the wave is bad).
-
-## Owner decisions, 2026-11-27 (not built yet)
-- (Built in D3b: the long Sap, the Rogue's opening, the longer Polymorph.)
-- **Shield Slam** (new, Guardian): free, a hit bigger than his auto-attack, on a cooldown, gives
-  grit. Target 2 to 3 uses a fight: "the tank should be busy and Shield Slam should only fit in
-  when everything is going super well." It is last in his list.
-- **Mage:** Quicken is benched (kept in code, not used, not on the sheet). Ice Block and Evocation
-  join the kit (Time Warp and Mirror Image skipped for now). 8 buttons on the Mage is fine; the
-  rule is no class has more than 1.5 times as many buttons as another.
-- **Cleanse** removes any one bad card (a stun too), never Bleeding.
-- **The ogre gets Stomp:** announced, then stuns the heroes next to it, so Cleanse has stuns.
-- Usage bands I proposed for the owner to confirm: Ice Block 0.2-1.5, Evocation 0.3-2.
+- D3c (built, not pushed): the owner's 2026-11-27 kit decisions. **Shield Slam** (Guardian,
+  free, 2d8, 1 grit, cooldown 2, last in his list). **Ice Block** and **Evocation** (Mage);
+  **Quicken benched** (`benched = true` in `game/`: in the code, not usable, off the sheet and
+  the checks). **Cleanse** takes any one bad card (`units.BAD_STACKS`), never Bleeding.
+  **Hero stuns** (no move, no act; the card comes off at the end of the party turn). The
+  ogre's **Stomp** (rounds 8, 14, 20; 1d6 and 1 stun next to him). The Guardian stays to take a
+  Stomp when a Druid is up to Cleanse him. Proposed bands for the owner: Ice Block 0.2-1.5,
+  Evocation 0.3-2. Design rule: no class has more than 1.5 times another's buttons.
+  Results and every rule call: tuning log, "D3c".
 
 ## Next, in order
-1. **D3c:** Shield Slam, Ice Block, Evocation, benching Quicken, wider Cleanse, the ogre's Stomp.
-2. **D4: retune** `game/` so every check passes on `check --n 3000 --seed 100000`, including all
+1. **D4: retune** `game/` so every check passes on `check --n 3000 --seed 100000`, including all
    `use:` checks. The tuner may also change grit regen / grit per attack and the Mage's
    `auto_gain`. Frozen: class dice, mana and energy pools and regen, cast times, card counts
    (except Sap's and Polymorph's), `max_rounds`. Watch: since D3b the round-1 opening Sap puts the
    brute to sleep before it ever hits the Guardian, so he has almost no grit early (0.39 at
    the top of round 2, against 1.45 without the opening), and `kit:guardian`, `taunt:boss` and
    `length` fail. With no opening, Sap 20 and Polymorph 12 pass all three (tuning log, D3b,
-   "Correction").
-3. **D5:** update rule text and class tips, re-render `rules/`, review, push, refresh the copies in
+   "Correction"). Also since D3c: the Stomp costs about 11 points of wins and 13 of length by
+   making the melee heroes step around it (not by its hit); Shield Slam is pressed 0.48 a fight
+   (band 2-3) and barely helps grit; Ice Block almost never (tuning log, D3c).
+2. **D5:** update rule text and class tips, re-render `rules/`, review, push, refresh the copies in
    the owner's Obsidian vault (`~/Documents/obsidian/main/fast-ttrpg/`).
 
 ## Open questions for the owner (also in the tuning log)
@@ -54,6 +52,11 @@ Delete or rewrite this file when the work below is done.
 - Printable card sheets are a later step.
 - Is 20 Sap cards too many to handle at the table? One "until hurt or N rounds" card may be better.
 - The Rogue's opening is not a real choice yet: Shadowstep in costs 2, and round 1 gives 3 back.
+- (D3c) The Stomp's cost is in the stepping, not the stun: change it, or let the retune absorb it?
+- (D3c) Shield Slam 0.48 a fight against 2-3: the Guardian is rarely free in this fight.
+- (D3c) Ice Block's trigger leaves it almost unused; a wider one costs about 3 points of wins.
+- (D3c) Should nobody Disrupt a Ground Slam that everyone has walked out of (as for the Stomp)?
+- (D3c) Confirm the proposed bands for Ice Block and Evocation.
 
 ## Working notes
 - Briefs given to subagents live in `.superpowers/sdd/round3/` (git-ignored, this machine only).

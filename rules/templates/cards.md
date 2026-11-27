@@ -8,13 +8,19 @@ When the cards come off:
 
 - **Cards a hero holds** come off one at a time at the top of each party
   turn.
-- **Bleeding cards** come off at the end of the party turn instead.
+- **Bleeding cards and stun cards on a hero** come off at the end of the
+  party turn instead.
 - **Cards on an enemy** come off one at a time at the end of each GM turn.
 - **Wound cards** never come off during a fight.
 
 A new stack of a kind takes the place of the old one, except Taunt, stun,
 sap and sheep, which never get shorter. Going down wipes every card a hero
 holds.
+
+**Bad cards** are stun, poison, rooted, sap and sheep. The Druid's Cleanse
+takes one stack of them off a hero (she picks which), and the Mage's Ice
+Block takes all of them off her. Bleeding and cooldowns are never bad
+cards.
 
 ## Cards heroes hold
 
@@ -25,10 +31,12 @@ holds.
 | **Guarded** | "Take {abilities.intercede.value} less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Guardian instead." | The ally the Guardian leapt to | Guardian's Intercede: {abilities.intercede.cards} card |
 | **Shield Plant** | "Take {abilities.shield_plant.value} less from a blast." | The Guardian, and each ally behind him | Guardian's Shield Plant: {abilities.shield_plant.cards} card each |
 | **Last Stand** | "You cannot drop below 1 HP." | The Guardian | Guardian's Last Stand: {abilities.last_stand.cards} card |
+| **Ice Block** | "Nothing can hurt you or pick you. You cannot move or act." | The Mage | Mage's Ice Block: {abilities.ice_block.cards} card. Going in takes every bad card off her. |
+| **Stun** (on a hero) | "Do not move or act this party turn." | Each hero the ogre's Stomp hit | The Stomp: {boss.stomp.stun} card. It comes off at the end of the party turn. The Druid's Cleanse takes it off. |
 | **Poison** | "Lose {enemy.shaman.poison_value} HP at the top of your turn." | The hero the shaman hit | The shaman's attack: {enemy.shaman.poison_cards} cards. The Druid's Cleanse takes them all off. |
 | **Bleeding** | "You are down. When the last one goes, you are out." | A downed hero | Going down: {rules.bleeding_cards} cards, one fewer for each Wound. They come off at the end of the party turn. |
 | **Wound** | "Each Wound: one Bleeding card fewer next time you go down." | A hero who got up | Getting up: 1 card, kept for the whole fight |
-| **Cooldown** | "Disrupt is resting." | Put it on the Disrupt line of your sheet | Using Disrupt: {abilities.disrupt.cooldown} cards. You cannot Disrupt while any are there. |
+| **Cooldown** | "(Ability) is resting." | Put it on that ability's line of your sheet | Using Disrupt: {abilities.disrupt.cooldown} cards. Shield Slam: {abilities.shield_slam.cooldown}. Ice Block: {abilities.ice_block.cooldown}. Evocation: {abilities.evocation.cooldown}. You cannot use the ability while any are there. |
 
 ## Cards on enemies
 

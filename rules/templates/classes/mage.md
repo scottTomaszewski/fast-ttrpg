@@ -1,8 +1,8 @@
 # The Mage
 
 The Mage stands far back and throws the biggest spells in the game. She can
-also freeze enemies in place, turn one into a sheep, and hop out of
-trouble.
+also freeze enemies in place, turn one into a sheep, hop out of trouble,
+freeze herself in a block of ice, and call her mana back.
 
 - **HP:** {heroes.mage.hp}
 - **Auto-attack:** d{heroes.mage.die}, on an enemy up to
@@ -64,6 +64,34 @@ trouble.
   moment it takes any damage. Not on a boss. Only one sheep at a time:
   when a new Polymorph lands, any other sheep turns back.
 
+### Ice Block
+
+- {abilities.ice_block.cost} mana · {abilities.ice_block.timing} · yourself · cooldown
+  {abilities.ice_block.cooldown}{abilities.ice_block.loud_tag}
+- Freeze yourself in a block of ice: take **{abilities.ice_block.cards}
+  Ice Block card**. While you hold it, nothing can hurt you (a blast or a
+  heavy hit does you no harm, and nothing can stun you), no enemy can
+  pick you as its target, and you cannot move or act. It comes off at the
+  top of your next party turn, so it covers the GM turn that follows.
+- Going into the ice takes **every bad card** off you (stun, poison,
+  rooted and the like; not Bleeding, not cooldowns), and ends your own
+  cast or channel.
+- **You may use it while stunned:** it is the one thing a stunned hero
+  can do.
+- Then put {abilities.ice_block.cooldown} cooldown cards on Ice Block.
+
+### Evocation
+
+- {abilities.evocation.cost} mana · Channel, {abilities.evocation.hits} rounds · yourself ·
+  cooldown {abilities.evocation.cooldown}{abilities.evocation.loud_tag}
+- Call your mana back: get **{abilities.evocation.value} mana** now, and
+  {abilities.evocation.value} more in your next act step if you keep
+  channelling ({abilities.evocation.hits} rounds in all, never more than
+  {heroes.mage.pool}).
+- **Stand still** while you channel it: moving ends it. Taking damage does
+  not. Doing anything else, or being stunned, ends it too.
+- Then put {abilities.evocation.cooldown} cooldown cards on Evocation.
+
 ### Disrupt (every hero has this)
 
 - {abilities.disrupt.cost} mana · {abilities.disrupt.timing} · range
@@ -78,6 +106,12 @@ trouble.
 - **Stand back.** Stay within {abilities.firebolt.range} squares of your
   target, but well back from every enemy. Stand still while you cast.
 - **Something reached you? Frost Nova,** then step away next turn.
+- **Ice Block is your last way out.** A big hit is coming at you that
+  could take you to 0, and you cannot Disrupt it or walk out of it? Ice
+  Block. Also when you are stunned, low, and an enemy is next to you.
+- **Out of mana and nobody needs you?** Evocation: stand still and get it
+  back. Not while an enemy is next to you, a blast is coming down on you,
+  a cast needs your Disrupt, or the boss is loose.
 - **You are the best at Disrupt:** yours reaches
   {abilities.disrupt.alt} squares. Break the shaman's mend and the boss's
   big moves.

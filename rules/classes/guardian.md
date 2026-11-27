@@ -11,7 +11,8 @@ enemies fight him, and stands between them and everyone else.
   with 0. You get 1 grit each
   time an enemy attacks you (its normal attack, or a heavy hit it
   announced), even if the hit does no damage. Blasts, throws and poison
-  give no grit. Grit does not come back at the top of the turn.
+  give no grit. Grit does not come back at the top of the turn. Shield
+  Slam gives grit too.
 - **Crit bonus:** 1 grit.
 - **The hold:** an enemy standing next to you must attack you, and cannot
   walk away. Bosses ignore the hold: only Taunt cards keep a boss on you.
@@ -66,6 +67,21 @@ enemies fight him, and stands between them and everyone else.
 - Take **1 Last Stand card**: while you hold it,
   nothing can take you below 1 HP. Use it when a heavy hit is coming.
 
+### Shield Slam
+
+- 0 grit · Instant · range
+  1 (next to you) · cooldown
+  2
+- Slam one enemy with your shield for **2d8**,
+  and get **1 grit** (never more than
+  10). It is a hit, not an auto-attack: it never
+  misses and never crits.
+- Then put 2 cooldown cards on Shield Slam.
+  You turn one in at the top of each party turn with your other cards, and
+  you cannot Shield Slam while any are there. So if you Shield Slam in
+  round 4, you can do it again in round
+  6.
+
 ### Disrupt (every hero has this)
 
 - 0 grit · Instant · range
@@ -89,3 +105,11 @@ enemies fight him, and stands between them and everyone else.
   keeps it on you anyway. Taunt a loose enemy that is going for
   someone else, Grip one that attacks from far away (like the
   shaman), and otherwise auto-attack. Getting hit is how you earn grit.
+- **Shield Slam when nothing needs you.** The boss has plenty of Taunt
+  cards, nobody is hurt, and no enemy is loose? Then Shield Slam the boss
+  (or the enemy on you) instead of an auto-attack. It costs
+  0 grit and gives
+  you grit. If something needs you, that comes first.
+- **A Stomp is coming and you hold the boss?** You may stay and take it:
+  the Druid can Cleanse your stun before your act step, because she acts
+  before you. Everyone else should step away.

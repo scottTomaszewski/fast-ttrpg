@@ -80,20 +80,22 @@ it likes.
 ## The boss's moves
 
 The Ogre announces **at most one** move each GM turn, in step 4: the first
-one in this list that is due. If both are due in the same round, the
-Ground Slam wins and the Skull Crusher is skipped that time. An announced
-move lands in step 1 of the next GM turn.
+one in this list that is due. If two are due in the same round, the one
+higher in the list wins and the other is skipped that time (the Stomp
+never meets another move before round 26). An announced move lands in
+step 1 of the next GM turn.
 
 | Move | Announced in rounds | What it does |
 |---|---|---|
 | **Ground Slam** | 4, 10, 16, 22, 28 and so on | A blast: every square within 2 of where the Ogre stands when he announces it. Mark them. When it lands, roll 3d6 once; every hero who is up on a marked square takes it all. |
 | **Skull Crusher** | 6, 11, 16, 21, 26 and so on | A heavy hit of 6d6 on the hero he went for this turn. It lands on that hero wherever they go. If he went for nobody this turn, or that hero is no longer up, he has no Crusher to announce. |
+| **Stomp** | 8, 14, 20, 26, 32 and so on | A small blast that stuns: every square next to the Ogre when he announces it. Mark them. When it lands, roll 1d6 once; every hero who is up on a marked square takes it all, and gets **1 stun card** (they do not move or act in the next party turn; the Druid's Cleanse takes it off). A Mage in an Ice Block takes nothing. |
 | **Boulder** | 2, 4, 6, 8, 10 and so on | Not announced. In his own turn, right after his attack and before the next enemy goes, he throws a boulder at a random hero who is up, not hidden and not next to him (pick one the way the shaman does). It hits for 2d6. If no hero fits, he throws nothing. |
 
 Heroes can stop an announced move with **Disrupt**, or with a stun such as
 **Cheap Shot**. Taunt cards make no difference to the boulder, and neither
-the Ground Slam nor the boulder gives the Guardian grit. The Skull Crusher
-does.
+the Ground Slam, the Stomp nor the boulder gives the Guardian grit. The
+Skull Crusher does.
 
 ### The shaman's mend
 
@@ -113,6 +115,9 @@ where, and what they can do about it.
   and the ground starts to shake! Next turn he SMASHES it down." Mark every
   square within 2 of him. "Anyone still in these
   squares takes the hit. Get out, or get behind the Guardian's shield!"
+- **Stomp:** "The Ogre raises one huge foot! Next turn he STOMPS, and
+  everyone next to him is knocked flat." Mark the squares next to him.
+  "Step away, or be stunned for a turn!"
 - **Skull Crusher:** "The Ogre glares at (say the hero's name) and winds
   up a huge swing! Next turn it lands on you, wherever you run." Then:
   "Can anyone stop him? Disrupt him or stun him now, or brace yourself!"
@@ -127,8 +132,8 @@ When a move lands, say what it did: "CRASH! Everyone on those squares takes
 
 ## The GM turn, step by step
 
-1. **Land** the announced moves: the Ground Slam, the Skull Crusher, or the
-   mend. Skip any that were broken, or whose enemy is stunned, sapped or
+1. **Land** the announced moves: the Ground Slam, the Skull Crusher, the
+   Stomp, or the mend. Skip any that were broken, or whose enemy is stunned, sapped or
    sheeped.
 2. **In round 10:** bring in the goblins.
 3. **Each enemy acts,** in alphabetical order: brute, goblins, Ogre,
@@ -136,7 +141,7 @@ When a move lands, say what it did: "CRASH! Everyone on those squares takes
    sheeped enemy does nothing. Right after the Ogre's attack, before the
    next enemy goes, throw the boulder if it is due.
 4. **Announce** the Ogre's next move and the shaman's mend, if due. Mark
-   the Ground Slam's squares.
+   the Ground Slam's or the Stomp's squares.
 5. **Take one card** off every stack on every enemy: Taunt, stun, sap,
    sheep, rooted.
 

@@ -58,7 +58,14 @@ Any heal gets a downed hero back up, on as much HP as the heal.
 
 - {abilities.cleanse.cost} energy · {abilities.cleanse.timing} · range
   {abilities.cleanse.range}{abilities.cleanse.loud_tag}
-- Take every poison card off one hero. Only on a hero who has poison.
+- Take one stack of bad cards off one hero: you pick which. Bad cards are
+  stun, poison, rooted, sap and sheep (heroes only get stun and poison in
+  this fight). Never Bleeding, and never cooldown cards. Only on a hero
+  who has a bad card.
+- You act before the Guardian, the Mage and the Rogue, so a Cleanse on a
+  stunned one of them gives them their act step back this turn (their
+  move step has already gone by). A stunned Druid cannot act, so she
+  cannot Cleanse herself.
 
 ### Shadowmeld
 
@@ -99,5 +106,9 @@ Any heal gets a downed hero back up, on as much HP as the heal.
   Wild Growth when three hurt heroes stand close together. Regrowth
   anyone at a little over half their HP or lower (but remember it is
   Loud).
+- **Cleanse a stun fast,** the Guardian's first: the boss is on him.
+  Only if it still costs them something: a stun on a hero who has already
+  acted this turn comes off at the end of the turn anyway, unless it has
+  more than one card.
 - **Fill the gaps.** Cleanse poison, put Rejuvenation on anyone who is
   hurt, and Nourish when there is nothing else to do: it costs nothing.

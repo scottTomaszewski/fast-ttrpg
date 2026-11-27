@@ -3,8 +3,8 @@
 # The Mage
 
 The Mage stands far back and throws the biggest spells in the game. She can
-also freeze enemies in place, turn one into a sheep, and hop out of
-trouble.
+also freeze enemies in place, turn one into a sheep, hop out of trouble,
+freeze herself in a block of ice, and call her mana back.
 
 - **HP:** 28
 - **Auto-attack:** d4, on an enemy up to
@@ -66,6 +66,34 @@ trouble.
   moment it takes any damage. Not on a boss. Only one sheep at a time:
   when a new Polymorph lands, any other sheep turns back.
 
+### Ice Block
+
+- 0 mana · Instant · yourself · cooldown
+  8
+- Freeze yourself in a block of ice: take **1
+  Ice Block card**. While you hold it, nothing can hurt you (a blast or a
+  heavy hit does you no harm, and nothing can stun you), no enemy can
+  pick you as its target, and you cannot move or act. It comes off at the
+  top of your next party turn, so it covers the GM turn that follows.
+- Going into the ice takes **every bad card** off you (stun, poison,
+  rooted and the like; not Bleeding, not cooldowns), and ends your own
+  cast or channel.
+- **You may use it while stunned:** it is the one thing a stunned hero
+  can do.
+- Then put 8 cooldown cards on Ice Block.
+
+### Evocation
+
+- 0 mana · Channel, 2 rounds · yourself ·
+  cooldown 8
+- Call your mana back: get **6 mana** now, and
+  6 more in your next act step if you keep
+  channelling (2 rounds in all, never more than
+  30).
+- **Stand still** while you channel it: moving ends it. Taking damage does
+  not. Doing anything else, or being stunned, ends it too.
+- Then put 8 cooldown cards on Evocation.
+
 ### Disrupt (every hero has this)
 
 - 0 mana · Instant · range
@@ -80,6 +108,12 @@ trouble.
 - **Stand back.** Stay within 10 squares of your
   target, but well back from every enemy. Stand still while you cast.
 - **Something reached you? Frost Nova,** then step away next turn.
+- **Ice Block is your last way out.** A big hit is coming at you that
+  could take you to 0, and you cannot Disrupt it or walk out of it? Ice
+  Block. Also when you are stunned, low, and an enemy is next to you.
+- **Out of mana and nobody needs you?** Evocation: stand still and get it
+  back. Not while an enemy is next to you, a blast is coming down on you,
+  a cast needs your Disrupt, or the boss is loose.
 - **You are the best at Disrupt:** yours reaches
   10 squares. Break the shaman's mend and the boss's
   big moves.

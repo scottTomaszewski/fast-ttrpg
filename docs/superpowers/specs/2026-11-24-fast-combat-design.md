@@ -125,10 +125,12 @@ her opening (see the Rogue).
   Guardian becomes an energy class.
 - **(call)** Cooldowns are kept rare, because the owner is wary of the
   tracking. Cost is the normal limit on an ability. Where a cooldown is
-  truly needed (Disrupt is the only one so far) it uses the same countdown
-  card stack as everything else, placed on the ability, so it is not a new
-  kind of bookkeeping. If it still feels like a chore at the table, the
-  fallback is to give Disrupt a resource cost instead.
+  truly needed it uses the same countdown card stack as everything else,
+  placed on the ability, so it is not a new kind of bookkeeping. If it
+  still feels like a chore at the table, the fallback is to give Disrupt a
+  resource cost instead. Since 2026-11-27 four buttons have one: Disrupt,
+  and the owner's free buttons Shield Slam, Ice Block and Evocation (a free
+  button needs some other limit).
 
 ### Cards
 
@@ -197,6 +199,12 @@ the assistant's proposal. **(call)**
 - **(call)** Bosses cannot be stunned, sapped or sheeped, but a stun still
   breaks the cast they are in the middle of.
 - Sap and Polymorph break the moment the target takes any damage.
+- **Heroes can be stunned too** (owner's decision, 2026-11-27: the ogre's
+  Stomp, so Cleanse has stuns to take off). A stunned hero does not move
+  or act in the party turn; the Mage's Ice Block is the one thing they may
+  still do. **(call)** Stun cards on a hero come off at the end of the
+  party turn, like Bleeding, so a 1-card stun from the GM turn costs one
+  party turn; a stun also ends the hero's cast or channel.
 
 ### Enemies
 
@@ -223,6 +231,11 @@ Numbers are deliberately missing here. See "Numbers".
 5. **Shield Plant:** plant your shield. Allies in the squares behind you take
    reduced damage from one blast.
 6. **Last Stand:** you cannot drop below 1 HP this round.
+7. **Shield Slam** (owner's decision, 2026-11-27): a free single-target hit,
+   bigger than his auto-attack, on a cooldown, that gives grit (in WoW it
+   builds the tank's resource). It is his filler for when nothing needs
+   him: "Shield Slam should only fit in when everything is going super
+   well." The owner's target: 2 to 3 uses a fight.
 
 ### Rogue. d6. Energy and combo points.
 
@@ -263,7 +276,9 @@ fantasy theme and suggested druid. Names are placeholders. **(call on names)**
 2. **Regrowth:** 1-round cast, big heal, gives a Seed. Loud.
 3. **Swiftmend:** instant heal, spends a Seed. Free on an ally below half HP.
 4. **Wild Growth:** allies in an area get 2 heal cards each.
-5. **Cleanse:** remove one harmful card from an ally.
+5. **Cleanse:** remove one harmful card from an ally: any one stack of bad
+   cards (a stun too, owner's decision 2026-11-27), never Bleeding and
+   never cooldowns. The Druid picks which.
 6. **Shadowmeld:** drop any pull on you and move a few squares.
 7. **Nourish:** replaces the auto-attack. Roll your die as a heal on an ally;
    the top face gives back energy. Costs nothing.
@@ -282,10 +297,26 @@ flash bang and so on) to keep the class simple.
    damage in the game. Hits allies still standing there.
 4. **Frost Nova:** instant. Enemies next to you cannot move for 2 rounds.
 5. **Blink:** short teleport.
-6. **Quicken:** the whole party rolls two auto-attack dice for 2 rounds.
-7. **Polymorph:** 1-round cast. Target is a sheep for up to 12 rounds
+6. **Polymorph:** 1-round cast. Target is a sheep for up to 12 rounds
    (was 4; the owner found 4 low, the simulator picked 12 on 2026-11-27);
    breaks on damage. One at a time.
+7. **Ice Block** (owner's decision, 2026-11-27): instant and free, on a
+   long cooldown. Until the top of her next party turn she cannot be hurt
+   and no enemy can pick her, and she cannot move or act. It clears her
+   bad cards and ends her cast, and she may use it while stunned.
+8. **Evocation** (owner's decision, 2026-11-27): a free 2-round channel
+   she must stand still for, giving mana each round; on a long cooldown.
+
+**Benched** (owner's decision, 2026-11-27): **Quicken** (the whole party
+rolls two auto-attack dice for 2 rounds). "I don't love the Quicken
+ability, but don't delete it yet." It stays in the code and the numbers
+(`benched = true`), but nobody uses it and it is not on the class sheet.
+Time Warp and Mirror Image were offered as other iconic Mage spells and
+skipped for now: "I don't want to overwhelm the player too much."
+
+**How many buttons (owner's rule, 2026-11-27).** No class has more than 1.5
+times as many buttons as another. The Mage has 8 (fine, the owner said);
+the others have 7. Disrupt, which everyone has, is not counted.
 
 ### Shared
 
@@ -338,6 +369,8 @@ not written into code, so a talent can later be "change these entries".
 One boss with adds, built to exercise the engine. It must include:
 
 - a boss with an announced area blast (dodge it, or stand behind Shield Plant);
+- an announced stomp that stuns the heroes next to the boss (work for
+  Cleanse; owner's decision, 2026-11-27);
 - an announced heavy hit on the tank (the Last Stand moment);
 - an announced cast worth interrupting (for example an add that heals);
 - an attack on a non-tank hero that taunts cannot stop (work for the healer);
