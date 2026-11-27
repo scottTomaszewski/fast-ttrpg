@@ -25,7 +25,7 @@ and make the whole party fight faster.
 - Hit one enemy for **{abilities.arcane_volley.dice}**, now and in each of
   your next act steps, for {abilities.arcane_volley.hits} hits in all. You
   may move while you channel. Each hit is paid for, and checks its range,
-  when it happens. **Each hit is Loud.**
+  when it happens.
 
 ### Firebolt
 

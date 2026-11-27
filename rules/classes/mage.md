@@ -23,11 +23,11 @@ and make the whole party fight faster.
 
 - 2 mana for each hit ·
   Channel, 3 hits · range
-  10 · **Loud**
+  10
 - Hit one enemy for **2d6**, now and in each of
   your next act steps, for 3 hits in all. You
   may move while you channel. Each hit is paid for, and checks its range,
-  when it happens. **Each hit is Loud.**
+  when it happens.
 
 ### Firebolt
 
