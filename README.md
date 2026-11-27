@@ -34,6 +34,19 @@ is only there when the party has a Warden.
 party (`--party warden,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.
 
+## The rules
+
+The rules a family plays from are in [`rules/README.md`](rules/README.md):
+the core rules, a sheet for each hero, the cards, and the test fight for
+the GM. They are made from templates in `rules/templates/`, with every
+number filled in from the game files. After changing a number, or a
+template, run:
+
+    uv run fastcombat rules
+
+A test fails if the rules in `rules/` are not what the templates make, so
+a retuned number cannot leave the rules out of step.
+
 ## Where the numbers live
 
 Every number in the game is in one of two places:
