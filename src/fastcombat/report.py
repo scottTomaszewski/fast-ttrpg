@@ -25,7 +25,10 @@ IN_BAND_AT_LEAST = 0.60  # ...in at least this share of fights
 WIN_RATE = (0.70, 0.90)  # win most fights, but not all
 DANGER_HP = 0.25  # a hero at this share of max HP or less is in danger...
 DANGER_AT_LEAST = 0.50  # ...and that should happen in at least this share of fights
-AUTO_SHARE = (0.20, 0.50)  # auto-attacks' share of all hero damage
+# Auto-attacks' share of all hero damage. The floor was 20%; lowered to 15%
+# (owner 2026-11-27, "We can lower if needed"): with honest Arcane Volley and
+# Backstab numbers it is about 16% (tuning log, "D4b"). Never below 15%.
+AUTO_SHARE = (0.15, 0.50)
 # No hero is starved (too little to pay for their cheapest ability) for
 # this share of their up rounds or more: the owner wants every hero able to
 # act in an emergency.

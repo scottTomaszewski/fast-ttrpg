@@ -30,7 +30,7 @@ enemies fight him, and stands between them and everyone else.
 ### Challenging Shout
 
 - 3 grit · Instant · around you
-- Every enemy within 5 squares of you gets
+- Every enemy within 4 squares of you gets
   **1 Taunt card**.
 
 ### Intercede

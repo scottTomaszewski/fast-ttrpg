@@ -50,7 +50,7 @@ the one whose name comes first picks first.
 
 ### Backstab
 
-- 7 energy · Instant · range
+- 5 energy · Instant · range
   1 (next to you)
 - Roll **2d6** and get 1 combo
   point.

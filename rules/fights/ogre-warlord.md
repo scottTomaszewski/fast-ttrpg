@@ -41,7 +41,7 @@ g goblin (fodder, comes in round 10)
 
 | Enemy | How many | HP | Attack | Reach | Move | Goes for |
 |---|---|---|---|---|---|---|
-| Ogre Warlord (boss) | 1 | 115 | 2d6+9 | 1 (next to it) | 4 | the back line |
+| Ogre Warlord (boss) | 1 | 130 | 2d6+9 | 1 (next to it) | 4 | the back line |
 | Brute (shielded 3) | 1 | 30 | 4 | 1 (next to it) | 4 | the nearest hero |
 | Shaman | 1 | 24 | 2, and poison | 8 squares | 4 | a random hero |
 | Wolf | 2 | 20 | 3 | 1 (next to it) | 7 | the back line |
@@ -101,7 +101,7 @@ Skull Crusher does.
 
 The shaman announces a **mend** in step 4 of the GM turn in rounds
 2, 6, 10, 14, 18 and so on. In step 1 of the next GM turn it heals the
-Ogre 25 HP (never past his full 115). It
+Ogre 25 HP (never past his full 130). It
 does not happen if the shaman is dead, or is stunned, sapped or sheeped
 when it is due, or if someone Disrupts it. A shaman who is stunned, sapped
 or sheeped in step 4 announces nothing.

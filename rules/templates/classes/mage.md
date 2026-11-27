@@ -120,5 +120,13 @@ freeze herself in a block of ice, and call her mana back.
   leave it, and any sapped enemy, alone until nothing else is left: a hit
   wakes it. Never aim a Meteor where it would. **Meteor** a spot with four or more
   enemies and no heroes.
-- **Otherwise Firebolt.** Hit the enemy casting a mend first, then the add
-  with the least HP, and the boss last.
+- **Arcane Volley is your everyday spell.** A whole Volley does about as
+  much damage for its mana as a Firebolt. Its edge: you can move while it
+  goes, and you can stop it part-way and keep the hits that already
+  landed. The owner's words: "A mage can let the spell hit twice and then
+  cancel the cast to skip the third hit to kick off another, more urgent
+  spell or interrupt. Firebolt is more all-or-nothing." So when a cast
+  needs your Disrupt, or an enemy reaches you, stop the Volley and do it.
+- **Who to hit:** the enemy casting a mend first, then the add with the
+  least HP, and the boss last. **Firebolt** instead of a Volley when one
+  Firebolt would finish that add.

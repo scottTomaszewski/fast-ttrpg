@@ -220,7 +220,8 @@ def test_each_target_can_fail():
     assert not passed(good(timeout_rate=0.01))["no_timeouts"]
     assert not passed(good(danger_rate=0.49))["danger"]
     assert not passed(good(auto_share=0.51))["auto_share"]
-    assert not passed(good(auto_share=0.19))["auto_share"]
+    assert not passed(good(auto_share=0.14))["auto_share"]
+    assert passed(good(auto_share=0.15))["auto_share"]          # the floor is 15% (owner 2026-11-27)
     assert not passed(good(starved={"guardian": 0.2, "mage": 0.1}))["resource:guardian"]
     assert not passed(good(ended_full={"guardian": 0.2, "mage": 0.5}))["resource:mage"]
     assert not passed(good(), {"mage": good(win_rate=0.61)})["needed:mage"]

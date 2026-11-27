@@ -21,7 +21,7 @@ die = 8
 attack_range = 1
 resource = "grit"
 pool = 10
-start = 4              # grit for two Taunts (D4; the design said none: owner to decide)
+start = 4              # grit for two Taunts, so he can hold the boss from round 1 (owner 2026-11-27)
 regen = 0
 crit_gain = 1          # grit
 
@@ -74,7 +74,7 @@ cards = 3
 [abilities.challenging_shout]
 hero = "guardian"
 cost = 3
-radius = 5
+radius = 4
 cards = 1
 
 [abilities.intercede]
@@ -112,7 +112,7 @@ loud = false
 
 [abilities.backstab]
 hero = "rogue"
-cost = 7
+cost = 5
 range = 1
 dice = [2, 6]
 
@@ -203,7 +203,7 @@ hero = "mage"
 cost = 2               # per hit
 hits = 3
 range = 10
-dice = [2, 4]
+dice = [2, 6]          # a whole Volley (21 for 6 mana) does as much for its mana as a Firebolt (14 for 4)
 loud = false           # the everyday spell: Loud on every hit would keep pulling enemies off the Guardian
 
 [abilities.firebolt]
@@ -229,7 +229,7 @@ cards = 2
 [abilities.blink]
 hero = "mage"
 cost = 2
-range = 5
+range = 6
 
 [abilities.quicken]
 hero = "mage"
