@@ -7,6 +7,7 @@ wins:
 1. Taunt cards on the enemy: it must go for the Warden, wherever they are.
 2. A pull: a Loud hero made it angry, so it goes for that hero.
 3. A hold: it is standing next to the Warden, so it must hit the Warden.
+   A boss ignores this hold: only Taunt cards make a boss attack the Warden.
 4. Otherwise it goes for whoever its kind likes best (see `choose_target`).
 
 "The Warden" is always the first Warden in the party who is up.
@@ -22,7 +23,13 @@ from fastcombat.units import Enemy, FightState, Hero
 
 
 def held(state: FightState, enemy: Enemy) -> bool:
-    """True when the enemy stands next to the Warden (the weak hold)."""
+    """True when the enemy stands next to the Warden (the weak hold).
+
+    Never true for a boss. A boss may walk away from the Warden and hit
+    someone else; only Taunt cards make it attack him.
+    """
+    if enemy.spec.tier == "boss":
+        return False
     warden = state.warden()
     return warden is not None and adjacent(enemy.pos, warden.pos)
 
@@ -99,14 +106,18 @@ def puller_of(state: FightState, enemy: Enemy) -> Hero | None:
 def apply_loud(state: FightState, hero_id: str, enemy: Enemy) -> None:
     """`hero_id` hit `enemy` with something Loud.
 
-    If the enemy has Taunt cards, one comes off. If it has none, it is
-    pulled: it goes for that hero on its next turn.
+    If the enemy has Taunt cards, one comes off; a boss loses
+    `boss_loud_cards` of them (from the rules in the numbers file). If it
+    has fewer than that, they all come off, and the rest of the hit does not
+    pull. If it has none, it is pulled: it goes for that hero on its next
+    turn.
     """
     taunt = enemy.stacks.get("taunt")
     if taunt is None:
         enemy.pulled_by = hero_id
         return
-    taunt.cards -= 1
+    cards = state.numbers.rules["boss_loud_cards"] if enemy.spec.tier == "boss" else 1
+    taunt.cards = max(0, taunt.cards - cards)
     if taunt.cards <= 0:
         del enemy.stacks["taunt"]
 
@@ -114,7 +125,8 @@ def apply_loud(state: FightState, hero_id: str, enemy: Enemy) -> None:
 def loud_heal(state: FightState, hero_id: str) -> None:
     """A Loud heal by `hero_id` pulls every living enemy that nothing holds.
 
-    An enemy with Taunt cards, or one standing next to the Warden, stays put.
+    An enemy with Taunt cards stays put, and so does one standing next to
+    the Warden, unless it is a boss (nothing but Taunt cards holds a boss).
     """
     for enemy in state.living_enemies():
         if "taunt" not in enemy.stacks and not held(state, enemy):

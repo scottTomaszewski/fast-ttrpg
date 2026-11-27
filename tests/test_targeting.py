@@ -160,3 +160,47 @@ def test_a_hidden_warden_is_never_the_one_an_intercede_hands_on_to():
     assert choose_target(s, w).id == "warden"
     s.heroes["warden"].hidden = True
     assert choose_target(s, w).id == "mage"
+
+
+# --- Bosses ignore the hold: only Taunt cards keep a boss on the Warden -------
+# The owner's decision, so the Warden has to taunt the boss.
+
+def test_a_boss_next_to_the_warden_is_not_held():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.pos = (5, 5)
+    o = enemy(s, "ogre", (4, 6))                       # next to the warden at (3, 6) and the rogue
+    assert not held(s, o) and can_move(s, o)
+    assert choose_target(s, o).id == "rogue"           # nearest: both 1 away, the rogue's id comes first
+    w = enemy(s, "wolf", (4, 7))                       # a wolf there is held, as before
+    assert held(s, w) and not can_move(s, w) and choose_target(s, w).id == "warden"
+
+def test_taunt_cards_still_hold_a_boss():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.pos = (5, 5)
+    o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 1)
+    assert choose_target(s, o).id == "warden"
+
+def test_a_loud_heal_pulls_a_boss_next_to_the_warden_with_no_taunt_cards():
+    s = state(); o = enemy(s, "ogre", (4, 6)); w = enemy(s, "wolf", (4, 7))   # both next to the warden
+    loud_heal(s, "druid")
+    assert o.pulled_by == "druid" and w.pulled_by is None
+    t = state(); o2 = enemy(t, "ogre", (4, 6)); add_stack(o2, "taunt", 2)
+    loud_heal(t, "druid")
+    assert o2.pulled_by is None
+
+def test_a_loud_hit_takes_boss_loud_cards_off_a_boss_and_one_off_anything_else():
+    s = state(); assert s.numbers.rules["boss_loud_cards"] == 1
+    o = enemy(s, "ogre", (10, 3)); w = enemy(s, "wolf", (10, 7))
+    add_stack(o, "taunt", 3); add_stack(w, "taunt", 3)
+    damage_enemy(s, "mage", o, 1, loud=True); damage_enemy(s, "mage", w, 1, loud=True)
+    assert o.stacks["taunt"].cards == 2 and w.stacks["taunt"].cards == 2
+    s.numbers.rules["boss_loud_cards"] = 2
+    damage_enemy(s, "mage", o, 1, loud=True); damage_enemy(s, "mage", w, 1, loud=True)
+    assert "taunt" not in o.stacks and o.pulled_by is None          # 2 of 2 cards gone, no pull
+    assert w.stacks["taunt"].cards == 1                              # not a boss: always 1
+    damage_enemy(s, "mage", o, 1, loud=True)
+    assert o.pulled_by == "mage"                                     # no cards left now: it pulls
+
+def test_a_loud_hit_on_a_boss_with_fewer_cards_takes_what_is_there_and_does_not_pull():
+    s = state(); s.numbers.rules["boss_loud_cards"] = 2
+    o = enemy(s, "ogre", (10, 3)); add_stack(o, "taunt", 1)
+    damage_enemy(s, "mage", o, 1, loud=True)
+    assert "taunt" not in o.stacks and o.pulled_by is None
