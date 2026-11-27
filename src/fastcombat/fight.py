@@ -1,6 +1,7 @@
 """One whole fight: the round loop, the party turn, and auto-attacks.
 
-A round is a party turn, then a GM turn (see `enemy_ai.py`). The party wins
+Before round 1, each Rogue makes her opening (see `opening.py`). A round
+is a party turn, then a GM turn (see `enemy_ai.py`). The party wins
 when no enemy is alive and no more are coming. The party loses when no hero
 is up: every one of them is down or out. A fight that goes on past the last
 round allowed (`rules.max_rounds`) is stopped and counts as a loss.
@@ -19,8 +20,9 @@ from fastcombat.combat import (
 from fastcombat.enemy_ai import gm_turn
 from fastcombat.grid import Pos, adjacent, distance, on_map
 from fastcombat.numbers import HAUL_UP, SHARED, FightDef, HeroSpec, Numbers
+from fastcombat.opening import NONE, open_fight
 from fastcombat.policies import Policy, default_policy
-from fastcombat.units import Enemy, FightState, Hero, Tally, new_state
+from fastcombat.units import CONTROL_STACKS, Enemy, FightState, Hero, Tally, new_state
 
 
 @dataclass
@@ -40,6 +42,9 @@ class FightResult:
     # Every button the party has, and whose it is: a class, or "shared" when
     # any hero has it. In the numbers file's order, with "haul_up" last.
     kit: dict[str, str]
+    # The control cards ("stun", "sap", "sheep") on enemies still alive at
+    # the end, one entry for each enemy and kind. Empty after a win.
+    controlled_at_end: list[str]
 
 
 def run_fight(
@@ -60,6 +65,7 @@ def run_fight(
         hero.id: chosen[hero.id] if hero.id in chosen else default_policy(hero.cls)
         for hero in state.heroes.values()
     }
+    openings(state, plays)
     for number in range(1, numbers.rules["max_rounds"] + 1):
         state.round = number
         party_turn(state, plays)
@@ -71,6 +77,16 @@ def run_fight(
         if outcome is not None:
             return _result(state, party, seed, won=outcome, timeout=False)
     return _result(state, party, seed, won=False, timeout=True)
+
+
+def openings(state: FightState, policies: dict[str, Policy]) -> None:
+    """The step before round 1: each Rogue, in id order, makes the opening
+    her policy picks. A policy with no `opening` picks none."""
+    for hero in sorted(state.heroes.values(), key=lambda hero: hero.id):
+        if hero.cls != "rogue":
+            continue
+        pick = getattr(policies[hero.id], "opening", None)
+        open_fight(state, hero, pick(state, hero) if pick else NONE)
 
 
 def party_turn(state: FightState, policies: dict[str, Policy]) -> None:
@@ -248,6 +264,9 @@ def _result(
         end_resource={hero.id: hero.resource for hero in state.heroes.values()},
         pool={hero.id: state.numbers.heroes[hero.cls].pool for hero in state.heroes.values()},
         kit=_kit(state.numbers, party),
+        controlled_at_end=[
+            name for e in state.living_enemies() for name in CONTROL_STACKS if name in e.stacks
+        ],
     )
 
 

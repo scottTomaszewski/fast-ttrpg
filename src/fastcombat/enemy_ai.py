@@ -21,7 +21,7 @@ from fastcombat.combat import add_stack, damage_hero, tick_stacks
 from fastcombat.grid import adjacent, approach, distance, nearest_free, within
 from fastcombat.numbers import ScriptStep
 from fastcombat.targeting import can_move, choose_target, seen_heroes
-from fastcombat.units import Announced, Enemy, FightState, Hero
+from fastcombat.units import CONTROL_STACKS, Announced, Enemy, FightState, Hero
 
 
 def gm_turn(state: FightState) -> None:
@@ -35,11 +35,20 @@ def gm_turn(state: FightState) -> None:
             # any pull on it is used up, as a pull is after a normal turn.
             enemy.target = None
             enemy.pulled_by = None
+            _count_turn_lost(state, enemy)
         else:
             _take_turn(state, enemy)
     announce(state)
     for enemy in state.living_enemies():
         tick_stacks(enemy)
+
+
+def _count_turn_lost(state: FightState, enemy: Enemy) -> None:
+    """Write down, for the report, which control cards cost `enemy` this turn."""
+    lost = state.tally.rounds_out
+    for name in CONTROL_STACKS:
+        if name in enemy.stacks:
+            lost[name] = lost.get(name, 0) + 1
 
 
 def land_announced(state: FightState) -> None:

@@ -339,3 +339,26 @@ def test_check_reads_the_usage_targets_given(tmp_path, capsys):
     usage.write_text((REAL_GAME / "usage_targets.toml").read_text() + "\n[fireball]\nmin = 1\n")
     assert main(["check", "--n", "1", *FILES, "--usage", str(usage)]) == 2
     assert "fireball" in capsys.readouterr().err
+
+
+# --- The Rogue's opening -------------------------------------------------------
+
+def test_the_summary_counts_the_openings_the_stealth_checks_and_the_rounds_sapped():
+    r = run_fight(N, F, PARTY, seed=1)
+    made = [{"rogue": "sneak"}, {"rogue": "spotted"}, {"rogue": "shadowstep"}, {"rogue": "sneak"}]
+    out = [{"sap": 6}, {}, {"sap": 2, "sheep": 4}, {"stun": 1}]
+    fights = [replace(r, tally=replace(r.tally, openings=m, rounds_out=o)) for m, o in zip(made, out)]
+    fights[1] = replace(fights[1], controlled_at_end=["sap"])
+    s = summarize(fights)
+    assert s.openings == {"sneak": 0.75, "shadowstep": 0.25, "none": 0.0}
+    assert s.sneak_success == 2 / 3
+    assert s.rounds_out == {"stun": 0.25, "sap": 2.0, "sheep": 1.0}
+    assert s.asleep_at_end == {"sap": 0.25, "sheep": 0.0}
+
+def test_the_printed_summary_has_a_rogue_opening_block_only_with_a_rogue():
+    text = format_summary(summarize([run_fight(N, F, PARTY, seed=i) for i in range(3)]))
+    assert "Rogue opening" in text and "rounds an enemy spent sapped" in text
+    assert "stealth checks that worked: -" in text                 # the frozen fight has no elite: nobody sneaks
+    s = summarize([run_fight(N, F, ["guardian", "druid", "mage"], seed=1)])
+    assert s.openings == {} and s.sneak_success is None
+    assert "Rogue opening" not in format_summary(s)

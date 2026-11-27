@@ -10,10 +10,13 @@ Shares are written as 0.25 for 25%.
 
 import math
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from fastcombat.combat import BROKEN_BY_DAMAGE
 from fastcombat.fight import FightResult
 from fastcombat.numbers import SHARED, UsageTarget
+from fastcombat.opening import KINDS as OPENING_KINDS
+from fastcombat.units import CONTROL_STACKS
 
 # What the design asks for. These are not game numbers: they are the targets
 # the game numbers are tuned to meet.
@@ -69,6 +72,17 @@ class Summary:
     # every hero's uses added together. A button never pressed is there at 0.
     uses: dict[str, float]
     kit: dict[str, str]  # whose each button in `uses` is: a class, or "shared"
+    # The Rogues' openings before round 1 (see `opening.py`): mean times per
+    # fight each one was picked, all Rogues together ("sneak" counts the
+    # stealth checks that failed too). Empty with no Rogue in the party.
+    openings: dict[str, float] = field(default_factory=dict)
+    sneak_success: float | None = None  # share of stealth checks that worked; None if nobody sneaked
+    # Mean GM turns per fight that enemies lost to each kind of control card
+    # ("stun", "sap", "sheep"), all enemies together.
+    rounds_out: dict[str, float] = field(default_factory=dict)
+    # Share of fights that ended with a living enemy sapped, or a sheep:
+    # by card name, "sap" and "sheep".
+    asleep_at_end: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -133,7 +147,34 @@ def summarize(results: list[FightResult]) -> Summary:
             for a in results[0].kit
         },
         kit=dict(results[0].kit),
+        openings=_openings(results),
+        sneak_success=_sneak_success(results),
+        rounds_out={
+            name: sum(r.tally.rounds_out.get(name, 0) for r in results) / n
+            for name in CONTROL_STACKS
+        },
+        asleep_at_end={
+            name: _share(results, lambda r: name in r.controlled_at_end)
+            for name in BROKEN_BY_DAMAGE
+        },
     )
+
+
+def _openings(results: list[FightResult]) -> dict[str, float]:
+    """Mean times per fight each opening was picked. A failed Sneak is a Sneak."""
+    if not results[0].tally.openings:
+        return {}
+    picked = {kind: 0 for kind in OPENING_KINDS}
+    for r in results:
+        for made in r.tally.openings.values():
+            picked["sneak" if made == "spotted" else made] += 1
+    return {kind: count / len(results) for kind, count in picked.items()}
+
+
+def _sneak_success(results: list[FightResult]) -> float | None:
+    """The share of stealth checks that worked, or None if there were none."""
+    made = [m for r in results for m in r.tally.openings.values() if m in ("sneak", "spotted")]
+    return made.count("sneak") / len(made) if made else None
 
 
 def check_targets(
@@ -271,7 +312,25 @@ def format_summary(s: Summary) -> str:
     for owner in sorted(owners, key=lambda o: o == SHARED):
         lines.append("anyone" if owner == SHARED else owner)
         lines += [f"  {a:<{width}}  {s.uses[a]:5.1f}" for a in s.uses if s.kit[a] == owner]
+    if s.openings:
+        lines += ["", *_format_openings(s)]
     return "\n".join(lines)
+
+
+def _format_openings(s: Summary) -> list[str]:
+    """The "Rogue opening" block: what the Rogues did before round 1, and how
+    long their Saps kept enemies out."""
+    success = "-" if s.sneak_success is None else _whole_pct(s.sneak_success)
+    return [
+        "Rogue opening (per fight, all Rogues together):",
+        f"  sneak {s.openings['sneak']:.2f}, shadowstep in {s.openings['shadowstep']:.2f}, "
+        f"none {s.openings['none']:.2f}",
+        f"  stealth checks that worked: {success}",
+        f"  rounds an enemy spent sapped: {s.rounds_out['sap']:.1f} "
+        f"(still sapped at the end of {_whole_pct(s.asleep_at_end['sap'])} of fights)",
+        f"  rounds an enemy spent as a sheep: {s.rounds_out['sheep']:.1f} "
+        f"(still a sheep at the end of {_whole_pct(s.asleep_at_end['sheep'])} of fights)",
+    ]
 
 
 def format_checks(checks: list[Check]) -> str:

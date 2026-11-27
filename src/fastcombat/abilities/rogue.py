@@ -142,7 +142,7 @@ def _shadowstep_needs_a_free_square_by_the_enemy(
     state: FightState, rogue: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     enemy = target_enemy(state, action)
-    return enemy is not None and _landing(state, rogue, enemy) is not None
+    return enemy is not None and landing(state, rogue, enemy) is not None
 
 
 @keeps_hiding("shadowstep")
@@ -156,7 +156,7 @@ def shadowstep(
     can open with a Backstab from hiding or a Sap, and no enemy can pick her
     as its target. If she was not, she is not.
     """
-    square = _landing(state, rogue, state.enemies[action.target])
+    square = landing(state, rogue, state.enemies[action.target])
     if square is not None:
         rogue.pos = square
 
@@ -173,8 +173,10 @@ def vanish(state: FightState, rogue: Hero, spec: AbilitySpec, action: Action) ->
     rogue.hidden = True
 
 
-def _landing(state: FightState, rogue: Hero, enemy: Enemy) -> Pos | None:
-    """Where Shadowstep would put the Rogue.
+def landing(state: FightState, rogue: Hero, enemy: Enemy) -> Pos | None:
+    """Where Shadowstep would put the Rogue: the free square next to the
+    enemy that is closest to her. The opening before round 1 uses it too
+    (see `opening.py`).
 
     None if no square next to the enemy is free.
     """

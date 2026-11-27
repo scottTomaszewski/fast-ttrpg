@@ -7,7 +7,7 @@ one), enemies after their type and a count ("wolf1", "wolf2").
 """
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fastcombat.dice import Dice
 from fastcombat.grid import Pos
@@ -106,6 +106,13 @@ class Tally:
     # How many times each hero used each ability, by hero id, then ability
     # id. Hauling an ally up counts too, as "haul_up".
     uses: dict[str, dict[str, int]]
+    # Each Rogue's opening before round 1, by hero id: "sneak" (it worked),
+    # "spotted" (the stealth check failed), "shadowstep" or "none". Only
+    # Rogues are in it. See `opening.py`.
+    openings: dict[str, str] = field(default_factory=dict)
+    # GM turns enemies lost to control cards, by card name ("stun", "sap",
+    # "sheep"), all enemies added together. Not by hero id.
+    rounds_out: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def for_heroes(cls, hero_ids: list[str]) -> "Tally":
