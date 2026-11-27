@@ -12,6 +12,10 @@ the ability can be used right now (`abilities.can_use`); if it cannot, the
 next rule is read. Each class's list is in its docstring below, and the
 code follows it in the same order, one block for each rule.
 
+The lists are written the way a good player of an online game (an MMO)
+plays: every button has a reason to be pressed, and the big ones are kept
+for the moment they are for.
+
 Some rules use a word that means the same for every class:
 
 - The focus is the enemy to attack. Never one that is stunned, sapped or
@@ -22,42 +26,60 @@ Some rules use a word that means the same for every class:
   the same way but only from enemies that are not fodder; if there are
   none, the rule is skipped. Auto-attacks use the normal focus, fodder
   too. So a 1-HP goblin gets an auto-attack, not a Backstab.
+- An add is an enemy that is not the boss. An elite is an add the fight
+  file marks as one (like the brute).
 - Haul up: a hero next to a downed ally hauls them up, unless a Druid is
   up and has a Seed (then the Druid will heal them).
-- Moving: never end on a square where a blast is going to land
-  (`state.danger_squares()`) if a free square out of it is in reach. A
-  hero who is in the middle of a cast, and safe, stays put. So does a
-  hero next to a downed ally they will haul up: that comes before where
-  a class likes to stand.
+- Moving: never end on a square where a blast is going to land (danger)
+  if a free square out of it is in reach. A hero who is in the middle of
+  a cast, and safe, stays put. So does a hero next to a downed ally they
+  will haul up: that comes before where a class likes to stand.
+- The shield plan: the boss has announced a blast that lands this round,
+  the Guardian stands in its area, the boss has Taunt cards, he is not
+  about to haul anyone up, and he can pay for Shield Plant. Then he will
+  plant his shield this turn (Guardian rule 3), so he stays where he is
+  in the move step instead of stepping out. Everyone can see that coming,
+  so for every hero the squares behind him (where Shield Plant covers
+  them, against the boss's square) are not danger from that blast: an
+  ally hitting an enemy there, or one who cannot move, stays behind the
+  shield instead of running.
+- An answered cast is a boss cast that a Guardian has already dealt
+  with this turn: a blast he planted his shield against, or a heavy hit
+  on a hero who holds a Last Stand card. Nobody spends an interrupt on it.
 
 An ally is a hero who is up (not down and not out), unless a rule says
 otherwise: "a downed ally" is one who is down. "Lowest" for allies means
-the lowest share of their max HP.
+the lowest share of their max HP. A squishy hero is a Druid or a Mage.
 """
 
 from dataclasses import replace
 from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
-from fastcombat.grid import Pos, adjacent, approach, distance, within
+from fastcombat.grid import Pos, adjacent, approach, behind, distance, within
+from fastcombat.numbers import AbilitySpec
 from fastcombat.targeting import held
 from fastcombat.units import Enemy, FightState, Hero
 
 # How the policies play. These are not game rules: they are how careful or
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
-INTERCEDE_AT = 0.5  # Guardian: guard an ally at half HP or less
-AOE_TAUNT_ENEMIES = 3  # Guardian: AoE Taunt when this many loose enemies are near
+INTERCEDE_AT = 0.6  # Guardian: guard an ally at 60% HP or less
+AOE_TAUNT_ENEMIES = 2  # Guardian: AoE Taunt when this many loose adds near him go for allies
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
-WILD_GROWTH_ALLIES = 3  # Druid: Wild Growth when it covers this many of them
+WILD_GROWTH_ALLIES = 2  # Druid: Wild Growth when it covers this many of them
 REGROWTH_AT = 0.60  # Druid: Regrowth an ally at 60% HP or less
 REJUVENATION_AT = 0.80  # Druid: Rejuvenation on an ally at 80% HP or less...
 REJUVENATION_ENERGY = 6  # ...when the Druid has this much energy or more
+VANISH_AT = 0.40  # Rogue: Vanish at 40% HP or less when something is after her
+CHEAP_SHOT_AT = 0.50  # Rogue: Cheap Shot an add on a squishy hero at half HP or less
 MAGE_SAFE_GAP = 5  # Mage: likes to stand this far from every enemy; farther is no better
-METEOR_ENEMIES = 4  # Mage: Meteor when it would hit this many enemies
-QUICKEN_ROUND = 5  # Mage: Quicken from this round on
-VOLLEY_TAUNT_CARDS = 3  # Mage: Arcane Volley only on a focus with this many Taunt cards
+METEOR_ENEMIES = 3  # Mage: Meteor when it would hit this many enemies
+QUICKEN_ROUND = 5  # Mage: the first Quicken from this round on...
+QUICKEN_BURN = 0.35  # ...and a second one when the boss is down to 35% HP or less
+QUICKEN_MOST = 2  # Mage: never more Quickens than this in one fight
+VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with this many Taunt cards
 
 
 class Policy(Protocol):
@@ -118,7 +140,8 @@ class _ClassPolicy:
 
 class GuardianPolicy(_ClassPolicy):
     """The Guardian. Move: to a square next to the boss (or to the nearest
-    enemy if there is no boss), out of danger if possible.
+    enemy if there is no boss), out of danger if possible. When the shield
+    plan is on, he stays where he is instead.
 
     An enemy next to the Guardian is already held: it must attack him. So the
     Guardian spends a turn on a Taunt or a pull only for an enemy that would
@@ -127,25 +150,37 @@ class GuardianPolicy(_ClassPolicy):
     it on him, so he keeps Taunt cards on it (rule 6). A loose enemy is one
     that is neither held, taunted nor controlled.
 
+    He keeps grit for his emergency buttons. While an ally (not a Guardian)
+    is at 60% HP or less, he keeps enough for Intercede. While the boss is
+    taunted and its script will announce a heavy hit this GM turn that
+    could take him to 0 (see rule 2), he keeps enough for Last Stand.
+    Rule 9 is the everyday one: he only uses it if the grit left after
+    paying is still that much. (Rules 7 and 8 are not everyday: they take
+    adds off his allies.)
+
     1. Haul up.
-    2. A boss heavy hit is announced on me and it could take me to 0 at its
-       maximum roll: Last Stand.
-    3. A boss blast is announced and at least one ally stands in its area:
-       Shield Plant, against the blast coming from the boss's square.
-    4. An enemy next to me has an announced cast and is not controlled (a
-       stunned, sapped or sheeped enemy's cast never lands): Disrupt.
-    5. An ally (not a Guardian) at half HP or less is the target of an enemy
+    2. A boss heavy hit is announced on me and it could take me to 0: its
+       biggest roll, plus the boss's own biggest hit later in that GM turn
+       if it has Taunt cards (one Last Stand card covers the whole GM turn):
+       Last Stand.
+    3. The shield plan is on: Shield Plant, against the blast coming from
+       the boss's square.
+    4. An enemy next to me has an announced cast that is not answered, and
+       is not controlled (a stunned, sapped or sheeped enemy's cast never
+       lands): Disrupt.
+    5. An ally (not a Guardian) at 60% HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
     6. The boss has no Taunt cards: Taunt the boss.
-    7. Three or more loose enemies are within AoE Taunt's radius: AoE Taunt.
-    8. A loose enemy that is not a boss and not fodder, and is not already
-       going for me, is in Taunt's range: Taunt the one closest to
-       any ally who is not a Guardian. (Fodder dies to any hit, so it is not
-       worth the grit.)
-    9. A loose enemy that is not a boss and attacks from farther than one
-       square away (like the shaman) is in Grip's range: Grip
-       the one closest to any ally who is not a Guardian. Next to me it is
-       held, and I can Disrupt its casts.
+    7. Two or more loose adds within AoE Taunt's radius are going for
+       someone else (fodder too, like a goblin wave): AoE Taunt.
+    8. A loose add is in Grip's range, and it attacks from farther than one
+       square away (like the shaman), or it is next to a squishy hero it is
+       going for (like a wolf that ran past me): Grip the one closest to any
+       ally who is not a Guardian. Next to me it is held, for as long as it
+       stays there, and I can Disrupt its casts.
+    9. A loose add that is not fodder, and is not already going for me, is
+       in Taunt's range: Taunt the one closest to any ally who is not a
+       Guardian. (Fodder dies to any hit, so it is not worth the grit.)
     10. Auto-attack the focus if it is next to me, or else the lowest-HP
         enemy next to me that is not controlled.
     """
@@ -153,6 +188,9 @@ class GuardianPolicy(_ClassPolicy):
     taunts_boss = True  # rule 6; `GuardianNoBossTaunt` switches it off
 
     def where_to(self, state: FightState, guardian: Hero) -> Pos:
+        plan = _shield_plan(state)
+        if plan is not None and plan[0] is guardian:
+            return guardian.pos
         goal = _boss(state) or _nearest_enemy(state, guardian)
         if goal is None:
             return _stay(state, guardian)
@@ -171,21 +209,18 @@ class GuardianPolicy(_ClassPolicy):
         # 2. A boss heavy hit on me that could take me to 0: Last Stand.
         cast = boss.announced if boss else None
         if cast and cast.kind == "heavy" and cast.target == guardian.id:
-            most = cast.dice[0] * cast.dice[1]
-            guarded = guardian.stacks.get("guarded")
-            if guarded is not None:
-                most -= guarded.value
-            if most >= guardian.hp:
+            if _heavy_could_drop(state, guardian, cast.dice):
                 if action := _ability(state, guardian, "last_stand"):
                     return action
 
-        # 3. A boss blast with an ally in its area: Shield Plant against it.
-        if cast and cast.kind == "blast" and any(a.pos in cast.area for a in allies):
-            if action := _ability(state, guardian, "shield_plant", pos=boss.pos):
+        # 3. The shield plan is on: Shield Plant against the boss's blast.
+        plan = _shield_plan(state)
+        if plan is not None and plan[0] is guardian:
+            if action := _ability(state, guardian, "shield_plant", pos=plan[1]):
                 return action
 
-        # 4. An enemy next to me has an announced cast and is not controlled: Disrupt.
-        casting = _first(_casting(_enemies_next_to(state, guardian)))
+        # 4. An enemy next to me has an announced cast nobody answered: Disrupt.
+        casting = _first(_casting(state, _enemies_next_to(state, guardian)))
         if casting is not None:
             if action := _ability(state, guardian, "disrupt", casting.id):
                 return action
@@ -206,42 +241,47 @@ class GuardianPolicy(_ClassPolicy):
             if action := _ability(state, guardian, "taunt", boss.id):
                 return action
 
-        # 7. Three or more loose enemies near me: AoE Taunt.
+        loose = [
+            e for e in state.living_enemies() if e.spec.tier != "boss" and _loose(state, e)
+        ]
+
+        # 7. Two or more loose adds near me are going for someone else: AoE Taunt.
         near = within(
             guardian.pos, abilities["aoe_taunt"].radius, state.fight.width, state.fight.height
         )
-        loose = [e for e in state.living_enemies() if _loose(state, e)]
-        if sum(1 for e in loose if e.pos in near) >= AOE_TAUNT_ENEMIES:
+        wandering = [e for e in loose if e.pos in near and e.target != guardian.id]
+        if len(wandering) >= AOE_TAUNT_ENEMIES:
             if action := _ability(state, guardian, "aoe_taunt"):
                 return action
 
-        # 8. A loose add (not fodder) that is not coming for me: Taunt the one
-        # closest to an ally.
-        reach = abilities["taunt"].range
-        hunting = [
-            e
-            for e in loose
-            if e.spec.tier not in ("boss", "fodder")
-            and e.target != guardian.id
-            and distance(guardian.pos, e.pos) <= reach
-        ]
-        if hunting:
-            add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
-            if action := _ability(state, guardian, "taunt", add.id):
-                return action
-
-        # 9. A loose enemy that hits from afar: Grip the one closest to an ally.
+        # 8. A loose add that hits from afar, or one on a squishy hero: Grip the
+        # one closest to an ally.
         reach = abilities["grip"].range
         grippable = [
             e
             for e in loose
-            if e.spec.tier != "boss"
-            and e.spec.range > 1
-            and distance(guardian.pos, e.pos) <= reach
+            if distance(guardian.pos, e.pos) <= reach
+            and (e.spec.range > 1 or _on_a_squishy(state, e))
         ]
         if grippable:
             grip = min(grippable, key=lambda e: (_gap(e.pos, spots), e.id))
             if action := _ability(state, guardian, "grip", grip.id):
+                return action
+
+        # 9. A loose add (not fodder) that is not coming for me: Taunt the one
+        # closest to an ally, if I still keep my emergency grit after paying.
+        reach = abilities["taunt"].range
+        hunting = [
+            e
+            for e in loose
+            if e.spec.tier != "fodder"
+            and e.target != guardian.id
+            and distance(guardian.pos, e.pos) <= reach
+        ]
+        spare = guardian.resource - abilities["taunt"].cost >= _grit_to_keep(state, guardian)
+        if hunting and spare:
+            add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
+            if action := _ability(state, guardian, "taunt", add.id):
                 return action
 
         # 10. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
@@ -261,39 +301,55 @@ class GuardianNoBossTaunt(GuardianPolicy):
 
 
 class RoguePolicy(_ClassPolicy):
-    """The Rogue. Move: next to the focus her abilities aim at (not fodder),
-    or next to the normal focus if there is no such enemy; a square also out
-    of danger, if possible. In round 1, while hidden, a shielded enemy that
-    can be reached this move comes first, so it can be sapped. If walking
-    cannot take her next to the ability focus, but rule 9 can (from the
-    square she stays on, it is farther than her move, within Shadowstep's
-    range, and Shadowstep can be used), she stays put (stepping out of
-    danger if she must) and Shadowsteps in the act step.
+    """The Rogue. Move: next to the enemy her abilities are after, a square
+    also out of danger if possible. That enemy is, the first that applies:
+    the elite to Sap (rule 3), while she has one; while she has full combo
+    points, the nearest enemy worth an Eviscerate (an elite, or the boss
+    while it has Taunt cards; rule 8); or else the focus her abilities aim
+    at (not fodder), or the normal focus if there is no such enemy. If walking cannot take her next to it, but Shadowstep can (from
+    the square she stays on, it is farther than her move, within
+    Shadowstep's range, and Shadowstep can be used), she stays put
+    (stepping out of danger if she must) and Shadowsteps in the act step.
+
+    The elite to Sap: while I am hidden, the most dangerous elite that is
+    awake (not stunned, sapped or sheeped), the one that hits hardest, then
+    the one with the most HP, then the nearest. I am hidden at the start of
+    every fight, and again after a Vanish.
 
     1. Haul up.
-    2. Hidden, round 1, and a shielded enemy is next to me (or reachable
-       next turn): Sap it, once it is next to me.
-    3. An enemy next to me has an announced cast and is not controlled:
-       Disrupt, else Cheap Shot.
-    4. An enemy is pulled by me: Vanish.
+    2. An enemy next to me has an announced cast that is not answered, and
+       is not controlled: Disrupt, else Cheap Shot.
+    3. I am hidden and there is an elite to Sap: Sap it if it is next to me;
+       else Shadowstep next to it (that keeps me hidden); else wait (do
+       nothing, so I stay hidden) while I walk to it.
+    4. I am not hidden, and: an enemy is pulled by me; or the boss went for
+       me on its last turn; or I am at 40% HP or less and an enemy that is
+       not controlled went for me or is next to me: Vanish.
     5. Hidden: Backstab the focus.
-    6. Full combo points, and the focus is not the boss, or it is the boss
-       with Taunt cards: Eviscerate.
-    7. Full combo points, and an enemy next to me that is not a boss and
-       not controlled has a Druid or a Mage as its target: Kidney Shot.
-    8. Backstab the focus.
-    9. The focus is farther than my move and within Shadowstep's range:
-       Shadowstep.
-    10. Auto-attack the normal focus (fodder too) if it is next to me; or
+    6. Full combo points, and an add next to me that is not fodder and not
+       controlled is going for someone who is not a Guardian: Kidney Shot
+       (the longer stun).
+    7. An add next to me that is not fodder and not controlled is going for
+       a squishy hero at half HP or less: Cheap Shot.
+    8. Full combo points: Eviscerate an enemy next to me that is not
+       controlled. First an elite or the boss while it has Taunt cards
+       (Eviscerate is Loud: a boss with none would be pulled onto me), the
+       one whose id comes first; else the focus, unless it is a boss with
+       no Taunt cards.
+    9. Backstab the focus.
+    10. The focus is farther than my move and within Shadowstep's range:
+        Shadowstep.
+    11. Auto-attack the normal focus (fodder too) if it is next to me; or
         else the focus my abilities aim at, if it is next to me; or else the
         lowest-HP enemy next to me that is not controlled.
     """
 
     def where_to(self, state: FightState, rogue: Hero) -> Pos:
-        shielded = _shielded_to_sap(state, rogue)
-        if shielded is not None:
-            return _go(state, rogue, shielded.pos, reach=1)
-        target = _ability_focus(state, rogue)
+        target = _sap_target(state, rogue)
+        if target is None and _full_combo(state, rogue):
+            target = _eviscerate_target(state, rogue)
+        if target is None:
+            target = _ability_focus(state, rogue)
         if target is None:
             target = _focus(state, rogue)  # only fodder is left
             if target is None:
@@ -302,7 +358,7 @@ class RoguePolicy(_ClassPolicy):
         dest = _go(state, rogue, target.pos, reach=1)
         if adjacent(dest, target.pos):
             return dest
-        # Rule 9 can take her there in the act step, from the square she
+        # Shadowstep can take her there in the act step, from the square she
         # stays on (out of danger, if she has to step out of it).
         stay = _stay(state, rogue)
         if _shadowstep(state, replace(rogue, pos=stay), target):
@@ -311,29 +367,34 @@ class RoguePolicy(_ClassPolicy):
 
     def act(self, state: FightState, rogue: Hero) -> Action:
         focus = _ability_focus(state, rogue)  # for the abilities aimed at the focus
-        full = rogue.combo >= state.numbers.rules["combo_max"]
+        full = _full_combo(state, rogue)
 
         # 1. Haul up.
         if action := _haul_up(state, rogue):
             return action
 
-        # 2. Hidden in round 1, with a shielded enemy next to me: Sap it.
-        shielded = _shielded_to_sap(state, rogue)
-        if shielded is not None and adjacent(rogue.pos, shielded.pos):
-            if action := _ability(state, rogue, "sap", shielded.id):
-                return action
-
-        # 3. An enemy next to me has an announced cast and is not controlled:
+        # 2. An enemy next to me has an announced cast nobody answered:
         # Disrupt, else Cheap Shot.
-        casting = _first(_casting(_enemies_next_to(state, rogue)))
+        casting = _first(_casting(state, _enemies_next_to(state, rogue)))
         if casting is not None:
             if action := _ability(state, rogue, "disrupt", casting.id):
                 return action
             if action := _ability(state, rogue, "cheap_shot", casting.id):
                 return action
 
-        # 4. An enemy is pulled by me: Vanish.
-        if any(e.pulled_by == rogue.id for e in state.living_enemies()):
+        # 3. Hidden, with an elite to Sap: Sap it, else Shadowstep to it, else wait.
+        sap = _sap_target(state, rogue)
+        if sap is not None:
+            if adjacent(rogue.pos, sap.pos):
+                if action := _ability(state, rogue, "sap", sap.id):
+                    return action
+            elif action := _shadowstep(state, rogue, sap):
+                return action
+            else:
+                return Action("none")
+
+        # 4. Pulled, chased by the boss, or low and chased: Vanish.
+        if not rogue.hidden and _should_vanish(state, rogue):
             if action := _ability(state, rogue, "vanish"):
                 return action
 
@@ -342,38 +403,59 @@ class RoguePolicy(_ClassPolicy):
             if action := _ability(state, rogue, "backstab", focus.id):
                 return action
 
-        # 6. Full combo points on a focus that is not an untaunted boss: Eviscerate.
-        if full and focus is not None:
-            if focus.spec.tier != "boss" or "taunt" in focus.stacks:
-                if action := _ability(state, rogue, "eviscerate", focus.id):
-                    return action
+        near = [
+            e
+            for e in _enemies_next_to(state, rogue)
+            if e.spec.tier not in ("boss", "fodder") and not e.controlled
+        ]
 
-        # 7. Full combo points, and an enemy next to me is after a Druid or a Mage:
-        # Kidney Shot.
+        # 6. Full combo points, and an add next to me is after someone who is
+        # not a Guardian: Kidney Shot.
         if full:
             hunter = _first(
-                e
-                for e in _enemies_next_to(state, rogue)
-                if e.spec.tier != "boss"
-                and not e.controlled
-                and _target_class(state, e) in ("druid", "mage")
+                e for e in near if _target_class(state, e) not in (None, "guardian")
             )
             if hunter is not None:
                 if action := _ability(state, rogue, "kidney_shot", hunter.id):
                     return action
 
-        # 8. Backstab the focus.
+        # 7. An add next to me is after a squishy hero at half HP or less: Cheap Shot.
+        hunter = _first(
+            e
+            for e in near
+            if _target_class(state, e) in ("druid", "mage")
+            and _share(state.heroes[e.target]) <= CHEAP_SHOT_AT
+        )
+        if hunter is not None:
+            if action := _ability(state, rogue, "cheap_shot", hunter.id):
+                return action
+
+        # 8. Full combo points: Eviscerate an elite or a taunted boss next to me,
+        # else the focus.
+        if full:
+            big = [
+                e
+                for e in _enemies_next_to(state, rogue)
+                if not e.controlled and _worth_eviscerating(e)
+            ]
+            if focus is not None and (focus.spec.tier != "boss" or "taunt" in focus.stacks):
+                big.append(focus)
+            for finish in big:
+                if action := _ability(state, rogue, "eviscerate", finish.id):
+                    return action
+
+        # 9. Backstab the focus.
         if focus is not None:
             if action := _ability(state, rogue, "backstab", focus.id):
                 return action
 
-        # 9. The focus is farther than my move, and within Shadowstep's range:
+        # 10. The focus is farther than my move, and within Shadowstep's range:
         # Shadowstep.
         if focus is not None:
             if action := _shadowstep(state, rogue, focus):
                 return action
 
-        # 10. Auto-attack the normal focus if it is next to me (fodder too), else
+        # 11. Auto-attack the normal focus if it is next to me (fodder too), else
         # the ability focus if it is next to me, else the weakest enemy next to me.
         if action := _auto(state, rogue, _focus(state, rogue)):
             return action
@@ -394,13 +476,14 @@ class DruidPolicy(_ClassPolicy):
     3. An ally is at 35% HP or less: Swiftmend.
     4. In the middle of a cast: continue.
     5. The Guardian is up without Rejuvenation cards: Rejuvenation.
-    6. Three or more allies at 70% HP or less fit in one Wild Growth area:
-       Wild Growth, centred to cover the most.
+    6. Two or more allies at 70% HP or less (after a blast, say) fit in one
+       Wild Growth area: Wild Growth, centred to cover the most.
     7. An ally is at 60% HP or less: Regrowth on the lowest.
     8. An ally has poison: Cleanse.
     9. An ally at 80% HP or less has no Rejuvenation cards and I have 6 or
        more energy: Rejuvenation.
-    10. An ally is below full HP: Nourish the lowest.
+    10. An ally is below full HP: Nourish the lowest. It is free, so it is
+        the filler whenever nothing better is needed.
     11. Auto-attack the focus if it is in range.
     """
 
@@ -459,7 +542,7 @@ class DruidPolicy(_ClassPolicy):
             if action := _ability(state, druid, "rejuvenation", guardian.id):
                 return action
 
-        # 6. Three or more hurt allies fit in one Wild Growth area: Wild Growth.
+        # 6. Two or more hurt allies fit in one Wild Growth area: Wild Growth.
         hurt = [a for a in allies if _share(a) <= WILD_GROWTH_AT]
         spec = abilities["wild_growth"]
         centre, count = _best_centre(state, druid.pos, spec.range, spec.radius, hurt)
@@ -506,22 +589,50 @@ class MagePolicy(_ClassPolicy):
     or more from every enemy is just as good as another. While casting (not
     channelling), stay still unless standing in danger.
 
+    Arcane Volley is her everyday damage spell; Firebolt is for a single
+    big hit that is worth a round of casting. "I have the mana" means she
+    can pay for all of the spell (every hit of Volley). Without it she is
+    saving mana: she auto-attacks, and each hit gives some back.
+
     1. Haul up.
-    2. In the middle of a cast or a channel: continue.
-    3. An enemy that is not controlled is next to me and not rooted: Frost Ring.
-    4. An enemy in range has an announced cast and is not controlled:
-       Disrupt.
-    5. No enemy is a sheep, no hero is in the middle of casting Polymorph
+    2. In the middle of a cast (not a channel): continue.
+    3. An enemy that is not controlled is next to me:
+       a. one of them is an add that is not rooted: Frost Ring (it cannot
+          follow me when I walk away);
+       b. else Blink to a square that none of them can reach this GM turn
+          (Frost Ring would not stop a boss, or they are rooted already);
+       c. else Frost Ring.
+    4. An enemy in range has an announced cast that is not answered, and is
+       not controlled: Disrupt, even in the middle of a channel. A mend
+       first (it undoes our damage), then by id.
+    5. In the middle of a channel: continue.
+    6. No enemy is a sheep, no hero is in the middle of casting Polymorph
        (another Mage's sheep is on its way), and at least two enemies are
        alive that are not controlled, not a boss and not fodder: Polymorph
        the one of them with the most HP that nobody is next to.
-    6. Some square in range has four or more living enemies, and no hero,
-       within Meteor's radius: Meteor on the square that covers the most.
-    7. Round 5 or later, every hero is up, and no hero has Quicken cards:
-       Quicken.
-    8. The focus has three or more Taunt cards: Arcane Volley.
-    9. Firebolt the focus.
-    10. Auto-attack the focus if it is in range.
+    7. Some square in range has three or more enemies that are not
+       controlled within Meteor's radius, and no hero there who could not
+       walk out before it lands: Meteor on the square that covers the most.
+       Everyone sees the marked squares and walks out (see Moving), so a
+       hero standing there now is no reason to wait, unless they cannot
+       walk out: me (I stand still to cast), a downed hero, a hero in the
+       middle of a longer cast, or the Guardian when an enemy it would hit
+       is next to him (he is holding it there).
+    8. Nobody has Quicken cards, every hero is up, I have Quickened fewer
+       than 2 times this fight, and: it is round 5 or later, I have not
+       Quickened yet, and the boss has Taunt cards (or there is no boss);
+       or I have Quickened once and the boss is at 35% HP or less (the burn
+       at the end): Quicken.
+    9. The focus is an add whose HP is more than one Volley hit (on average)
+       and no more than one Firebolt (on average), and I have the mana:
+       Firebolt it. One big hit finishes it in one of my turns, where Volley
+       would need two.
+    10. Arcane Volley the focus, if I have the mana. If Volley is Loud, only
+        on a focus with three or more Taunt cards: on anything else, Loud
+        would pull it off the Guardian, or strip his Taunt.
+    11. Volley would be Loud on the focus, and I have the mana: Firebolt the
+        focus instead (Firebolt is not Loud).
+    12. Auto-attack the focus if it is in range.
     """
 
     def where_to(self, state: FightState, mage: Hero) -> Pos:
@@ -537,29 +648,49 @@ class MagePolicy(_ClassPolicy):
     def act(self, state: FightState, mage: Hero) -> Action:
         focus = _ability_focus(state, mage)  # for the spells aimed at the focus
         enemies = state.living_enemies()
+        abilities = state.numbers.abilities
+
+        def affords(ability: str) -> bool:
+            """True if she can pay for all of `ability`: every hit of a channel."""
+            spec = abilities[ability]
+            return mage.resource >= spec.cost * max(1, spec.hits)
 
         # 1. Haul up.
         if action := _haul_up(state, mage):
             return action
 
-        # 2. In the middle of a cast or a channel: continue.
-        if mage.cast is not None:
+        # 2. In the middle of a cast (not a channel): continue.
+        if _mid_cast(mage):
             return Action("continue")
 
-        # 3. A loose enemy next to me that is not rooted: Frost Ring.
-        if any(
-            not e.controlled and "rooted" not in e.stacks
-            for e in _enemies_next_to(state, mage)
-        ):
-            if action := _ability(state, mage, "frost_ring"):
-                return action
+        # 3. An enemy is next to me: Frost Ring, else Blink, else Frost Ring.
+        threats = [e for e in _enemies_next_to(state, mage) if not e.controlled]
+        if threats:
+            if any(e.spec.tier != "boss" and "rooted" not in e.stacks for e in threats):
+                if action := _ability(state, mage, "frost_ring"):
+                    return action
+            square = _blink_square(state, mage, threats)
+            if square is not None:
+                if action := _ability(state, mage, "blink", pos=square):
+                    return action
+            if any("rooted" not in e.stacks for e in threats):
+                if action := _ability(state, mage, "frost_ring"):
+                    return action
 
-        # 4. An enemy in range has an announced cast and is not controlled: Disrupt.
-        for casting in _casting(sorted(enemies, key=lambda e: e.id)):
+        # 4. An enemy in range has an announced cast nobody answered: Disrupt,
+        # a mend first.
+        def mend_first(enemy: Enemy) -> tuple:
+            return (enemy.announced.kind != "mend", enemy.id)
+
+        for casting in sorted(_casting(state, enemies), key=mend_first):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 5. No sheep yet, none on its way, and two or more enemies worth one:
+        # 5. In the middle of a channel: continue.
+        if mage.cast is not None:
+            return Action("continue")
+
+        # 6. No sheep yet, none on its way, and two or more enemies worth one:
         # Polymorph.
         worth = [
             e
@@ -582,42 +713,46 @@ class MagePolicy(_ClassPolicy):
                 if action := _ability(state, mage, "polymorph", sheep.id):
                     return action
 
-        # 6. A square in range with four or more enemies and no hero: Meteor.
-        spec = state.numbers.abilities["meteor"]
-        heroes = [h.pos for h in state.heroes.values() if not h.out]
-
-        def no_hero_near(square: Pos) -> bool:
-            return _gap(square, heroes) > spec.radius
-
-        centre, count = _best_centre(
-            state, mage.pos, spec.range, spec.radius, enemies, allowed=no_hero_near
-        )
+        # 7. Three or more enemies in one area, and every hero there can walk
+        # out of it: Meteor.
+        centre, count = _meteor_centre(state, mage)
         if count >= METEOR_ENEMIES:
             if action := _ability(state, mage, "meteor", pos=centre):
                 return action
 
-        # 7. Round 5 or later, everyone up, nobody quickened: Quicken.
-        everyone_up = all(h.up for h in state.heroes.values())
-        if (
-            state.round >= QUICKEN_ROUND
-            and everyone_up
-            and not any("quicken" in h.stacks for h in state.heroes.values())
-        ):
+        # 8. A good moment, and not too often: Quicken.
+        if _quicken_now(state, mage):
             if action := _ability(state, mage, "quicken"):
                 return action
 
-        # 8. The focus has three or more Taunt cards: Arcane Volley.
-        taunt = focus.stacks.get("taunt") if focus else None
-        if taunt is not None and taunt.cards >= VOLLEY_TAUNT_CARDS:
-            if action := _ability(state, mage, "arcane_volley", focus.id):
-                return action
-
-        # 9. Firebolt the focus.
-        if focus is not None:
+        # 9. An add one Firebolt would finish, and Volley would need two hits:
+        # Firebolt.
+        volley, firebolt = abilities["arcane_volley"], abilities["firebolt"]
+        if (
+            focus is not None
+            and focus.spec.tier != "boss"
+            and _average(volley) < focus.hp <= _average(firebolt)
+            and affords("firebolt")
+        ):
             if action := _ability(state, mage, "firebolt", focus.id):
                 return action
 
-        # 10. Auto-attack the focus if it is in range (fodder too).
+        # 10. Arcane Volley the focus, unless Loud would do harm.
+        taunt = focus.stacks.get("taunt") if focus else None
+        loud_is_safe = not volley.loud or (
+            taunt is not None and taunt.cards >= VOLLEY_TAUNT_CARDS
+        )
+        if focus is not None and affords("arcane_volley"):
+            if loud_is_safe:
+                if action := _ability(state, mage, "arcane_volley", focus.id):
+                    return action
+
+        # 11. Volley would be Loud on the focus: Firebolt it instead.
+        if focus is not None and not loud_is_safe and affords("firebolt"):
+            if action := _ability(state, mage, "firebolt", focus.id):
+                return action
+
+        # 12. Auto-attack the focus if it is in range (fodder too).
         return _auto(state, mage, _focus(state, mage)) or Action("none")
 
 
@@ -697,12 +832,291 @@ def _bleeding(hero: Hero) -> int:
     return 0 if stack is None else stack.cards
 
 
+def _shield_plan(state: FightState) -> tuple[Hero, Pos] | None:
+    """The shield plan (see the top of this file): the Guardian who will plant
+    his shield this turn, and the square the blast comes from. None if there
+    is no plan.
+
+    What it looks at does not change between the move step and his act
+    step, so the heroes who move before him and the ones who move after him
+    all see the same plan, and he does what they planned round. (One rare
+    case can change it: the Druid acts before him, and if she spends her
+    last Seed, he hauls a downed ally up instead.)
+    """
+    guardian = state.guardian()
+    boss = _boss(state)
+    if guardian is None or boss is None:
+        return None
+    cast = boss.announced
+    if cast is None or cast.kind != "blast" or cast.lands_round != state.round:
+        return None
+    if guardian.pos not in cast.area or "taunt" not in boss.stacks:
+        return None
+    if _haul_up(state, guardian) is not None:
+        return None
+    if _ability(state, guardian, "shield_plant", pos=boss.pos) is None:
+        return None
+    return guardian, boss.pos
+
+
+def _answered(state: FightState, enemy: Enemy) -> bool:
+    """True when a Guardian has already dealt with `enemy`'s announced cast.
+
+    A blast is answered once a Guardian has planted his shield this turn (the
+    card comes off at the top of the next party turn, so a card means it
+    was this turn). A heavy hit is answered when the hero it is aimed at
+    holds a Last Stand card.
+    """
+    cast = enemy.announced
+    if cast is None:
+        return False
+    if cast.kind == "blast":
+        return any(
+            h.cls == "guardian" and "shield_plant" in h.stacks for h in state.up_heroes()
+        )
+    if cast.kind == "heavy":
+        hero = state.heroes.get(cast.target) if cast.target else None
+        return hero is not None and "last_stand" in hero.stacks
+    return False
+
+
+# --- The Guardian's grit -------------------------------------------------------
+
+
+def _grit_to_keep(state: FightState, guardian: Hero) -> int:
+    """How much grit the Guardian keeps for an emergency button (see his list)."""
+    abilities = state.numbers.abilities
+    keep = 0
+    if any(
+        _share(a) <= INTERCEDE_AT for a in state.up_heroes() if a.cls != "guardian"
+    ):
+        keep = max(keep, abilities["intercede"].cost)
+    heavy = _heavy_due(state)
+    if heavy is not None and _heavy_could_drop(state, guardian, heavy):
+        keep = max(keep, abilities["last_stand"].cost)
+    return keep
+
+
+def _heavy_due(state: FightState) -> tuple[int, int] | None:
+    """The dice of the heavy hit the boss will announce on the Guardian this GM
+    turn, or None.
+
+    The fight file's script says when the boss announces what. It announces
+    the first move that is due, and only while it has no cast waiting. The
+    heavy hit goes at whoever it attacks, and with Taunt cards that is the
+    Guardian.
+    """
+    boss = _boss(state)
+    if boss is None or boss.announced is not None or "taunt" not in boss.stacks:
+        return None
+    for step in state.fight.boss_script:
+        due = state.round >= step.first and (state.round - step.first) % step.every == 0
+        if not due or step.kind == "throw":
+            continue
+        return step.dice if step.kind == "heavy" else None
+    return None
+
+
+def _heavy_could_drop(state: FightState, guardian: Hero, dice: tuple[int, int]) -> bool:
+    """True when a heavy hit with these dice could take the Guardian to 0 in
+    the GM turn it lands.
+
+    That is the heavy hit at its biggest roll, and then, later in the same
+    GM turn, the boss's own attack at its biggest, if the boss has Taunt
+    cards (so it attacks him). One Last Stand card covers that whole GM
+    turn. Guarded cards make each hit smaller by their value.
+    """
+    guarded = guardian.stacks.get("guarded")
+    less = guarded.value if guarded is not None else 0
+    most = max(0, dice[0] * dice[1] - less)
+    boss = _boss(state)
+    if boss is not None and "taunt" in boss.stacks:
+        most += max(0, _hit_size(boss, biggest=True) - less)
+    return most >= guardian.hp
+
+
+# --- The Rogue's targets -------------------------------------------------------
+
+
+def _full_combo(state: FightState, rogue: Hero) -> bool:
+    return rogue.combo >= state.numbers.rules["combo_max"]
+
+
+def _sap_target(state: FightState, rogue: Hero) -> Enemy | None:
+    """While the Rogue is hidden: the elite to Sap (see her list), or None."""
+    if not rogue.hidden:
+        return None
+    elites = [
+        e for e in state.living_enemies() if e.spec.tier == "elite" and not e.controlled
+    ]
+    return min(
+        elites,
+        key=lambda e: (-_hit_size(e), -e.hp, distance(rogue.pos, e.pos), e.id),
+        default=None,
+    )
+
+
+def _eviscerate_target(state: FightState, rogue: Hero) -> Enemy | None:
+    """Where the Rogue walks with full combo points: the nearest enemy worth an
+    Eviscerate that is not controlled (ties: by id), or None if there is none."""
+    worth = [e for e in state.living_enemies() if not e.controlled and _worth_eviscerating(e)]
+    return min(worth, key=lambda e: (distance(rogue.pos, e.pos), e.id), default=None)
+
+
+def _worth_eviscerating(enemy: Enemy) -> bool:
+    """An elite, or the boss while it has Taunt cards."""
+    if enemy.spec.tier == "boss":
+        return "taunt" in enemy.stacks
+    return enemy.spec.tier == "elite"
+
+
+def _should_vanish(state: FightState, rogue: Hero) -> bool:
+    """Rogue rule 4: pulled, chased by the boss, or low and chased."""
+    enemies = state.living_enemies()
+    if any(e.pulled_by == rogue.id for e in enemies):
+        return True
+    chasers = [e for e in enemies if e.target == rogue.id and not e.controlled]
+    if any(e.spec.tier == "boss" for e in chasers):
+        return True
+    if _share(rogue) > VANISH_AT:
+        return False
+    close = [e for e in _enemies_next_to(state, rogue) if not e.controlled]
+    return bool(chasers or close)
+
+
+def _hit_size(enemy: Enemy, biggest: bool = False) -> float:
+    """How hard one of `enemy`'s attacks hits: on average, or at its biggest roll."""
+    spec = enemy.spec
+    if spec.dice[0] > 0:
+        face = spec.dice[1] if biggest else (spec.dice[1] + 1) / 2
+        return spec.dice[0] * face + spec.bonus
+    return spec.damage
+
+
+# --- The Mage's choices --------------------------------------------------------
+
+
+def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
+    """Mage rule 7: the best square for Meteor and how many enemies it would hit.
+
+    Only enemies that are not controlled are counted. A square is left out
+    if a hero who could not walk out stands within Meteor's radius of it.
+    """
+    spec = state.numbers.abilities["meteor"]
+    guardians = [h for h in state.up_heroes() if h.cls == "guardian"]
+    enemies = [e for e in state.living_enemies() if not e.controlled]
+    stuck = [
+        h.pos
+        for h in state.heroes.values()
+        if h is mage
+        or h.down
+        or (h.up and h.cast is not None and not h.cast.is_channel and h.cast.actions_left > 0)
+    ]
+
+    def allowed(square: Pos) -> bool:
+        if _gap(square, stuck) <= spec.radius:
+            return False
+        for guardian in guardians:
+            if distance(square, guardian.pos) <= spec.radius and any(
+                adjacent(e.pos, guardian.pos) and distance(square, e.pos) <= spec.radius
+                for e in enemies
+            ):
+                return False  # he is holding an enemy it would hit
+        return True
+
+    return _best_centre(state, mage.pos, spec.range, spec.radius, enemies, allowed=allowed)
+
+
+def _quicken_now(state: FightState, mage: Hero) -> bool:
+    """Mage rule 8: is this a good moment for Quicken?"""
+    heroes = list(state.heroes.values())
+    if not all(h.up for h in heroes) or any("quicken" in h.stacks for h in heroes):
+        return False
+    used = state.tally.uses[mage.id].get("quicken", 0)
+    boss = _boss(state)
+    if used == 0:
+        taunted = boss is None or "taunt" in boss.stacks
+        return state.round >= QUICKEN_ROUND and taunted
+    burn = boss is not None and boss.hp <= QUICKEN_BURN * boss.spec.hp
+    return used < QUICKEN_MOST and burn
+
+
+def _blink_square(state: FightState, mage: Hero, threats: list[Enemy]) -> Pos | None:
+    """Where Blink should take the Mage away from `threats`, or None if nowhere will do.
+
+    A square will do if it is free, on the map, within Blink's range, out of
+    danger, and none of `threats` can reach it this GM turn (its move plus
+    its range; a rooted enemy only its range). Of those she picks one in
+    spell range of the focus if she can, then the one farthest from every
+    enemy (5 or more is as good as farther), then the nearest, then the first
+    in (x, y) order.
+    """
+    spec = state.numbers.abilities["blink"]
+    danger = _danger(state)
+    taken = state.occupied()
+    enemies = [e.pos for e in state.living_enemies()]
+    focus = _focus(state, mage)
+    spell = state.numbers.abilities["firebolt"].range
+
+    def reach(enemy: Enemy) -> int:
+        move = 0 if "rooted" in enemy.stacks else enemy.spec.move
+        return move + enemy.spec.range
+
+    squares = [
+        square
+        for square in within(mage.pos, spec.range, state.fight.width, state.fight.height)
+        if square not in taken
+        and square not in danger
+        and all(distance(square, e.pos) > reach(e) for e in threats)
+    ]
+    if not squares:
+        return None
+    return min(
+        squares,
+        key=lambda square: (
+            focus is not None and distance(square, focus.pos) > spell,
+            -min(_gap(square, enemies), MAGE_SAFE_GAP),
+            distance(mage.pos, square),
+            square,
+        ),
+    )
+
+
+def _average(spec: AbilitySpec) -> float:
+    """The average of one hit of an ability: its dice and its bonus."""
+    count, sides = spec.dice
+    return count * (sides + 1) / 2 + spec.bonus
+
+
 # --- Moving --------------------------------------------------------------------
 
 
 def _mid_cast(hero: Hero) -> bool:
     """True while a cast (not a channel) is going: moving would end it."""
     return hero.cast is not None and not hero.cast.is_channel
+
+
+def _danger(state: FightState) -> set[Pos]:
+    """The squares a hero keeps off: where a blast is going to land.
+
+    That is `state.danger_squares()`, except that while the shield plan is
+    on, the squares behind the Guardian's shield are safe from the boss's
+    blast (they are still danger if another blast covers them).
+    """
+    plan = _shield_plan(state)
+    if plan is None:
+        return state.danger_squares()
+    guardian, source = plan
+    boss = _boss(state)
+    radius = state.numbers.abilities["shield_plant"].radius
+    shelter = behind(guardian.pos, source, radius, state.fight.width, state.fight.height)
+    other: set[Pos] = set()
+    for enemy in state.living_enemies():
+        if enemy is not boss and enemy.announced is not None:
+            other |= enemy.announced.area
+    for area in state.marked.values():
+        other |= area
+    return other | (boss.announced.area - shelter)
 
 
 def _go(state: FightState, hero: Hero, goal: Pos, reach: int) -> Pos:
@@ -721,7 +1135,7 @@ def _go(state: FightState, hero: Hero, goal: Pos, reach: int) -> Pos:
         state.fight.height,
         reach=reach,
     )
-    danger = state.danger_squares()
+    danger = _danger(state)
     if dest not in danger:
         return dest
     safe = [square for square in _squares_in_reach(state, hero) if square not in danger]
@@ -751,7 +1165,7 @@ def _stand(state: FightState, hero: Hero, goal: Pos, reach: int, worse) -> Pos:
     If no square in reach is close enough to `goal`, the hero walks toward
     it instead (see `_go`).
     """
-    danger = state.danger_squares()
+    danger = _danger(state)
     squares = _squares_in_reach(state, hero)
     if all(distance(square, goal) > reach for square in squares):
         return _go(state, hero, goal, reach)
@@ -837,48 +1251,39 @@ def _loose(state: FightState, enemy: Enemy) -> bool:
     return not held(state, enemy) and "taunt" not in enemy.stacks and not enemy.controlled
 
 
-def _casting(enemies: list[Enemy]) -> list[Enemy]:
-    """The enemies in `enemies` worth a Disrupt: an announced cast, and not controlled.
+def _casting(state: FightState, enemies: list[Enemy]) -> list[Enemy]:
+    """The enemies in `enemies` worth an interrupt: an announced cast that is
+    not answered, and not controlled.
 
     A stunned, sapped or sheeped enemy loses its cast anyway (see
-    `enemy_ai.land_announced`), so a Disrupt on it would be wasted.
+    `enemy_ai.land_announced`), so a Disrupt on it would be wasted. So
+    would one on a cast a Guardian has already answered (see `_answered`).
     """
-    return [e for e in enemies if e.announced is not None and not e.controlled]
+    return [
+        e
+        for e in enemies
+        if e.announced is not None and not e.controlled and not _answered(state, e)
+    ]
 
 
-def _shadowstep(state: FightState, rogue: Hero, focus: Enemy) -> Action | None:
-    """Rogue rule 9: Shadowstep to `focus` if it is farther than her move, within
+def _shadowstep(state: FightState, rogue: Hero, target: Enemy) -> Action | None:
+    """Shadowstep to `target` if it is farther than her move, within
     Shadowstep's range, and Shadowstep can be used now. Otherwise None.
 
     The move step asks this too, so she waits for it instead of walking. It
     asks with a copy of the Rogue on the square she would stay on, so the
     answer is the one the act step will get from there.
     """
-    gap = distance(rogue.pos, focus.pos)
+    gap = distance(rogue.pos, target.pos)
     if state.numbers.rules["hero_move"] < gap <= state.numbers.abilities["shadowstep"].range:
-        return _ability(state, rogue, "shadowstep", focus.id)
+        return _ability(state, rogue, "shadowstep", target.id)
     return None
 
 
-def _shielded_to_sap(state: FightState, rogue: Hero) -> Enemy | None:
-    """In round 1, while hidden: a shielded enemy (not a boss) the Rogue can get
-    next to this move.
-
-    The nearest one, then by id. None if there is none, or it is not round 1,
-    or the Rogue is not hidden.
-    """
-    if state.round != 1 or not rogue.hidden:
-        return None
-    reach = state.numbers.rules["hero_move"] + 1
-    shielded = [
-        e
-        for e in state.living_enemies()
-        if e.spec.shielded > 0
-        and e.spec.tier != "boss"
-        and not e.controlled
-        and distance(rogue.pos, e.pos) <= reach
-    ]
-    return min(shielded, key=lambda e: (distance(rogue.pos, e.pos), e.id), default=None)
+def _on_a_squishy(state: FightState, enemy: Enemy) -> bool:
+    """True when `enemy` is going for a Druid or a Mage and is next to them."""
+    hero = state.heroes.get(enemy.target) if enemy.target else None
+    return hero is not None and hero.cls in ("druid", "mage") and adjacent(hero.pos, enemy.pos)
 
 
 def _target_class(state: FightState, enemy: Enemy) -> str | None:

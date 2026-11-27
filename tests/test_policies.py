@@ -11,6 +11,11 @@ from fastcombat.numbers import load_numbers, load_fight
 def act(s, hero):
     return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
 
+def elite(s, type, pos):
+    # In the real fight the brute is an elite; the frozen copy has no elites, so a test makes one.
+    e = enemy(s, type, pos); e.spec = replace(e.spec, tier="elite")
+    return e
+
 def test_guardian_taunts_the_boss_whenever_it_has_no_taunt_cards():
     # A boss is never held by standing next to the Guardian: only Taunt cards keep it on him.
     s = state(); o = enemy(s, "ogre", (4, 6))                         # next to the guardian at (3, 6)
@@ -40,15 +45,15 @@ def test_guardian_taunts_an_add_that_is_not_coming_for_him():
     assert act(s, "guardian") == Action("auto", target="ogre1")
     g = enemy(s, "goblin", (5, 4)); assert act(s, "guardian").ability != "taunt"   # fodder: any hit kills it
 
-def test_guardian_grips_a_caster_that_shoots_him_from_afar():
+def test_guardian_grips_a_caster_that_shoots_from_afar_whoever_it_is_after():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
     sh = enemy(s, "shaman", (6, 2)); sh.target = "guardian"
     a = act(s, "guardian"); assert (a.ability, a.target) == ("grip", "shaman1")
-    sh.target = "mage"                                                # after the mage: a Taunt first, it is cheaper
-    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "shaman1")
+    sh.target = "mage"                                                # a Taunt would leave it shooting from afar
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("grip", "shaman1")
 
 def test_rogue_saps_the_brute_on_round_one():
-    s = state(); enemy(s, "brute", (3, 4))
+    s = state(); elite(s, "brute", (3, 4))
     a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
 
 def test_druid_drops_everything_for_a_downed_ally():
@@ -136,13 +141,17 @@ def heavy_on_guardian(s, dice=(6, 6)):
     o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
     o.announced = Announced("skull_crusher", "heavy", s.round + 1, "guardian", frozenset(), dice)
 
-def test_guardian_braces_with_last_stand_only_when_the_heavy_hit_could_drop_them():
+def test_guardian_braces_with_last_stand_when_the_heavy_hit_and_the_boss_could_drop_him():
+    # 6d6 can roll 36, and then the taunted ogre hits him for up to 2d6+2 = 14: 50 in all.
     s = state(); heavy_on_guardian(s); w = s.heroes["guardian"]; w.resource = 10
-    w.hp = 36; assert act(s, "guardian").ability == "last_stand"         # 6d6 can roll 36
+    w.hp = 50; assert act(s, "guardian").ability == "last_stand"
+    w.hp = 51; assert act(s, "guardian").ability != "last_stand"
+    add_stack(w, "guarded", 1, 4)                                    # each of the two hits 4 smaller: at most 42
+    w.hp = 42; assert act(s, "guardian").ability == "last_stand"
+    w.hp = 43; assert act(s, "guardian").ability != "last_stand"
+    del w.stacks["guarded"]; del s.enemies["ogre1"].stacks["taunt"]  # untaunted, it hits someone else after
+    w.hp = 36; assert act(s, "guardian").ability == "last_stand"
     w.hp = 37; assert act(s, "guardian").ability != "last_stand"
-    add_stack(w, "guarded", 1, 4)                                    # each hit 4 smaller: at most 32
-    w.hp = 32; assert act(s, "guardian").ability == "last_stand"
-    w.hp = 33; assert act(s, "guardian").ability != "last_stand"
 
 def test_guardian_without_the_grit_for_last_stand_reads_on():
     s = state(); heavy_on_guardian(s); w = s.heroes["guardian"]; w.hp = 10; w.resource = 4
@@ -163,16 +172,24 @@ def test_a_hero_next_to_a_downed_ally_stays_to_haul_them_up():
     s.heroes["druid"].seeds = 1                                     # now the Druid will heal her
     assert default_policy("rogue").move(s, r) != r.pos
 
-def test_mage_never_drops_a_meteor_on_a_hero():
+def test_mage_meteors_three_enemies_unless_a_hero_there_cannot_walk_out():
     s = state()
-    for square in ((8, 4), (8, 5), (8, 6), (9, 5)):
+    for square in ((8, 4), (8, 5), (9, 5)):
         enemy(s, "goblin", square)
     a = act(s, "mage")
-    assert (a.ability, a.pos) == ("meteor", (7, 4))                 # the first square, in (x, y) order, that covers all four
-    s.heroes["rogue"].pos = (6, 2)                                  # 2 from (7, 4): that square is out now
-    a = act(s, "mage")
-    assert a.ability == "meteor" and a.pos != (7, 4) and all(
-        max(abs(a.pos[0] - h.pos[0]), abs(a.pos[1] - h.pos[1])) > 2 for h in s.heroes.values())
+    assert (a.ability, a.pos) == ("meteor", (7, 3))                 # the first square, in (x, y) order, that covers all three
+    s.heroes["rogue"].pos = (6, 2)                                  # in the area, but she can walk out of it
+    a = act(s, "mage"); assert (a.ability, a.pos) == ("meteor", (7, 3))
+    s.heroes["guardian"].pos = (7, 4)                               # next to two of them: he is holding them there
+    a = act(s, "mage"); assert (a.ability, a.pos) == ("meteor", (10, 3))   # the only square that leaves him out
+    damage_hero(s, s.heroes["druid"], 99, attacker=None)
+    s.heroes["druid"].pos = (10, 4)                                 # a downed hero cannot walk out either
+    assert act(s, "mage").ability != "meteor"
+    s = state(party=("mage",)); m = s.heroes["mage"]; m.pos = (5, 4)
+    for square in ((7, 4), (7, 5), (7, 3)):
+        enemy(s, "goblin", square)
+    a = act(s, "mage"); assert a.ability == "meteor"
+    assert max(abs(a.pos[0] - 5), abs(a.pos[1] - 4)) > 2            # never on herself: she stands still to cast
 
 def test_druid_centres_wild_growth_to_cover_the_most_hurt_allies():
     s = state()
@@ -344,3 +361,199 @@ def test_rogue_eviscerates_the_boss_only_while_it_has_taunt_cards():
     assert act(s, "rogue").ability != "eviscerate"                  # no Taunt cards: it would turn on her
     add_stack(o, "taunt", 2)
     a = act(s, "rogue"); assert (a.ability, a.target) == ("eviscerate", "ogre1")
+
+
+# --- Every button for an MMO player's reason -------------------------------------
+
+from fastcombat.grid import adjacent, distance, within
+from fastcombat.units import Enemy
+
+def quiet_volley(s):
+    # The real numbers have a quiet Arcane Volley; the frozen copy still has a Loud one.
+    s.numbers.abilities["arcane_volley"] = replace(s.numbers.abilities["arcane_volley"], loud=False)
+
+def slam_coming(s, guardian_at=(4, 6), boss_at=(5, 6)):
+    # The ogre announced a Ground Slam last GM turn: it lands this round, within 2 of the ogre.
+    o = enemy(s, "ogre", boss_at); add_stack(o, "taunt", 3)
+    s.heroes["guardian"].pos = guardian_at
+    o.announced = Announced("ground_slam", "blast", s.round, None, frozenset(within(boss_at, 2, 16, 12)), (3, 6))
+    return o
+
+def test_guardian_plants_his_shield_against_a_slam_instead_of_stepping_out():
+    s = state(); o = slam_coming(s); g = s.heroes["guardian"]; g.resource = 4
+    assert default_policy("guardian").move(s, g) == (4, 6)          # he stays next to the boss
+    a = act(s, "guardian"); assert (a.ability, a.pos) == ("shield_plant", (5, 6))
+    g.resource = 3                                                   # he cannot pay for it: he steps out
+    assert default_policy("guardian").move(s, g) not in s.danger_squares()
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("disrupt", "ogre1")   # still next to it: free
+    g.resource = 4; del o.stacks["taunt"]                            # the boss is loose: Taunt it from outside
+    g.pos = default_policy("guardian").move(s, g)
+    assert g.pos not in s.danger_squares()
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "ogre1")
+
+def test_an_ally_behind_the_planted_shield_stays_where_she_is():
+    s = state(); o = slam_coming(s); s.heroes["guardian"].resource = 4
+    r = s.heroes["rogue"]; r.hidden = False; r.pos = (3, 4)         # 2 from the ogre: in the slam, behind the Guardian
+    w = enemy(s, "wolf", (4, 4))                                    # her focus, next to her
+    assert r.pos in s.danger_squares()
+    assert default_policy("rogue").move(s, r) == (3, 4)             # the shield covers her: she keeps hitting
+    s.heroes["guardian"].resource = 3                               # no shield coming: she runs
+    dest = default_policy("rogue").move(s, r)
+    assert dest not in s.danger_squares() and adjacent(dest, w.pos)
+
+def test_nobody_interrupts_a_boss_cast_the_guardian_has_answered():
+    s = state(); o = slam_coming(s); g = s.heroes["guardian"]
+    r = s.heroes["rogue"]; r.hidden = False; r.pos = (6, 6)         # next to the ogre
+    assert (act(s, "mage").ability, act(s, "rogue").ability) == ("disrupt", "disrupt")
+    add_stack(g, "shield_plant", 1, 8)                              # he planted his shield against it
+    assert act(s, "mage").ability != "disrupt" and act(s, "rogue").ability != "disrupt"
+    o.announced = Announced("skull_crusher", "heavy", s.round, "guardian", frozenset(), (6, 6))
+    assert act(s, "mage").ability == "disrupt"
+    add_stack(g, "last_stand", 1)                                   # he braced for it
+    assert act(s, "mage").ability != "disrupt"
+
+def test_guardian_keeps_grit_for_intercede_while_an_ally_is_low():
+    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
+    w = enemy(s, "wolf", (6, 2)); w.target = "mage"                 # loose, going for the Mage
+    g = s.heroes["guardian"]; g.resource = 2                        # Taunt costs 1, Intercede 2
+    s.heroes["druid"].hp = 20                                       # 20 of 36: 60% or less, and nothing is after her
+    assert act(s, "guardian") == Action("auto", target="ogre1")     # a Taunt would leave too little to Intercede
+    g.resource = 3
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+
+def test_guardian_keeps_grit_for_last_stand_before_a_heavy_hit_he_could_not_take():
+    s = state(); s.round = 5                                        # the script announces Skull Crusher this GM turn
+    o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
+    w = enemy(s, "wolf", (6, 2)); w.target = "mage"
+    g = s.heroes["guardian"]; g.resource = 5; g.hp = 50             # 36 and then 14 could drop him
+    assert act(s, "guardian") == Action("auto", target="ogre1")     # a Taunt would leave 4: too few for Last Stand
+    g.hp = 51
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+    g.hp = 50; s.round = 6                                          # nothing heavy is due this round
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+
+def test_guardian_intercedes_for_an_ally_at_sixty_percent():
+    s = state(); o = enemy(s, "ogre", (1, 8)); o.target = "druid"   # no Taunt cards, after the Druid
+    d = s.heroes["druid"]
+    d.hp = 22; assert act(s, "guardian").ability != "intercede"     # 22 of 36 is more than 60%
+    d.hp = 21; a = act(s, "guardian"); assert (a.ability, a.target) == ("intercede", "druid")
+
+def test_guardian_aoe_taunts_two_loose_adds_going_for_his_allies():
+    s = state(); o = enemy(s, "ogre", (8, 8)); add_stack(o, "taunt", 3)
+    s.heroes["guardian"].resource = 3                               # at (3, 6)
+    g1 = enemy(s, "goblin", (5, 4)); g1.target = "mage"
+    g2 = enemy(s, "goblin", (6, 6)); g2.target = "druid"            # both within 3 of him, neither next to him
+    assert act(s, "guardian").ability == "aoe_taunt"
+    g2.target = "guardian"                                          # one is coming for him anyway
+    assert act(s, "guardian").ability != "aoe_taunt"
+
+def test_guardian_grips_a_wolf_that_ran_past_him_onto_a_squishy_hero():
+    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
+    w = enemy(s, "wolf", (2, 4)); w.target = "mage"                 # next to the Mage at (1, 5)
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("grip", "wolf1")
+    w.pos = (6, 2)                                                  # not on her yet: a Taunt will do
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+
+def test_rogue_saps_the_most_dangerous_elite_whenever_she_is_hidden():
+    s = state(); s.round = 7; r = s.heroes["rogue"]                 # hidden (as after a Vanish), at (2, 5)
+    b = elite(s, "brute", (3, 4))                                   # an elite that hits for 6
+    w = elite(s, "wolf", (2, 4))                                    # an elite that hits for 4
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
+    add_stack(b, "sap", 4)                                          # the brute is out already
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "wolf1")
+    r.hidden = False
+    assert act(s, "rogue").ability != "sap"
+
+def test_rogue_shadowsteps_to_the_elite_to_sap_and_waits_hidden_when_she_cannot_reach_it():
+    s = state(); r = s.heroes["rogue"]                              # hidden at (2, 5); move 6, Shadowstep 8
+    b = elite(s, "brute", (10, 5))                                  # 8 away
+    assert default_policy("rogue").move(s, r) == r.pos              # she waits for Shadowstep...
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("shadowstep", "brute1")
+    use_ability(s, r, a)
+    assert r.hidden and adjacent(r.pos, b.pos)                      # ...and is still hidden, next to it
+    r.pos = (2, 5); b.pos = (12, 5)                                 # 10 away: too far for Shadowstep
+    assert act(s, "rogue") == Action("none")                        # she walks there, and stays hidden
+
+def test_rogue_vanishes_from_the_boss_or_when_low_and_chased():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False
+    o = enemy(s, "ogre", (3, 4)); o.target = "rogue"                # the boss went for her
+    assert act(s, "rogue").ability == "vanish"
+    o.target = "guardian"; b = elite(s, "brute", (2, 4)); b.target = "rogue"
+    assert act(s, "rogue").ability != "vanish"                      # an elite, and she is at full HP: she fights it
+    r.hp = 14                                                       # 14 of 36: 40% or less
+    assert act(s, "rogue").ability == "vanish"
+
+def test_rogue_kidney_shots_an_add_hurting_someone_and_eviscerates_an_elite():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
+    w = enemy(s, "wolf", (3, 4)); w.target = "druid"                # next to her, going for the Druid
+    b = elite(s, "brute", (2, 4)); b.target = "guardian"
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("kidney_shot", "wolf1")
+    w.target = "guardian"                                           # now both are on the Guardian
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("eviscerate", "brute1")   # the elite, not the focus
+
+def test_rogue_cheap_shots_an_add_on_a_squishy_hero_who_is_hurt():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False
+    m = s.heroes["mage"]; w = enemy(s, "wolf", (2, 4)); w.target = "mage"   # next to her and to the Mage
+    assert act(s, "rogue").ability != "cheap_shot"                  # the Mage is at full HP
+    m.hp = 14                                                       # half of 28
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("cheap_shot", "wolf1")
+
+def test_rogue_with_full_combo_points_walks_to_an_elite():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5   # at (2, 5)
+    w = enemy(s, "wolf", (2, 9)); b = elite(s, "brute", (7, 5))     # the wolf has less HP: it is the focus
+    assert adjacent(default_policy("rogue").move(s, r), b.pos)
+    r.combo = 4
+    assert adjacent(default_policy("rogue").move(s, r), w.pos)
+
+def test_druid_wild_growths_two_hurt_allies():
+    s = state(); s.heroes["guardian"].hp = 36                       # 60%, at (3, 6)
+    add_stack(s.heroes["guardian"], "rejuvenation", 2, 4)
+    assert act(s, "druid").ability == "regrowth"                    # one hurt ally: a Regrowth
+    s.heroes["rogue"].hp = 21                                       # 58%, at (2, 5)
+    assert act(s, "druid").ability == "wild_growth"
+
+def test_mage_volleys_her_focus_and_saves_mana_when_she_cannot_pay_for_all_of_it():
+    s = state(); quiet_volley(s); enemy(s, "ogre", (11, 6))        # 10 from the Mage at (1, 5)
+    a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "ogre1")
+    s.heroes["mage"].resource = 5                                   # three hits cost 6
+    assert act(s, "mage") == Action("auto", target="ogre1")
+
+def test_a_loud_volley_goes_only_on_a_well_taunted_focus_and_firebolt_takes_the_rest():
+    s = state(); o = enemy(s, "ogre", (11, 6))                      # the frozen copy's Volley is Loud
+    a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "ogre1")
+    add_stack(o, "taunt", 3)
+    a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "ogre1")
+
+def test_mage_firebolts_an_add_one_big_hit_would_finish():
+    s = state(); quiet_volley(s); w = enemy(s, "wolf", (9, 5))     # Volley hits for 7 on average, Firebolt for 14
+    w.hp = 14; a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "wolf1")
+    w.hp = 15; assert act(s, "mage").ability == "arcane_volley"
+    w.hp = 7; assert act(s, "mage").ability == "arcane_volley"
+
+def test_mage_frost_rings_an_add_and_blinks_away_from_a_boss_or_a_rooted_add():
+    s = state(party=("mage",)); m = s.heroes["mage"]; m.pos = (5, 5)
+    w = enemy(s, "wolf", (6, 5))
+    assert act(s, "mage").ability == "frost_ring"
+    add_stack(w, "rooted", 1)                                       # it cannot follow her, but it can still bite
+    a = act(s, "mage"); assert a.ability == "blink" and distance(a.pos, w.pos) > 1
+    w.dead = True; o = enemy(s, "ogre", (6, 6))                     # Frost Ring would not stop a boss's hits
+    a = act(s, "mage"); assert a.ability == "blink"
+    assert distance(a.pos, o.pos) > o.spec.move + o.spec.range      # out of its reach this GM turn
+
+def test_mage_breaks_her_channel_to_disrupt_a_mend_before_a_boss_cast():
+    s = state(); quiet_volley(s); enemy(s, "ogre", (11, 6)); s.round = 3; announce(s)   # a Ground Slam
+    mending_shaman(s, (9, 5))
+    s.heroes["mage"].cast = Cast("arcane_volley", "ogre1", None, 0, 2, True)
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "shaman1")
+
+def test_mage_quickens_once_when_the_boss_is_taunted_and_again_for_the_burn():
+    s = state(); s.round = 5; o = enemy(s, "ogre", (11, 6))
+    assert act(s, "mage").ability != "quicken"                      # the boss is not taunted
+    add_stack(o, "taunt", 3)
+    assert act(s, "mage").ability == "quicken"
+    s.tally.count_use("mage", "quicken")                            # she has Quickened once
+    assert act(s, "mage").ability != "quicken"
+    o.hp = o.spec.hp * 35 // 100                                    # 35%: the burn at the end
+    assert act(s, "mage").ability == "quicken"
+    s.tally.count_use("mage", "quicken")
+    assert act(s, "mage").ability != "quicken"                      # never a third
