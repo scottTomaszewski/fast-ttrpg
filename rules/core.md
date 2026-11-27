@@ -123,8 +123,9 @@ in the fight. The Guardian still has 2 Rejuvenation heal cards.
 - The Mage: an **auto-attack** on the wolf with her d4.
   She rolls a 4, the top face: a crit! She rolls again and
   gets a 2, so the hit is 6. The wolf had
-  16 HP and now has 10. The
-  crit also gives her 2 mana.
+  16 HP and now has 10. A
+  Mage's auto-attack that hits gives her 1 mana, and
+  the crit gives her 2 more.
 - The Rogue: the wolf is busy with someone else (it went for the Mage), so
   she can **Backstab** it. She rolls 2d6 and gets a 5
   and a 3, so 8. She is not hidden, so it is not made bigger. The
@@ -180,6 +181,9 @@ one enemy in reach:
   1 grit, the Rogue 1 extra
   combo point, the Druid 1 Seed, and the Mage
   2 mana.
+- The Mage also gets 1 mana back from each auto-attack
+  that does not miss, crit or not. Her auto-attack is weak, but it keeps
+  her mana coming.
 - When you have Quicken cards you roll 2 dice
   instead of one. Each die can miss or crit on its own, and they add up
   into one hit.
@@ -261,7 +265,7 @@ Every hero has a resource that pays for their abilities.
 | Guardian | grit | 10 | 0 | 1 each time an enemy attacks him |
 | Rogue | energy | 10 | 10 | 3 at the top of each party turn |
 | Druid | energy | 10 | 10 | 3 at the top of each party turn |
-| Mage | mana | 30 | 30 | 1 at the top of each party turn |
+| Mage | mana | 30 | 30 | 1 at the top of each party turn, and 1 for each auto-attack that does not miss |
 
 - You never go above the most you can hold.
 - A downed hero gets nothing back.
@@ -554,4 +558,4 @@ on the Guardian, so it gives him no grit.
 | Guardian | 110 | d8 | grit | 10 | 0 | 1 each time attacked |
 | Rogue | 36 | d6 | energy | 10 | 10 | 3 |
 | Druid | 36 | d6 | energy | 10 | 10 | 3 |
-| Mage | 28 | d4 | mana | 30 | 30 | 1 |
+| Mage | 28 | d4 | mana | 30 | 30 | 1, and 1 for each auto-attack that hits |

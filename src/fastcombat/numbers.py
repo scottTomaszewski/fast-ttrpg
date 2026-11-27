@@ -48,6 +48,7 @@ class HeroSpec:
     start: int  # resource at the start of a fight
     regen: int  # resource back at the top of each party turn
     crit_gain: int  # what a crit gives; each class uses it its own way
+    auto_gain: int = 0  # own resource back from each auto-attack that does not miss
 
 
 @dataclass(frozen=True)

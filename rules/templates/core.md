@@ -129,8 +129,9 @@ in the fight. The Guardian still has 2 Rejuvenation heal cards.
 - The Mage: an **auto-attack** on the wolf with her d{heroes.mage.die}.
   She rolls a {heroes.mage.die}, the top face: a crit! She rolls again and
   gets a 2, so the hit is {heroes.mage.die + 2}. The wolf had
-  {enemy.wolf.hp} HP and now has {enemy.wolf.hp - heroes.mage.die - 2}. The
-  crit also gives her {heroes.mage.crit_gain} mana.
+  {enemy.wolf.hp} HP and now has {enemy.wolf.hp - heroes.mage.die - 2}. A
+  Mage's auto-attack that hits gives her {heroes.mage.auto_gain} mana, and
+  the crit gives her {heroes.mage.crit_gain} more.
 - The Rogue: the wolf is busy with someone else (it went for the Mage), so
   she can **Backstab** it. She rolls {abilities.backstab.dice} and gets a 5
   and a 3, so {5 + 3}. She is not hidden, so it is not made bigger. The
@@ -186,6 +187,9 @@ one enemy in reach:
   {heroes.guardian.crit_gain} grit, the Rogue {heroes.rogue.crit_gain} extra
   combo point, the Druid {heroes.druid.crit_gain} Seed, and the Mage
   {heroes.mage.crit_gain} mana.
+- The Mage also gets {heroes.mage.auto_gain} mana back from each auto-attack
+  that does not miss, crit or not. Her auto-attack is weak, but it keeps
+  her mana coming.
 - When you have Quicken cards you roll {abilities.quicken.value} dice
   instead of one. Each die can miss or crit on its own, and they add up
   into one hit.
@@ -267,7 +271,7 @@ Every hero has a resource that pays for their abilities.
 | Guardian | grit | {heroes.guardian.pool} | {heroes.guardian.start} | {rules.grit_per_attack} each time an enemy attacks him |
 | Rogue | energy | {heroes.rogue.pool} | {heroes.rogue.start} | {heroes.rogue.regen} at the top of each party turn |
 | Druid | energy | {heroes.druid.pool} | {heroes.druid.start} | {heroes.druid.regen} at the top of each party turn |
-| Mage | mana | {heroes.mage.pool} | {heroes.mage.start} | {heroes.mage.regen} at the top of each party turn |
+| Mage | mana | {heroes.mage.pool} | {heroes.mage.start} | {heroes.mage.regen} at the top of each party turn, and {heroes.mage.auto_gain} for each auto-attack that does not miss |
 
 - You never go above the most you can hold.
 - A downed hero gets nothing back.
@@ -560,4 +564,4 @@ on the Guardian, so it gives him no grit.
 | Guardian | {heroes.guardian.hp} | d{heroes.guardian.die} | grit | {heroes.guardian.pool} | {heroes.guardian.start} | {rules.grit_per_attack} each time attacked |
 | Rogue | {heroes.rogue.hp} | d{heroes.rogue.die} | energy | {heroes.rogue.pool} | {heroes.rogue.start} | {heroes.rogue.regen} |
 | Druid | {heroes.druid.hp} | d{heroes.druid.die} | energy | {heroes.druid.pool} | {heroes.druid.start} | {heroes.druid.regen} |
-| Mage | {heroes.mage.hp} | d{heroes.mage.die} | mana | {heroes.mage.pool} | {heroes.mage.start} | {heroes.mage.regen} |
+| Mage | {heroes.mage.hp} | d{heroes.mage.die} | mana | {heroes.mage.pool} | {heroes.mage.start} | {heroes.mage.regen}, and {heroes.mage.auto_gain} for each auto-attack that hits |

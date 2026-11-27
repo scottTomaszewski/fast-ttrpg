@@ -113,6 +113,8 @@ def test_each_class_gets_its_crit_hook_and_never_goes_over_the_cap():
     s = state(rolls=[8, 2, 6, 1, 6, 2, 4, 3, 6, 2]); h = s.heroes
     w = enemy(s, "wolf", (4, 6)); w.hp = 999; r = enemy(s, "wolf", (3, 5)); r.hp = 999
     h["druid"].seeds = 1; h["mage"].resource = 20; h["rogue"].combo = 4
+    # Only the crit's mana here: the Mage's mana for a hit is tested below.
+    s.numbers.heroes["mage"] = replace(s.numbers.heroes["mage"], auto_gain=0)
     auto_attack(s, h["guardian"], w); assert h["guardian"].resource == 3     # one grit
     auto_attack(s, h["druid"], w); assert h["druid"].seeds == 2          # a Seed
     auto_attack(s, h["druid"], w); assert h["druid"].seeds == 2          # seeds_max is 2
@@ -311,3 +313,30 @@ def test_the_result_lists_every_button_the_party_has():
     assert r.kit == {a.id: a.hero for a in N.abilities.values() if a.hero in ("mage", "rogue", "shared")} \
         | {"haul_up": "shared"}
     assert list(r.kit)[-1] == "haul_up"
+
+
+# The Mage's auto-attack gives mana
+
+def test_a_mage_auto_attack_that_hits_gives_mana_and_a_miss_gives_none():
+    s = state(rolls=[3, 1]); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5)); m.resource = 10
+    auto_attack(s, m, w); assert m.resource == 10 + N.heroes["mage"].auto_gain == 11
+    auto_attack(s, m, w); assert m.resource == 11                         # a 1 misses: nothing
+
+def test_the_mana_from_an_auto_attack_never_goes_past_the_pool_and_adds_to_a_crit():
+    s = state(rolls=[3, 4, 2]); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5))
+    auto_attack(s, m, w); assert m.resource == N.heroes["mage"].pool         # full stays full
+    m.resource = 10
+    auto_attack(s, m, w); assert m.resource == 10 + 1 + N.heroes["mage"].crit_gain
+
+def test_a_quickened_auto_attack_gives_the_mana_once():
+    s = state(rolls=[3, 2]); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5)); m.resource = 10
+    add_stack(m, "quicken", 2); auto_attack(s, m, w); assert m.resource == 11
+
+def test_heroes_with_no_auto_gain_get_nothing_from_a_hit():
+    s = state(rolls=[3]); d = s.heroes["druid"]; w = enemy(s, "wolf", (8, 5)); d.resource = 5
+    auto_attack(s, d, w); assert d.resource == 5 and N.heroes["druid"].auto_gain == 0
+
+def test_how_much_an_auto_attack_gives_comes_from_the_numbers():
+    s = state(rolls=[3]); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5)); m.resource = 10
+    s.numbers.heroes["mage"] = replace(s.numbers.heroes["mage"], auto_gain=3)
+    auto_attack(s, m, w); assert m.resource == 13

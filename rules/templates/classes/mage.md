@@ -11,6 +11,9 @@ and make the whole party fight faster.
   {heroes.mage.start}, and you get {heroes.mage.regen} back at the top of
   each party turn.
 - **Crit bonus:** {heroes.mage.crit_gain} mana.
+- **Mana from a hit:** each auto-attack that does not miss gives you
+  {heroes.mage.auto_gain} mana, crit or not. With Quicken cards it is still
+  {heroes.mage.auto_gain} for the whole hit.
 
 ## Abilities
 

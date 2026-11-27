@@ -52,6 +52,7 @@ pool = 30
 start = 30
 regen = 1
 crit_gain = 2          # mana
+auto_gain = 1          # mana back from each auto-attack that does not miss
 
 # Ability fields: cost, cast (rounds), hits (channel), range, radius,
 # dice = [count, sides], bonus, cards (how long it lasts), value (what each

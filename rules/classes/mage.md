@@ -13,6 +13,9 @@ and make the whole party fight faster.
   30, and you get 1 back at the top of
   each party turn.
 - **Crit bonus:** 2 mana.
+- **Mana from a hit:** each auto-attack that does not miss gives you
+  1 mana, crit or not. With Quicken cards it is still
+  1 for the whole hit.
 
 ## Abilities
 

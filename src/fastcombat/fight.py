@@ -109,7 +109,10 @@ def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
     One die. With a Quicken card, as many dice as Quicken's `value` in the
     numbers file, added together into one hit. A Rogue gets combo points
     (`combo_per_hit`) for each die that did not miss. Each crit also gives
-    the class's crit bonus. Attacking gives a hidden hero away.
+    the class's crit bonus. A hero with an `auto_gain` (the Mage) gets that
+    much of their own resource back if the attack did not miss; with
+    Quicken that is once for the whole hit, not once per die. Attacking
+    gives a hidden hero away.
     """
     spec = state.numbers.heroes[hero.cls]
     if enemy.dead or distance(hero.pos, enemy.pos) > spec.attack_range:
@@ -123,6 +126,8 @@ def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
             hero.combo = min(rules["combo_max"], hero.combo + rules["combo_per_hit"])
         if roll.crit:
             _crit_bonus(state, hero, spec)
+    if not all(roll.miss for roll in rolls):
+        hero.resource = min(spec.pool, hero.resource + spec.auto_gain)
     hero.hidden = False
 
 
