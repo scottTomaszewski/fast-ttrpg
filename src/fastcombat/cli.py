@@ -5,8 +5,10 @@
                        each hero only auto-attacking in turn, and with the
                        Warden never taunting the boss, and checks everything
                        against the design's targets
+    fastcombat rules   makes the player rules in rules/ from their templates,
+                       with the numbers from the game files
 
-Both read the real game files (`game/numbers.toml` and `game/fights/`)
+All three read the real game files (`game/numbers.toml` and `game/fights/`)
 unless told to read others. `--set` changes one number for one run, so an
 idea can be tried without editing the numbers file.
 """
@@ -22,6 +24,7 @@ from fastcombat.fight import FightResult, run_fight
 from fastcombat.numbers import FightDef, Numbers, NumbersError, load_fight, load_numbers
 from fastcombat.policies import POLICIES
 from fastcombat.report import Summary, check_targets, format_checks, format_summary, summarize
+from fastcombat.rules_doc import RULES, RulesError, load_game, write_rules
 from fastcombat.units import new_state
 
 # The real game files, found from where this file is, not from where the
@@ -69,6 +72,8 @@ class _Setup:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "rules":
+        return _rules()
     try:
         setup = _Setup(args)
     except (NumbersError, ValueError, OSError) as error:
@@ -168,7 +173,24 @@ def _parser() -> argparse.ArgumentParser:
         "auto-attacking, and with the Warden never taunting the boss, and check "
         "the design's targets (exits 0 only if every check passes)",
     )
+    commands.add_parser(
+        "rules",
+        help="make the player rules in rules/ from rules/templates/, with the "
+        "numbers from game/ (run it after changing a number)",
+    )
     return parser
+
+
+def _rules() -> int:
+    """Make the player rules from their templates, and say which files were written."""
+    try:
+        written = write_rules(RULES, load_game(GAME))
+    except (RulesError, NumbersError, OSError) as error:
+        print(f"fastcombat: {error}", file=sys.stderr)
+        return 2
+    for path in written:
+        print(f"wrote {path.relative_to(RULES.parent)}")
+    return 0
 
 
 def _overrides(pairs: list[str]) -> dict[str, object]:
