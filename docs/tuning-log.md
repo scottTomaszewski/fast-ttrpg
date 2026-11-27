@@ -759,6 +759,131 @@ gives 71.4% wins and 51.0% in 18 to 22 rounds (83.0% and 63.4% with no
 Stomp). Not changed here (it changes an old button's play); for the
 retune or the owner.
 
+## D4: the retune for the full kit, 2026-11-27
+
+The kit is complete (D3c), so this step tunes `game/` to the checks. It
+had two parts: five fixes to how the heroes play (the only policy changes
+allowed), then numbers. Tuning runs used seeds below 100000 (`--seed 0`,
+1000 or 2000 fights, full party unless it says so); the confirm run is at
+the end, under "Final".
+
+### The five play fixes (`policies.py`)
+
+Each fix was measured by taking it back out of the five, one at a time
+(1000 fights, seeds 0 to 999). With all five: wins 77.0%, 56.6% of fights
+in 18 to 22 rounds. With none (D3c's play): 69.0% and 36.3%.
+
+| Fix | Without it | What it moved |
+|---|---|---|
+| 1. The Stomp: whoever can Disrupt it does (the Guardian next to the boss first), and the Guardian and the Rogue stay next to the boss when someone will; they step out only when nobody will | wins 68.7%, length 48.8%, Disrupt 2.27 a fight | +8 points of wins, +8 of length. Disrupt 3.69 a fight. Cleanse drops from 1.63 to 0.68 (fewer stunned Guardians) |
+| 2. The Guardian walks next to the boss to take a Stomp, not only when he is already in it | 76.5%, 55.6% | about 1 point each: noise at 1000 fights, but it is the right play (on half the Stomp turns he used to stop outside and not hit the boss) |
+| 3. Shield Slam needs 1 Taunt card on the boss, not 2 (a boss loses its card at the end of the GM turn, after it attacks, so 1 card means it still attacks him in the coming GM turn) | Shield Slam 0.62 a fight | Shield Slam 0.83 a fight. Wins the same |
+| 4. Ice Block: low (35%), the boss or an elite next to her and on her, and no Blink out (or she would Frost Nova first); the dead "rooted" line is gone | Ice Block 0.00 | Ice Block 0.31 a fight. Wins the same (it does not take Blink's place) |
+| 5. Nobody Disrupts a blast or a Stomp with nobody in it | 75.0%, 51.3%, Disrupt 4.84 | +2 points of wins, +5 of length |
+
+The D3c rule "a Stomp only the Guardian is in, with a Druid up, is
+answered" is gone with fix 1: a hero who can Disrupt it now does.
+
+After the fixes the checks that still failed were `length`,
+`resource:guardian` (starved 61%), `kit:guardian` and 11 use bands.
+
+### The Guardian's grit was the root problem
+
+Probed round by round (500 fights, the fixed play, the D3c numbers): the
+Guardian had under 2 grit (Taunt's cost) in 90% or more of rounds 1 to 5,
+and the boss had Taunt cards after only 3% to 27% of party turns in rounds
+2 to 8. The opening Sap takes the brute out before it hits him, the boss
+goes for the back line, and the wolves run past him: nothing hits him, so
+he gets no grit, so he cannot Taunt, so nothing hits him. Grit per attack
+alone does not break this (2 grit: starved 41%; 3 grit: 37%), nor does a
+cheaper Taunt (cost 1 with 2 grit per attack: starved 24%, it counts round
+1 too). Only grit at the start breaks it: with 2 grit at the start the boss
+is held from round 1 and the party won 98% of fights. So the start grit
+went up, and then the fight had to be made harder again.
+
+### Kept changes
+
+Each row: the change, why, and what taking just that one change back out
+of the final numbers does (2000 fights, seeds 0 to 1999, full party). The
+final numbers there: wins 81.5%, 69.5% in 18 to 22 rounds, auto-attacks
+21% of damage, the Guardian starved 3% of rounds, every check of the full
+party passing except Shield Slam (0.65).
+
+| Change | Old → new | Why | With the old number instead |
+|---|---|---|---|
+| Guardian start grit (`heroes.guardian.start`) | 0 → 4 | breaks the no-grit spiral (above): two Taunts' worth. **Owner to decide** | wins 52.0%, length 54.9%, Guardian starved 42%; Grip 0.05, Arcane Volley 3.32 fail. With 2: everything passes, but the Guardian is starved 18% of rounds (the line is 20%) |
+| Grit per attack (`rules.grit_per_attack`) | 1 → 2 | with the boss held he is hit every round; at 1 grit he still cannot pay for his emergency buttons | Guardian starved 36%; Challenging Shout 0.32, Last Stand 0.18, Kidney Shot 0.40 fail; wins 87.1% |
+| Ogre melee bonus | 4 → 9 (2d6+9) | a held boss only hits the Guardian, and +4 was tuned for a boss that ran to the back line (fourth look) | wins 97.2% and auto share 20% (both fail), the Guardian ends up and full too often; Intercede 0.86, Kidney Shot 0.29, Vanish 0.08, Frost Nova 0.13, Blink 0.04, Ice Block 0.03 |
+| Ogre HP | 150 → 115 | with +9 the fight ran long and was lost too often | wins 38.9%, length 51.2%, auto share 20% (fails), Rejuvenation 3.83 |
+| Grip cost | 4 → 2 | Grip was 0.02 to 0.25 a fight: the Guardian kept his grit for Intercede and Taunt | Guardian starved 12%, Kidney Shot just under 0.5. (Before the other Rogue changes, Grip was 0.25 a fight at cost 4 and 1.01 at 2) |
+| Intercede cost | 4 → 2 | Intercede was 0.57 to 0.86 a fight | Guardian starved 7%; Kidney Shot 0.48. With Grip at 4 too, Intercede falls to 0.90 to 0.92 |
+| Challenging Shout radius | 3 → 5 | Shout was 0.31 to 0.5: two loose adds within 3 squares of the tank are rare | Challenging Shout 0.48 |
+| Combo points at most (`rules.combo_max`) | 5 → 3 | Eviscerate 1.28 to 1.5 and Kidney Shot 0.21 to 0.4: full combo points came too seldom | Eviscerate 1.44, Kidney Shot 0.32, Intercede 0.88, Ice Block 0.16 |
+| Backstab cost | 4 → 7 | auto-attacks were 12% to 18% of all damage: with the boss held, the Guardian auto-attacks much less, so the Rogue has to | auto share 16%, wins 89.8%, the Guardian ends up and full too often; Kidney Shot 0.49, Vanish 0.16, Ice Block 0.16 |
+| Cheap Shot cost | 3 → 2 | with Shadowstep at 5 and Backstab at 7, the Rogue's cheapest button was 3, and she was starved 21% to 26% of rounds | Rogue starved 21% |
+| Arcane Volley dice | 2d6 → 2d4 | at 2d6 the Mage's spells were more than half of all damage and auto share fell under 20%; at a higher cost instead, Volley fell under 4 a fight | auto share 19%, wins 88.8%, the Guardian ends up and full too often; Eviscerate 1.96, Kidney Shot 0.42, Vanish 0.16, Ice Block 0.15 |
+| Blink range | 6 → 5 | the ogre reaches 5 squares (move 4, reach 1), so Blink 6 nearly always got her out and Ice Block almost never fired | Ice Block 0.19 |
+| Wolf HP | 16 → 20 | wolves died before they hurt anyone; this puts Intercede and the wins in band | wins 89.6%, the Guardian ends up and full too often; Kidney Shot 0.41, Vanish 0.16, Ice Block 0.14 |
+| Brute shield (`shielded`) | 5 → 3 | a stalemate, about 1 fight in 3000: the Guardian and the Mage out, the brute (sapped early, awake late) left alone on the Rogue and the Druid. Their d6 auto-attacks mostly bounced off it, and the Rogue spent each full combo on Kidney Shot | 1 or 2 fights in 6000 to 9000 ran out of rounds (0 in 24000 at 3) |
+| Shadowstep cost | 2 → 5 | **the owner's number** (2026-11-27), not tuned | see "The opening" below |
+
+Tried and put back (each one made no difference at the final numbers, so
+the old number stays): Guardian grit pool 15 (he ends up and full in
+about 35% of fights against about 43% at 10, both under the 50% line), goblin damage 2, Evocation 4 mana, Meteor cost 14. Tried and not
+kept: Backstab cost 6 or 8 (6: auto share 19%; 8: the Rogue starved),
+Arcane Volley cost 3 (Volley 3.55 a fight), Meteor 6d6 or 7d6 (wins fell to
+57% and 64%: Meteor kills the adds), a boulder of 1d6 (fights ran out of
+rounds) or every 3 or 4 rounds (length under 60%), 1 grit a round
+(`regen`) instead of start grit (starved 27% to 28%, and it is a design
+change too), Guardian HP 120 or 130 (wins 87% to 95%, and still a
+stalemate), Mage HP 24 or 26 (fewer wins, shorter band), ogre move 5
+(wins 74%, and still a stalemate).
+
+### The opening, with Shadowstep at 5
+
+The owner set Shadowstep's cost to 5. The judgement rule (Shadowstep in if
+she can still pay for the Sap after round 1's energy comes back: 10 - 5 + 3
+= 8, and Sap costs 3) still always picks Shadowstep in: it would only pick
+Sneak at a cost over 10, which she could not pay anyway. So the choice is
+still not a real choice in this fight, but now for a different reason: the
+Sap is worth too much to gamble. 2000 fights, seeds 0 to 1999, final
+numbers:
+
+| Opening | wins | 18 to 22 rounds | Sap a fight | Shadowstep | Vanish | Rogue starved |
+|---|---|---|---|---|---|---|
+| Shadowstep in (judgement, kept) | 81.5% | 69.5% | 1.05 | 1.05 | 0.24 | 12% |
+| always Sneak (works 49%) | 53.8% | 59.5% | 0.53 | 1.41 | 0.58 | 14% |
+| no opening | 59.4% | 56.8% | 1.08 | 1.54 | 0.38 | 12% |
+| Shadowstep at 2 (before) | 82.5% | 69.0% | 1.05 | 1.22 | 0.27 | 4% |
+
+With the Guardian able to hold the boss, the round-1 Sap on the brute is
+now worth about 22 points of wins. A failed Sneak is worse than no opening
+(she ends up next to the brute and seen). At 5 the Rogue is starved more
+(12% against 4%) and Shadowsteps a little less in the fight; her bands all
+pass (Backstab 4.73, Eviscerate 2.16, Kidney Shot 0.52, Cheap Shot 0.60,
+Sap 1.05, Shadowstep 1.05, Vanish 0.24).
+
+### Shield Slam cannot reach 2 to 3 a fight
+
+Probed at the final numbers: the Guardian gets to rule 10 (Shield Slam or
+auto-attack) only about 5.7 turns a fight; he is busy with Taunt, Shield
+Plant, Disrupt, Grip, Intercede and Last Stand the rest. On 4.4 of those
+turns an ally is at 75% HP or less, on 1.8 an add is loose (wolves, then
+goblins). How much the ally line matters (2000 fights, seeds 0 to 1999):
+
+| Shield Slam when every ally is above | Shield Slam a fight | auto share | wins |
+|---|---|---|---|
+| 75% (kept) | 0.65 | 21% | 81.5% |
+| 60% | 1.57 | 18% (fails) | 82.4% |
+| 50% | 1.91 | 17% (fails) | 82.8% |
+| any HP | in band | 16% (fails) | 83.2% |
+| 75%, but 2 Taunt cards (D3c) | 0.54 | 21% | 81.4% |
+
+So it only gets into its band when the HP line is gone, which is not the
+owner's "only when everything is going super well", and then every Slam
+takes an auto-attack's place and the auto share check fails. Left as "Not
+met".
+
 ## Needs a decision
 
 These are things numbers alone could not fix well. Each needs a change
@@ -777,6 +902,9 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    After the fourth look (the 3000 confirm fights): still true. The
    Crusher is announced 2.2 times a fight and lands 0.02 times (56
    times). Last Stand was used 45 times in 3000 fights.
+   After D4: Last Stand 0.77 a fight, in band. He now has the grit, and
+   comes first on his list once a heavy hit that could drop him is
+   announced.
 2. **Sap never happens.** The Rogue only Saps in round 1, and her rule
    looks 7 squares away (move 6 plus 1). The brute starts 8 squares
    from her. Moving the brute from [10, 7] to [9, 7] makes Sap happen in
@@ -833,6 +961,7 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    fights), so almost never again. Best guess why: with the boss
    walking to the back line, the enemies end up close to the heroes,
    and the Mage never drops a Meteor where a hero stands.
+   After D4: 1.61 a fight, in band (not looked into why it came back).
 5. **Some buttons are almost never pressed in this fight** (per fight,
    first pass's numbers): Challenging Shout 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
    Last Stand 0.0, Sap 0, Frost Nova 0.1, Shield Plant 0.3, Wild Growth 0.4.
@@ -872,41 +1001,54 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    so it takes Taunt cards off and lets the boss loose sooner. Choices:
    change the Mage's rule (how she plays, not a game number), or leave
    Volley for fights where it fits better.
+   After D4: every button is pressed inside its band but Shield Slam
+   (see "Not met"). Arcane Volley is 4.44 a fight (it is quiet since D3).
 6. **Fight length is touchy about the boss's timings.** Changing when
    the Ground Slam comes moved "in band" anywhere from 47% to 75%,
    because the Guardian and Rogue lose a whole turn stepping out of it.
    If the slam timing changes later, length needs checking again.
-7. **Twenty Sap cards (and twelve sheep cards) at the table.** A pile of
-   20 cards on one enemy, one coming off each round, is a lot to handle.
-   A single card that says "until hurt, or for N rounds" with a die or a
-   tally for the rounds left may be better. That is the owner's call.
-8. **The opening is not a real choice yet.** Shadowstep in costs 2
-   energy, but the Rogue gets 3 back at the top of round 1, so it is free
-   and always works; a Sneak can only lose. See "The opening" in D3b for
-   numbers that would make it a choice.
-9. **The round-1 Sap makes the Guardian matter less.** With the brute
-   sapped in round 1, before it ever hits him, `kit:guardian`,
-   `taunt:boss` and `length` fail (see D3b, and its correction: it is the
-   opening Sap, more than the long one). Grit only comes from being hit,
-   and the brute was what hit him early. For the retune, or a rule change
-   (grit from something else).
+7. (Settled 2026-11-27: the owner accepts 20 Sap cards for now, to be
+   tried at the table. Twelve sheep cards likewise.)
+8. **The opening is still not a real choice.** Shadowstep in now costs 5
+   (the owner's number), so it is no longer free: she starts round 1 on 8
+   energy, not 10. But the judgement rule still always Shadowsteps in, and
+   it should: in this fight the round-1 Sap is worth about 22 points of
+   wins, and a failed Sneak is worse than no opening (D4, "The opening").
+   Sneak would only be worth it with an easier stealth check or a fight
+   where the Sap matters less.
+9. **The Guardian starts with 4 grit (D4).** The design says he starts
+   with none. With none, the round-1 Sap keeps the brute off him, the boss
+   goes for the back line, and he never gets the grit to Taunt it: wins
+   52%, starved 42% of rounds (D4). Start 2 also passes every other check,
+   but he is starved 18% of rounds, near the 20% line; 4 leaves room. A
+   grit a round (`regen = 1`) instead was tried: starved 27%. The owner
+   should accept start grit (and how much), or pick another way for a tank
+   to open a fight (say, a free first Taunt).
 
-10. **The Stomp costs about 11 points of wins and 13 of length, by
-    making the melee heroes step around it,** not by its hit or its stun
-    (D3c). The retune can take it in, or the Stomp can change (a smaller
-    or no area, with the stun on the boss's target only, say).
-11. **Shield Slam is pressed 0.48 times a fight, not 2 to 3.** The
-    Guardian is rarely free in this fight. Loosening the rule does not get
-    there (1.56 at the loosest). Either the fight leaves the tank more
-    quiet turns, or the band moves.
-12. **Ice Block is almost never pressed** (1 in 500 fights) under the
-    owner's trigger. A wider trigger (low, with an enemy next to her)
-    would press it about 1.4 times a fight and cost about 3 points of
-    wins.
-13. **Disrupting a blast nobody stands in.** The Mage Disrupts Ground
-    Slams everyone has walked out of. Treating those as answered (as
-    the Stomp is) is worth about 2 points of wins and 11 of length today
-    (D3c). It changes how an old button is played, so it was left.
+10. (Done in D4: whoever can Disrupt the Stomp does, and the melee heroes
+    stay in. It was worth about 8 points of wins and 8 of length.)
+11. **Shield Slam is pressed about 0.6 times a fight, not 2 to 3** (see
+    "Not met"). The Guardian reaches the Slam rule about 5.7 turns a
+    fight, and on most of them an ally is at 75% HP or less. Only a rule
+    with no HP line at all gets into the band, and then auto-attacks fall
+    under a fifth of the damage. Either the band moves (say 0.5 to 2), or
+    Shield Slam stops being a filler that takes an auto-attack's place.
+12. **Ice Block is pressed 0.21 times a fight** with the D4 trigger (low,
+    the boss or an elite on her, no Blink out), just inside the proposed
+    0.2 to 1.5. Blink reaches 5 squares now so that it does not always get
+    her out of the ogre's reach. Confirm the band, or the trigger.
+13. (Done in D4: nobody Disrupts a blast or a Stomp with nobody in it.)
+14. **The Rogue spends full combo points on Kidney Shot when an add is on
+    her** (rule 6), even when it is the last enemy and an Eviscerate would
+    kill it. That made a rare stalemate with the brute (D4, the brute's
+    shield). The numbers end it today (the shield stops hits below 3,
+    not 5); the rule could also skip Kidney Shot on the last enemy.
+15. **Auto-attacks are 20.9% of all damage**, just over the 20% line. With
+    the boss held, the Guardian auto-attacks much less, and the Mage's
+    spells do half of all damage. Backstab costs 7 and Arcane Volley hits
+    for 2d4 to keep autos over the line. Each Shield Slam also takes an
+    auto-attack's place. If the owner wants more room, lower the check or
+    make spells cost turns, not mana.
 
 ## Rules the simulator had to decide
 
@@ -931,7 +1073,8 @@ to change any of them.
   mage, rogue), not truly all at once. So a hero who acts before the
   Mage in that order gets one quickened turn fewer than one who acts
   after her: Quicken lands after they have already attacked that turn.
-- The Guardian starts a fight with 0 grit.
+- The Guardian starts a fight with 4 grit (D4; it was 0, see "Needs a
+  decision", item 9).
 - Bosses ignore the hold: only Taunt cards make a boss attack the Guardian
   (owner's decision).
 
@@ -1089,95 +1232,122 @@ The Rogue's opening (D3b), rules the owner left open:
 - The enemies' tally: a sapped, sheeped or stunned enemy "loses" each GM
   turn it spends with those cards (`rounds_out` in the summary).
 
-## Final (before the rename; being retuned)
+## Final (D4, 2026-11-27)
 
-These are the numbers after the fourth look: bosses ignore the hold, the
-Guardian Taunts the boss whenever it has no Taunt cards, and the ogre
-goes for the back line when nobody taunts it. `boss_loud_cards` is 1.
+These are the numbers after D4: the full kit (Shield Slam, Ice Block,
+Evocation, the Stomp, the Rogue's opening, Sap 20, Polymorph 12, Quicken
+benched), the five D4 play fixes, and the D4 numbers (see "D4", "Kept
+changes"). Shadowstep costs 5 (the owner's number).
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
-used while tuning; every tuning run used seeds below 100000). The
-simulator gives up after 60 rounds (`max_rounds = 60`).
+used while tuning). The simulator gives up after 60 rounds.
 
 ```
 Fights played:          3000
-Wins:                   78%
+Wins:                   80%
 Ran out of rounds:      0%
-Rounds:                 median 21, most between 18 and 26
+Rounds:                 median 20, most between 18 and 25
 Lasted 18 to 22 rounds: 67%
-A hero in danger:       92% (down to 25% HP, or went down)
-Auto-attack damage:     26% of all damage
+A hero in danger:       90% (down to 25% HP, or went down)
+Auto-attack damage:     21% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-guardian         19%       0%      39%           9%        50%        10%
-rogue          48%       0%       1%          18%        23%        44%
-druid           1%     100%       0%          25%        27%        26%
-mage           32%       0%      11%           0%        56%        11%
+guardian       12%       0%       3%          43%        50%        10%
+rogue          35%       0%      12%          22%        20%        51%
+druid           1%     100%       1%          34%        21%        45%
+mage           51%       0%       0%           0%        43%        17%
 
-PASS  length           67.2% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
-PASS  win_rate         77.9%  (wanted: 70.0% to 90.0%)
-PASS  no_timeouts      0.0%  (wanted: none)
-PASS  danger           92.4% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
-PASS  auto_share       26.2% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:guardian  starved 39.0% of rounds, ended up and full 8.8% of fights  (wanted: both under 50.0%)
-PASS  resource:rogue   starved 0.6% of rounds, ended up and full 17.7% of fights  (wanted: both under 50.0%)
-PASS  resource:druid   starved 0.2% of rounds, ended up and full 24.9% of fights  (wanted: both under 50.0%)
-PASS  resource:mage    starved 10.5% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-PASS  needed:guardian    wins 77.9% with, 0.7% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:rogue     wins 77.9% with, 1.8% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:druid     wins 77.9% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:mage      wins 77.9% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
-PASS  kit:guardian       wins 77.9% with the kit, 44.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:rogue        wins 77.9% with the kit, 25.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:druid        wins 77.9% with the kit, 3.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:mage         wins 77.9% with the kit, 6.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss       wins 77.9% with, 35.2% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+Uses per fight: taunt 4.33, challenging_shout 0.67, intercede 1.27,
+grip 1.01, shield_plant 1.41, last_stand 0.77, shield_slam 0.61,
+backstab 4.66, eviscerate 2.16, kidney_shot 0.52, cheap_shot 0.59,
+sap 1.05, shadowstep 1.08, vanish 0.27, rejuvenation 4.53,
+regrowth 4.43, swiftmend 2.13, wild_growth 1.95, cleanse 0.50,
+shadowmeld 0.88, nourish 3.45, arcane_volley 4.44, firebolt 0.94,
+meteor 1.61, frost_nova 0.35, blink 0.20, polymorph 0.86,
+ice_block 0.21, evocation 0.39, disrupt 2.20, haul_up 0.11
+
+Rogue opening: shadowstep in 1.00 a fight. Rounds an enemy spent sapped
+17.8 (still sapped at the end of 15% of fights); as a sheep 9.6.
+
+PASS  length                 67.3% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
+PASS  win_rate               80.2%  (wanted: 70.0% to 90.0%)
+PASS  no_timeouts            0.0%  (wanted: none)
+PASS  danger                 90.3% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
+PASS  auto_share             20.9% of damage  (wanted: 20.0% to 50.0%)
+PASS  resource:guardian      starved 2.7% of rounds, ended up and full 42.9% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:rogue         starved 12.5% of rounds, ended up and full 22.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:druid         starved 1.1% of rounds, ended up and full 34.2% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:mage          starved 0.5% of rounds, ended up and full 0.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  needed:guardian        wins 80.2% with, 0.2% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:rogue           wins 80.2% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:druid           wins 80.2% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:mage            wins 80.2% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  kit:guardian           wins 80.2% with the kit, 47.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:rogue              wins 80.2% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:druid              wins 80.2% with the kit, 21.8% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:mage               wins 80.2% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  taunt:boss             wins 80.2% with, 54.6% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+PASS  use:taunt              4.33 per fight  (wanted: 3 to 10 per fight)
+PASS  use:challenging_shout  0.67 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:intercede          1.27 per fight  (wanted: 1 to 4 per fight)
+PASS  use:grip               1.01 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:shield_plant       1.41 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:last_stand         0.77 per fight  (wanted: 0.2 to 2 per fight)
+FAIL  use:shield_slam        0.61 per fight  (wanted: 2 to 3 per fight)
+PASS  use:backstab           4.66 per fight  (wanted: at least 4 per fight)
+PASS  use:eviscerate         2.16 per fight  (wanted: at least 2 per fight)
+PASS  use:kidney_shot        0.52 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:cheap_shot         0.59 per fight  (wanted: 0.3 to 3 per fight)
+PASS  use:sap                1.05 per fight  (wanted: 0.7 to 2 per fight)
+PASS  use:shadowstep         1.08 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:vanish             0.27 per fight  (wanted: 0.2 to 2 per fight)
+PASS  use:rejuvenation       4.53 per fight  (wanted: at least 4 per fight)
+PASS  use:regrowth           4.43 per fight  (wanted: 1 to 6 per fight)
+PASS  use:swiftmend          2.13 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:wild_growth        1.95 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:cleanse            0.50 per fight  (wanted: 0.3 to 4 per fight)
+PASS  use:shadowmeld         0.88 per fight  (wanted: 0.1 to 2 per fight)
+PASS  use:nourish            3.45 per fight  (wanted: at least 2 per fight)
+PASS  use:arcane_volley      4.44 per fight  (wanted: at least 4 per fight)
+PASS  use:firebolt           0.94 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:meteor             1.61 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:frost_nova         0.35 per fight  (wanted: 0.2 to 3 per fight)
+PASS  use:blink              0.20 per fight  (wanted: 0.1 to 3 per fight)
+PASS  use:polymorph          0.86 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:ice_block          0.21 per fight  (wanted: 0.2 to 1.5 per fight)
+PASS  use:evocation          0.39 per fight  (wanted: 0.3 to 2 per fight)
+PASS  use:disrupt            2.20 per fight  (wanted: at least 1 per fight)
+PASS  use:haul_up            0.11 per fight  (wanted: at least 0 per fight)
 ```
 
-Every check passes with the round cap at 60, `taunt:boss` too. The
-pinned test seeds (`check --n 600 --seed 500000`) pass too.
+Every check passes except `use:shield_slam` (see "Not met"). The pinned
+test seeds (`check --n 600 --seed 500000`) give the same: only Shield
+Slam fails, so the slow test is marked xfail with that reason. No fight
+ran out of rounds in 24000 tuning fights (seeds 0 to 23999) either.
 
-Things to keep an eye on:
+Things to keep an eye on (thin margins on the confirm run):
 
-- Taunting the boss now matters: without it the party wins 35% instead
-  of 78%. The Guardian Taunts the boss about 5.7 times a fight.
-- The Guardian is starved 39% of rounds (the line is 50%). Keeping the
-  boss taunted costs him 2 grit about every three rounds, and he only
-  gets grit by auto-attacking. A more costly Taunt, or one more
-  grit-hungry button, would push him over.
-- The Guardian goes down in 50% of fights and the Mage in 56%. The Rogue
-  went down in 54% after the third look and in 23% now. Best guess why:
-  the boss used to hit whoever stood nearest, often her, and now it is
-  either on the Guardian or going for the back line.
-- A hero is in danger in 92% of fights, so nearly every fight is still
-  a scare.
-- With goblin damage 0 wins go up from 78% to 93%, over the top of the
-  target. So the goblins matter.
-- No fight ran out of rounds, here or in 24000 tuning fights. See
-  "Needs a decision", item 3.
-- Without any one hero the party almost never wins (2% or less).
-- Meteor and Arcane Volley are almost never or never cast. See "Needs a
-  decision", items 4 and 5.
+- Auto share 20.9% (line 20%), Ice Block 0.21 (line 0.2), Vanish 0.27,
+  Kidney Shot 0.52 and Cleanse 0.50 (lines 0.2, 0.5, 0.3), Blink 0.20
+  (line 0.1), Backstab 4.66 (line 4). A small change anywhere can tip
+  one of these.
+- The Guardian goes down in half the fights (the boss hits him for 2d6+9)
+  and the Mage in 43%. Taunting the boss is worth 26 points of wins.
+- The round-1 Sap is worth about 22 points of wins: this fight is now
+  tuned around it.
+- The Mage does half of all damage.
 
 ## Not met
 
-Nothing: every check passed on the confirm run after the fourth look,
-`taunt:boss` included, with the round cap at 60. The items under "Needs
-a decision" are design goals the checks do not measure.
+After D4 (`check --n 3000 --seed 100000`), one check fails:
 
-Since then (D3 and D3b, 2026-11-27) checks fail again, waiting for the
-retune (D4). After D3b, `check --n 500 --seed 100000` fails `length`
-(58.6%), `resource:guardian` (starved 61.4%), `kit:guardian` (81.8% with
-the kit, 79.2% on auto), `taunt:boss` (81.8% with, 75.8% without), and
-these use bands: Challenging Shout, Intercede, Grip, Shield Plant, Last
-Stand, Eviscerate, Kidney Shot, Arcane Volley, Firebolt and Quicken. The
-slow test fails with them; it is left failing (not marked xfail) because
-D4 is the step that has to make them pass.
-
-After D3c, `check --n 500 --seed 100000` fails `length` (39.8%),
-`win_rate` (69.4%, a hair under 70%), `resource:guardian` (starved
-60.6%), `kit:guardian` (69.4% with the kit, 67.4% on auto), `taunt:boss`
-(69.4% with, 59.6% without), and these use bands: Challenging Shout,
-Intercede, Grip, Shield Plant, Last Stand, Shield Slam (0.48, wanted 2 to
-3), Eviscerate, Kidney Shot, Arcane Volley, Firebolt and Ice Block (0.00,
-wanted 0.2 to 1.5). Quicken has no check now (benched). Still for D4.
+- **`use:shield_slam`: 0.61 a fight, wanted 2 to 3.** The Guardian gets
+  to his Shield Slam rule (the one before his auto-attack) only about 5.7
+  turns a fight, and on about 4.4 of those an ally is at 75% HP or less;
+  on 1.8 an add is loose. With the HP line at 60% it is 1.57 a fight and
+  at 50% 1.91; it gets into the band only with no HP line at all, which
+  is not the owner's "only when everything is going super well", and then
+  auto-attacks fall to 16% of damage (the `auto_share` check fails),
+  because every Slam takes an auto-attack's place. The check is not
+  loosened. The slow targets test is marked xfail with this reason. See
+  "Needs a decision", item 11.
