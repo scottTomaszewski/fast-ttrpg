@@ -10,7 +10,7 @@ hits, then spends them all on one huge blow or a long stun.
 - **Resource:** energy. At most 10, you start a fight with
   10, and you get 3 back at the top of
   each party turn.
-- **Combo points:** at most 5, and you start a fight with
+- **Combo points:** at most 3, and you start a fight with
   none. You get
   1 for each auto-attack die that hits, and for each
   Backstab. Eviscerate and Kidney Shot spend them all. Keep them with
@@ -28,7 +28,7 @@ not a boss, and get next to it in one of two ways:
   hidden. Below that you are **spotted**: you start on your own square,
   and you are not hidden.
 - **Shadowstep in.** It always works. You start on that same square,
-  hidden, but with 2 less energy (Shadowstep's
+  hidden, but with 5 less energy (Shadowstep's
   cost, spent before the fight).
 
 Or do neither, and start on your own square, hidden. If two Rogues play,
@@ -50,7 +50,7 @@ the one whose name comes first picks first.
 
 ### Backstab
 
-- 4 energy · Instant · range
+- 7 energy · Instant · range
   1 (next to you)
 - Roll **2d6** and get 1 combo
   point.
@@ -66,8 +66,8 @@ the one whose name comes first picks first.
 - 3 energy · Instant ·
   range 1 (next to you) · **Loud**
 - Spend all your combo points (you need at least 1). Roll
-  **1d6 for each point**: with 5
-  points, that is 5 rolls added together.
+  **1d6 for each point**: with 3
+  points, that is 3 rolls added together.
 
 ### Kidney Shot
 
@@ -75,12 +75,12 @@ the one whose name comes first picks first.
   range 1 (next to you)
 - Spend all your combo points (you need at least 1) to stun one enemy:
   **1 stun card**, or
-  **2** if you had the full 5.
+  **2** if you had the full 3.
   Not on a boss.
 
 ### Cheap Shot
 
-- 3 energy · Instant ·
+- 2 energy · Instant ·
   range 1 (next to you)
 - A quick stun: **1 stun card** on one enemy. No
   combo points needed. It works on a boss too: a boss cannot be stunned,
@@ -98,7 +98,7 @@ the one whose name comes first picks first.
 
 ### Shadowstep
 
-- 2 energy · Instant ·
+- 5 energy · Instant ·
   range 8
 - Pick an enemy in range. You appear next to it, on the empty square
   nearest to you (there has to be one). It **does not end your hiding**.
@@ -133,7 +133,7 @@ the one whose name comes first picks first.
 - **Stop casts next to you.** If an enemy next to you has announced a
   cast, Disrupt it, or Cheap Shot it if Disrupt is cooling down.
 - **If something is coming for you because of your Loud hit, Vanish.**
-- **At 5 combo points, Eviscerate.** On the boss, only while
+- **At 3 combo points, Eviscerate.** On the boss, only while
   it has Taunt cards: Eviscerate is Loud, so then the boss loses
   1 of its Taunt cards instead of being pulled onto
   you. If an add (an extra enemy that fights alongside the boss) next to you is chasing the Druid or the Mage, Kidney Shot it instead.

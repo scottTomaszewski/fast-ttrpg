@@ -130,13 +130,13 @@ in the fight. The Guardian still has 2 Rejuvenation heal cards.
 - The Mage: an **auto-attack** on the wolf with her d4.
   She rolls a 4, the top face: a crit! She rolls again and
   gets a 2, so the hit is 6. The wolf had
-  16 HP and now has 10. A
+  20 HP and now has 14. A
   Mage's auto-attack that hits gives her 1 mana, and
   the crit gives her 2 more.
 - The Rogue: the wolf is busy with someone else (it went for the Mage), so
   she can **Backstab** it. She rolls 2d6 and gets a 5
   and a 3, so 8. She is not hidden, so it is not made bigger. The
-  wolf is down to 2 HP. She
+  wolf is down to 6 HP. She
   gets 1 combo point.
 
 **End of the turn.** Nobody is down, so there are no Bleeding cards to
@@ -149,9 +149,9 @@ take off.
 2. No new enemies come in this round.
 3. The Ogre goes first (alphabetical order). It has Taunt cards, so it
    must go for the Guardian. It moves up to 4 squares to him
-   and hits for 2d6+4: the GM rolls a 3 and a 5, and adds
-   4, so 12. The Guardian loses
-   12 HP, and gains 1 grit
+   and hits for 2d6+9: the GM rolls a 3 and a 5, and adds
+   9, so 17. The Guardian loses
+   17 HP, and gains 2 grit
    for being attacked. Then the wolf: no Taunt cards, it is not next to
    the Guardian, and nobody pulled it, so it goes where wolves like to go,
    the back line. It runs at the Mage and bites her for
@@ -160,7 +160,7 @@ take off.
 5. One Taunt card comes off the Ogre. It has
    2 left.
 
-Next round the wolf, with 2 HP
+Next round the wolf, with 6 HP
 left, will not last long.
 
 ## 3. Auto-attacks and abilities
@@ -268,7 +268,7 @@ Every hero has a resource that pays for their abilities.
 
 | Hero | Resource | Most you can hold | At the start | Gets back |
 |---|---|---|---|---|
-| Guardian | grit | 10 | 0 | 1 each time an enemy attacks him |
+| Guardian | grit | 10 | 4 | 2 each time an enemy attacks him |
 | Rogue | energy | 10 | 10 | 3 at the top of each party turn |
 | Druid | energy | 10 | 10 | 3 at the top of each party turn |
 | Mage | mana | 30 | 30 | 1 at the top of each party turn, and 1 for each auto-attack that does not miss |
@@ -284,7 +284,7 @@ Every hero has a resource that pays for their abilities.
 
 Two heroes also keep a count of something:
 
-- **Combo points** (Rogue), at most 5. She gets
+- **Combo points** (Rogue), at most 3. She gets
   1 for each auto-attack die that hits, and
   1 more for a crit. A Backstab gives
   1 too. Eviscerate and Kidney Shot spend them all.
@@ -585,7 +585,7 @@ on the Guardian, so it gives him no grit.
 
 | Hero | HP | Die | Resource | Most | Start | Back each round |
 |---|---|---|---|---|---|---|
-| Guardian | 110 | d8 | grit | 10 | 0 | 1 each time attacked |
+| Guardian | 110 | d8 | grit | 10 | 4 | 2 each time attacked |
 | Rogue | 36 | d6 | energy | 10 | 10 | 3 |
 | Druid | 36 | d6 | energy | 10 | 10 | 3 |
 | Mage | 28 | d4 | mana | 30 | 30 | 1, and 1 for each auto-attack that hits |

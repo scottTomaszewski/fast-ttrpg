@@ -23,7 +23,7 @@ freeze herself in a block of ice, and call her mana back.
 - 2 mana for each hit ·
   Channel, 3 hits · range
   10
-- Hit one enemy for **2d6**, now and in each of
+- Hit one enemy for **2d4**, now and in each of
   your next act steps, for 3 hits in all. You
   may move while you channel. Each hit is paid for, and checks its range,
   when it happens.
@@ -54,7 +54,7 @@ freeze herself in a block of ice, and call her mana back.
 ### Blink
 
 - 2 mana · Instant · range
-  6
+  5
 - Jump to an empty square, without walking there.
 
 ### Polymorph

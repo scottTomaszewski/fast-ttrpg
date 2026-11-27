@@ -41,10 +41,10 @@ g goblin (fodder, comes in round 10)
 
 | Enemy | How many | HP | Attack | Reach | Move | Goes for |
 |---|---|---|---|---|---|---|
-| Ogre Warlord (boss) | 1 | 150 | 2d6+4 | 1 (next to it) | 4 | the back line |
-| Brute (shielded 5) | 1 | 30 | 4 | 1 (next to it) | 4 | the nearest hero |
+| Ogre Warlord (boss) | 1 | 115 | 2d6+9 | 1 (next to it) | 4 | the back line |
+| Brute (shielded 3) | 1 | 30 | 4 | 1 (next to it) | 4 | the nearest hero |
 | Shaman | 1 | 24 | 2, and poison | 8 squares | 4 | a random hero |
-| Wolf | 2 | 16 | 3 | 1 (next to it) | 7 | the back line |
+| Wolf | 2 | 20 | 3 | 1 (next to it) | 7 | the back line |
 | Goblin (fodder) | 5, in round 10 | 1 | 3 | 1 (next to it) | 3 | the back line |
 
 "The back line" is the hero with the fewest max HP who is not the Guardian:
@@ -55,13 +55,13 @@ for him. Remember the order for every enemy (core rules, section 8): Taunt
 cards first, then a pull, then the Guardian's hold (not the Ogre), then what
 it likes.
 
-- **Ogre Warlord.** The boss. He rolls 2d6+4 for each hit. Only
+- **Ogre Warlord.** The boss. He rolls 2d6+9 for each hit. Only
   Taunt cards keep him on the Guardian: standing next to the Guardian does not.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
   sheeped or Gripped, but a stun still breaks the move he announced,
   and Frost Nova can root him. His big moves are below.
-- **Brute.** Big and slow. Shielded 5: any single hit
-  under 5 does nothing to him. He walks to the nearest
+- **Brute.** Big and slow. Shielded 3: any single hit
+  under 3 does nothing to him. He walks to the nearest
   hero, so he often ends up held by the Guardian.
 - **Shaman.** Stands back and hits from 8 squares away.
   Each of his hits also gives the hero 3 poison
@@ -101,7 +101,7 @@ Skull Crusher does.
 
 The shaman announces a **mend** in step 4 of the GM turn in rounds
 2, 6, 10, 14, 18 and so on. In step 1 of the next GM turn it heals the
-Ogre 25 HP (never past his full 150). It
+Ogre 25 HP (never past his full 115). It
 does not happen if the shaman is dead, or is stunned, sapped or sheeped
 when it is due, or if someone Disrupts it. A shaman who is stunned, sapped
 or sheeped in step 4 announces nothing.

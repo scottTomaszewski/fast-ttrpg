@@ -5,13 +5,13 @@
 hero_move = 6
 bleeding_cards = 3     # rounds to save a downed hero
 haul_up_hp = 5         # HP after an ally hauls you up
-combo_max = 5
+combo_max = 3
 combo_per_hit = 1      # combo points a Rogue gets for each auto-attack die that hits, and for a Backstab
 backstab_hidden_multiplier = 2   # a Backstab from hiding hits this many times as hard
 sneak_die = 6          # the Rogue's stealth check before the fight: one die with this many sides...
 sneak_target = 4       # ...and she gets next to her enemy unseen on this or more
 seeds_max = 2
-grit_per_attack = 1
+grit_per_attack = 2    # grit the Guardian gets each time an enemy attacks him (not a blast)
 boss_loud_cards = 1    # Taunt cards a Loud hit takes off a boss
 max_rounds = 60        # the simulator gives up after this many
 
@@ -21,7 +21,7 @@ die = 8
 attack_range = 1
 resource = "grit"
 pool = 10
-start = 0              # the design: the Guardian starts with no grit
+start = 4              # grit for two Taunts (D4; the design said none: owner to decide)
 regen = 0
 crit_gain = 1          # grit
 
@@ -74,19 +74,19 @@ cards = 3
 [abilities.challenging_shout]
 hero = "guardian"
 cost = 3
-radius = 3
+radius = 5
 cards = 1
 
 [abilities.intercede]
 hero = "guardian"
-cost = 4
+cost = 2
 range = 6
 cards = 1
 value = 4             # damage taken off each hit on the guarded ally
 
 [abilities.grip]
 hero = "guardian"
-cost = 4
+cost = 2
 range = 6
 
 [abilities.shield_plant]
@@ -112,7 +112,7 @@ loud = false
 
 [abilities.backstab]
 hero = "rogue"
-cost = 4
+cost = 7
 range = 1
 dice = [2, 6]
 
@@ -132,7 +132,7 @@ alt = 2                # cards at full combo points
 
 [abilities.cheap_shot]
 hero = "rogue"
-cost = 3
+cost = 2
 range = 1
 cards = 1
 
@@ -144,7 +144,7 @@ cards = 20             # long: a sapped enemy is out for most of the fight, unle
 
 [abilities.shadowstep]
 hero = "rogue"
-cost = 2
+cost = 5               # the owner's number (2026-11-27)
 range = 8
 
 [abilities.vanish]
@@ -203,7 +203,7 @@ hero = "mage"
 cost = 2               # per hit
 hits = 3
 range = 10
-dice = [2, 6]
+dice = [2, 4]
 loud = false           # the everyday spell: Loud on every hit would keep pulling enemies off the Guardian
 
 [abilities.firebolt]
@@ -229,7 +229,7 @@ cards = 2
 [abilities.blink]
 hero = "mage"
 cost = 2
-range = 6
+range = 5
 
 [abilities.quicken]
 hero = "mage"

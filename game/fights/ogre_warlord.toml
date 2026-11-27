@@ -11,9 +11,9 @@ mage = [1, 5]
 
 [enemy_types.ogre]
 tier = "boss"
-hp = 150
+hp = 115
 dice = [2, 6]          # the boss rolls its melee hit
-bonus = 4
+bonus = 9
 move = 4
 range = 1
 prefers = "backline"   # with no Taunt cards on it, it goes for the soft heroes
@@ -31,20 +31,20 @@ cast_every = 4
 cast_heal = 25
 
 [enemy_types.wolf]     # runs past the tank
-hp = 16
+hp = 20
 damage = 3
 move = 7
 range = 1
 prefers = "backline"
 
-[enemy_types.brute]    # Shielded: ignores hits below 5
+[enemy_types.brute]    # Shielded: ignores hits below 3
 tier = "elite"         # plays like a normal enemy; Sap and the heroes' rules look for elites
 hp = 30
 damage = 4
 move = 4
 range = 1
 prefers = "nearest"
-shielded = 5
+shielded = 3
 
 [enemy_types.goblin]    # comes late and runs at the back line
 tier = "fodder"

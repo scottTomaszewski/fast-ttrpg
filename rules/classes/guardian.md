@@ -8,7 +8,7 @@ enemies fight him, and stands between them and everyone else.
 - **HP:** 110
 - **Auto-attack:** d8, on an enemy next to you.
 - **Resource:** grit. At most 10, and you start a fight
-  with 0. You get 1 grit each
+  with 4. You get 2 grit each
   time an enemy attacks you (its normal attack, or a heavy hit it
   announced), even if the hit does no damage. Blasts, throws and poison
   give no grit. Grit does not come back at the top of the turn. Shield
@@ -30,12 +30,12 @@ enemies fight him, and stands between them and everyone else.
 ### Challenging Shout
 
 - 3 grit · Instant · around you
-- Every enemy within 3 squares of you gets
+- Every enemy within 5 squares of you gets
   **1 Taunt card**.
 
 ### Intercede
 
-- 4 grit · Instant · range
+- 2 grit · Instant · range
   6
 - Leap to an ally who is up: you land on the empty square next to them
   that is closest to where you were (if there is none, you stay put). They
@@ -45,7 +45,7 @@ enemies fight him, and stands between them and everyone else.
 
 ### Grip
 
-- 4 grit · Instant · range
+- 2 grit · Instant · range
   6
 - Pull one enemy to the empty square next to you that is closest to where
   it was. Now it is next to you, so the hold keeps it on you. Not on a
