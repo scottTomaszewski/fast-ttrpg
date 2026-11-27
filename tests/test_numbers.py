@@ -1,8 +1,9 @@
+import math
 import re
 import pytest
 from dataclasses import FrozenInstanceError, fields, replace
 from tests.helpers import GAME, REAL_GAME
-from fastcombat.numbers import load_numbers, load_fight, NumbersError
+from fastcombat.numbers import load_numbers, load_fight, load_usage, NumbersError
 
 def without(text, table, key):
     """The file's text with the `key = ...` line taken out of one [table]."""
@@ -177,3 +178,41 @@ def test_a_cast_every_of_zero_means_the_enemy_never_casts(tmp_path):
     text = (GAME / "fights" / "ogre_warlord.toml").read_text()
     p = tmp_path / "f.toml"; p.write_text(text.replace("cast_every = 4", "cast_every = 0"))
     assert load_fight(p).enemy_types["shaman"].cast_every == 0
+
+
+# --- The usage targets -------------------------------------------------------
+
+
+USAGE = REAL_GAME / "usage_targets.toml"
+
+def test_the_usage_targets_load_with_a_band_for_every_button():
+    n = load_numbers(GAME / "numbers.toml")
+    u = load_usage(USAGE, n)
+    assert set(u) == set(n.abilities) | {"haul_up"}
+    assert (u["taunt"].min, u["taunt"].max) == (3, 10)
+    assert u["sap"].min == 0.7 and u["backstab"].max == math.inf       # no max: no upper limit
+    assert isinstance(u["taunt"].min, float)
+
+def usage_error(tmp_path, text, match):
+    p = tmp_path / "u.toml"; p.write_text(text)
+    with pytest.raises(NumbersError, match=match):
+        load_usage(p, load_numbers(GAME / "numbers.toml"))
+
+def test_an_unknown_button_in_the_usage_targets_names_the_place(tmp_path):
+    usage_error(tmp_path, USAGE.read_text() + "\n[fireball]\nmin = 1\n", r"fireball")
+
+def test_a_misspelled_key_in_the_usage_targets_names_the_place(tmp_path):
+    usage_error(tmp_path, USAGE.read_text().replace("[meteor]         # big area hit on 3+ enemies\nmin",
+                                                    "[meteor]\nmni"), r"meteor\.mni")
+
+def test_a_button_left_out_of_the_usage_targets_is_an_error(tmp_path):
+    no_vanish = re.sub(r"\[vanish\][^\[]*", "", USAGE.read_text())
+    assert "vanish" not in no_vanish
+    usage_error(tmp_path, no_vanish, r"vanish")
+    usage_error(tmp_path, without(USAGE.read_text(), "vanish", "min"), r"vanish\.min")
+
+def test_a_usage_target_must_be_a_number_and_make_sense(tmp_path):
+    usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", 'min = "lots"'), r"sap\.min")
+    usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = true"), r"sap\.min")
+    usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = -1"), r"sap\.min")
+    usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = 5"), r"sap\.max")

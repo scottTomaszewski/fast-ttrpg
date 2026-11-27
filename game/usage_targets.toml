@@ -1,0 +1,126 @@
+# How often each button should be pressed in one fight, by the test party
+# (one hero of each class). `min` and `max` are uses per fight, counted over
+# many fights; with no `max` there is no upper limit. The comment says what
+# kind of button it is in an MMO, which is where the numbers come from.
+#
+# These are the owner's targets. Tuning changes the game numbers to meet
+# them; it never changes this file.
+
+# --- Guardian ---
+
+[taunt]          # taunt on the boss, used most of the fight
+min = 3
+max = 10
+
+[aoe_taunt]      # when adds get loose
+min = 0.5
+max = 3
+
+[intercede]      # save an ally in trouble
+min = 1
+max = 4
+
+[grip]           # pull a ranged or loose add
+min = 0.5
+max = 4
+
+[shield_plant]   # when a boss blast is coming at allies
+min = 0.5
+max = 3
+
+[last_stand]     # big emergency
+min = 0.2
+max = 2
+
+# --- Rogue ---
+
+[backstab]       # main builder
+min = 4
+
+[eviscerate]     # main finisher
+min = 2
+
+[kidney_shot]    # stun finisher
+min = 0.5
+max = 3
+
+[cheap_shot]     # small stun or interrupt
+min = 0.3
+max = 3
+
+[sap]            # take an elite out at the start
+min = 0.7
+max = 2
+
+[shadowstep]     # gap closer
+min = 0.5
+max = 4
+
+[vanish]         # drop a pull
+min = 0.2
+max = 2
+
+# --- Druid ---
+
+[rejuvenation]   # main heal over time
+min = 4
+
+[regrowth]       # big heal
+min = 1
+max = 6
+
+[swiftmend]      # emergency heal
+min = 0.5
+max = 4
+
+[wild_growth]    # group heal
+min = 0.5
+max = 4
+
+[cleanse]        # remove poison
+min = 0.3
+max = 4
+
+[shadowmeld]     # drop a pull
+min = 0.1
+max = 2
+
+[nourish]        # free filler heal
+min = 2
+
+# --- Mage ---
+
+[arcane_volley]  # go-to damage spell
+min = 4
+
+[firebolt]       # big single hit
+min = 0.5
+max = 4
+
+[meteor]         # big area hit on 3+ enemies
+min = 0.5
+max = 3
+
+[frost_ring]     # get enemies off the Mage
+min = 0.2
+max = 3
+
+[blink]          # escape
+min = 0.1
+max = 3
+
+[quicken]        # once-a-fight power-up
+min = 0.7
+max = 2
+
+[polymorph]      # take an add out
+min = 0.5
+max = 3
+
+# --- Anyone ---
+
+[disrupt]        # interrupt casts (all heroes together)
+min = 1
+
+[haul_up]        # hauling a downed ally up; no target, only listed
+min = 0

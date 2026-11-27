@@ -8,11 +8,12 @@ people to read.
 Shares are written as 0.25 for 25%.
 """
 
+import math
 import statistics
 from dataclasses import dataclass
 
 from fastcombat.fight import FightResult
-from fastcombat.numbers import SHARED
+from fastcombat.numbers import SHARED, UsageTarget
 
 # What the design asks for. These are not game numbers: they are the targets
 # the game numbers are tuned to meet.
@@ -22,7 +23,10 @@ WIN_RATE = (0.70, 0.90)  # win most fights, but not all
 DANGER_HP = 0.25  # a hero at this share of max HP or less is in danger...
 DANGER_AT_LEAST = 0.50  # ...and that should happen in at least this share of fights
 AUTO_SHARE = (0.20, 0.50)  # auto-attacks' share of all hero damage
-STARVED_UNDER = 0.50  # no hero starved for this share of rounds or more
+# No hero is starved (too little to pay for their cheapest ability) for
+# this share of their up rounds or more: the owner wants every hero able to
+# act in an emergency.
+STARVED_UNDER = 0.20
 ENDED_FULL_UNDER = 0.50  # no hero ends this share of fights or more up, with a full pool
 NEEDED_AT_LEAST = 0.20  # wins should drop at least this much without any one hero
 # Wins should also drop at least this much when any one hero only
@@ -137,6 +141,7 @@ def check_targets(
     without: dict[str, Summary],
     on_auto: dict[str, Summary] | None = None,
     no_boss_taunt: Summary | None = None,
+    usage: dict[str, UsageTarget] | None = None,
 ) -> list[Check]:
     """Check the full party's summary against each target, in a fixed order.
 
@@ -147,6 +152,9 @@ def check_targets(
     each. `no_boss_taunt` is the summary of the same party with the Guardian
     playing `guardian_no_boss_taunt` (he never Taunts the boss). It gives
     the `taunt:boss` check; with no Guardian there is none, and no check.
+    `usage` holds how often each button should be pressed. It gives one
+    `use:` check for each button in the summary; with no `usage`, there are
+    none (the targets are for a party of one of each class).
     """
     low, high = WIN_RATE
     auto_low, auto_high = AUTO_SHARE
@@ -185,7 +193,8 @@ def check_targets(
                 starved < STARVED_UNDER and ended_full < ENDED_FULL_UNDER,
                 f"starved {_pct(starved)} of rounds, "
                 f"ended up and full {_pct(ended_full)} of fights",
-                f"both under {_pct(STARVED_UNDER)}",
+                f"starved under {_pct(STARVED_UNDER)}, "
+                f"ended up and full under {_pct(ENDED_FULL_UNDER)}",
             )
         )
     for hero, other in without.items():
@@ -219,7 +228,18 @@ def check_targets(
                 f"at least {_pct(TAUNT_BOSS_AT_LEAST)} fewer wins without Taunting the boss",
             )
         )
+    if usage is not None:
+        checks += [_use_check(button, uses, usage[button]) for button, uses in full.uses.items()]
     return checks
+
+
+def _use_check(button: str, uses: float, target: UsageTarget) -> Check:
+    """The `use:` check for one button: pressed `uses` times per fight, on the mean."""
+    if target.max == math.inf:
+        wanted = f"at least {target.min:g} per fight"
+    else:
+        wanted = f"{target.min:g} to {target.max:g} per fight"
+    return Check(f"use:{button}", target.min <= uses <= target.max, f"{uses:.2f} per fight", wanted)
 
 
 def format_summary(s: Summary) -> str:

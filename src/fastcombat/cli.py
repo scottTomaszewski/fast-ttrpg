@@ -4,7 +4,8 @@
     fastcombat check   also plays them with each hero left out in turn, with
                        each hero only auto-attacking in turn, and with the
                        Guardian never Taunting the boss, and checks everything
-                       against the design's targets
+                       against the design's targets and how often each
+                       ability should be used
     fastcombat rules   makes the player rules in rules/ from their templates,
                        with the numbers from the game files
 
@@ -23,7 +24,15 @@ from dataclasses import asdict
 from pathlib import Path
 
 from fastcombat.fight import FightResult, run_fight
-from fastcombat.numbers import FightDef, Numbers, NumbersError, load_fight, load_numbers
+from fastcombat.numbers import (
+    FightDef,
+    Numbers,
+    NumbersError,
+    UsageTarget,
+    load_fight,
+    load_numbers,
+    load_usage,
+)
 from fastcombat.policies import POLICIES
 from fastcombat.report import Summary, check_targets, format_checks, format_summary, summarize
 from fastcombat.rules_doc import RULES, RulesError, load_game, write_rules
@@ -46,6 +55,14 @@ class _Setup:
         self.ids = _hero_ids(self.numbers, self.fight, self.party)
         self.policies = _policies(args.policy, self.ids)
         self.seeds = range(args.seed, args.seed + args.n)
+        # How often each button should be pressed. The targets are for the
+        # test party, one hero of each class, so with any other party there
+        # are no `use:` checks. The file is still read, so a typo shows.
+        self.usage: dict[str, UsageTarget] | None = None
+        if getattr(args, "usage", None):
+            usage = load_usage(Path(args.usage), self.numbers)
+            if sorted(self.party) == sorted(self.numbers.heroes):
+                self.usage = usage
 
     def play(self, keep: list[int], swap: dict[int, str] | None = None) -> list[FightResult]:
         """Play every seed with only the heroes at the places in `keep`.
@@ -105,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
         if setup.party[i] == "guardian" and setup.policies.get(hero, "guardian") == "guardian"
     }
     no_boss_taunt = summarize(setup.play(everyone, swap=guardians)) if guardians else None
-    checks = check_targets(full, without, on_auto, no_boss_taunt)
+    checks = check_targets(full, without, on_auto, no_boss_taunt, setup.usage)
     print()
     print(format_checks(checks))
     _write_json(
@@ -168,12 +185,19 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "run", parents=[shared], help="play the fights and print a summary"
     )
-    commands.add_parser(
+    check = commands.add_parser(
         "check",
         parents=[shared],
         help="also play with each hero left out, with each hero only "
         "auto-attacking, and with the Guardian never Taunting the boss, and check "
         "the design's targets (exits 0 only if every check passes)",
+    )
+    check.add_argument(
+        "--usage",
+        default=str(GAME / "usage_targets.toml"),
+        help="how often each ability should be used, for the use: checks "
+        "(default: game/usage_targets.toml). The use: checks are only there "
+        "when the party is one hero of each class.",
     )
     commands.add_parser(
         "rules",

@@ -18,13 +18,9 @@ from fastcombat.combat import (
 )
 from fastcombat.enemy_ai import gm_turn
 from fastcombat.grid import Pos, adjacent, distance, on_map
-from fastcombat.numbers import SHARED, FightDef, HeroSpec, Numbers
+from fastcombat.numbers import HAUL_UP, SHARED, FightDef, HeroSpec, Numbers
 from fastcombat.policies import Policy, default_policy
 from fastcombat.units import Enemy, FightState, Hero, Tally, new_state
-
-
-# Hauling an ally up is counted with the abilities, under this name.
-HAUL_UP = "haul_up"
 
 
 @dataclass

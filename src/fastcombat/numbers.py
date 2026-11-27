@@ -9,8 +9,12 @@ where it is, so it never quietly plays the wrong game.
 A place in a file is written as a dotted path, like `abilities.meteor.cost`.
 Lists use a number in brackets, counting from 0: `spawns[3].type` is the
 `type` of the fourth spawn.
+
+It also reads the usage targets (`game/usage_targets.toml`): how often the
+test party should press each button in a fight.
 """
 
+import math
 import tomllib
 from collections.abc import Iterable
 from dataclasses import MISSING, dataclass, fields
@@ -29,6 +33,7 @@ TIERS = ("normal", "elite", "boss", "fodder")
 PREFERS = ("nearest", "backline", "random")
 KINDS = ("blast", "heavy", "throw")
 SHARED = "shared"  # an ability's `hero` when any hero may use it
+HAUL_UP = "haul_up"  # hauling an ally up is counted with the abilities, under this name
 
 
 @dataclass(frozen=True)
@@ -139,6 +144,17 @@ class FightDef:
     boss_script: list[ScriptStep]
 
 
+@dataclass(frozen=True)
+class UsageTarget:
+    """How often one button should be pressed in a fight: from `min` to `max` times.
+
+    With no `max` in the file there is no upper limit.
+    """
+
+    min: float
+    max: float = math.inf
+
+
 def load_numbers(path: Path, overrides: dict[str, object] | None = None) -> Numbers:
     """Read and check the numbers file.
 
@@ -237,6 +253,29 @@ def load_fight(path: Path) -> FightDef:
     )
 
 
+def load_usage(path: Path, numbers: Numbers) -> dict[str, UsageTarget]:
+    """Read and check the usage targets: one table for each ability, and haul_up.
+
+    Every ability in `numbers` needs a table, and there may be no others, so
+    a misspelled name cannot quietly go unchecked.
+    """
+    raw = _read(path)
+    buttons = [*numbers.abilities, HAUL_UP]
+    for name in raw:
+        if name not in buttons:
+            raise NumbersError(f"{name}: there is no such ability (is it spelled right?)")
+    targets = {}
+    for name in buttons:
+        if name not in raw:
+            raise NumbersError(f"{name}: missing, and every ability needs a usage target")
+        target = _build(UsageTarget, raw[name], name)
+        _check_at_least(target.min, 0, f"{name}.min")
+        if target.max < target.min:
+            raise NumbersError(f"{name}.max: should be at least min ({target.min:g}), not {target.max:g}")
+        targets[name] = target
+    return targets
+
+
 def _read(path: Path) -> dict:
     with open(path, "rb") as file:
         try:
@@ -307,6 +346,7 @@ def _check_keys(
 # How to say what each kind of value should look like.
 _SHOULD_BE = {
     int: "a whole number",
+    float: "a number",
     str: "a word in quotes",
     bool: "true or false",
     Pos: "a pair of whole numbers, like [2, 6]",
@@ -319,6 +359,8 @@ def _check(value: object, kind: object, where: str):
     """Give back `value` if it is the right kind. A pair becomes a tuple."""
     if kind is int and _whole(value):
         return value
+    if kind is float and (_whole(value) or isinstance(value, float)):
+        return float(value)
     # `==`, not `is`: each `tuple[int, int]` written out is its own object.
     if kind == Pos and isinstance(value, (list, tuple)):
         if len(value) == 2 and all(map(_whole, value)):
