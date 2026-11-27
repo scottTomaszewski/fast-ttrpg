@@ -11,26 +11,28 @@ from fastcombat.numbers import load_numbers, load_fight
 def act(s, hero):
     return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
 
-def test_warden_challenges_the_boss_only_when_it_is_about_to_reach_someone_else():
-    s = state(); o = enemy(s, "ogre", (5, 8))                         # 2 from the warden at (3, 6): not held
-    o.pulled_by = "druid"                                             # 4 from the druid at (1, 7): it can get there
+def test_warden_challenges_the_boss_whenever_it_has_no_taunt_cards():
+    # A boss is never held by standing next to the Warden: only Taunt cards keep it on him.
+    s = state(); o = enemy(s, "ogre", (4, 6))                         # next to the warden at (3, 6)
     a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
-    o.pos = (9, 7)                                                    # 8 from the druid: move 4 + range 1 is too short
+    o.pos = (8, 8)                                                    # 5 away, and nobody pulled it
+    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
+    o.pos = (10, 6)                                                   # 7 away: out of Challenge's range 6
     assert act(s, "warden").ability != "challenge"
-    o.pos = (5, 8); o.pulled_by = "rogue"                             # the rogue is hidden: her pull counts for nothing
-    assert act(s, "warden").ability != "challenge"
-    o.pos = (4, 6); o.pulled_by = None                                # held by the warden, and nobody pulled it
+    o.pos = (4, 6); add_stack(o, "taunt", 1)                          # it has a Taunt card already
     assert act(s, "warden") == Action("auto", target="ogre1")
 
 def test_warden_challenges_an_add_that_is_not_coming_for_him():
-    s = state(); enemy(s, "ogre", (4, 6)); w = enemy(s, "wolf", (5, 3))   # the ogre is held
+    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
+    w = enemy(s, "wolf", (5, 3))
     a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "wolf1")
     w.target = "warden"                                               # it is coming for him anyway
     assert act(s, "warden") == Action("auto", target="ogre1")
     g = enemy(s, "goblin", (5, 4)); assert act(s, "warden").ability != "challenge"   # fodder: any hit kills it
 
 def test_warden_hooks_a_caster_that_shoots_him_from_afar():
-    s = state(); enemy(s, "ogre", (4, 6)); sh = enemy(s, "shaman", (6, 2)); sh.target = "warden"
+    s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
+    sh = enemy(s, "shaman", (6, 2)); sh.target = "warden"
     a = act(s, "warden"); assert (a.ability, a.target) == ("chain_hook", "shaman1")
     sh.target = "mage"                                                # after the mage: a Taunt first, it is cheaper
     a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "shaman1")
@@ -321,3 +323,13 @@ def test_rogue_waits_for_shadowstep_only_if_she_could_still_use_it_after_steppin
     # Stepping out of it puts her at (0, 3), 10 from the wolf: too far to Shadowstep.
     # So she walks toward the wolf instead of waiting.
     assert default_policy("rogue").move(s, r) == (8, 5)
+
+
+# --- Bosses ignore the hold: the Rogue's Eviscerate on the boss -----------------
+
+def test_rogue_eviscerates_the_boss_only_while_it_has_taunt_cards():
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
+    o = enemy(s, "ogre", (3, 4))                                    # next to the Rogue at (2, 5)
+    assert act(s, "rogue").ability != "eviscerate"                  # no Taunt cards: it would turn on her
+    add_stack(o, "taunt", 2)
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("eviscerate", "ogre1")

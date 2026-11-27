@@ -40,7 +40,7 @@ from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
 from fastcombat.grid import Pos, adjacent, approach, distance, within
-from fastcombat.targeting import held, puller_of
+from fastcombat.targeting import held
 from fastcombat.units import Enemy, FightState, Hero
 
 # How the policies play. These are not game rules: they are how careful or
@@ -123,8 +123,9 @@ class WardenPolicy(_ClassPolicy):
     An enemy next to the Warden is already held: it must attack him. So the
     Warden spends a turn on a Taunt or a pull only for an enemy that would
     otherwise go for someone else. Anything else costs him an auto-attack
-    and does nothing. A loose enemy is one that is neither held, taunted
-    nor controlled.
+    and does nothing. A boss is never held that way: only Taunt cards keep
+    it on him, so he keeps Taunt cards on it (rule 6). A loose enemy is one
+    that is neither held, taunted nor controlled.
 
     1. Haul up.
     2. A boss heavy hit is announced on me and it could take me to 0 at its
@@ -135,9 +136,7 @@ class WardenPolicy(_ClassPolicy):
        stunned, sapped or sheeped enemy's cast never lands): Disrupt.
     5. An ally (not a Warden) at half HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
-    6. The boss has no Taunt cards and is pulled by an ally who is up and
-       not hidden, and it could reach that ally this GM turn (they are no
-       farther than its move plus its reach): Challenge the boss.
+    6. The boss has no Taunt cards: Challenge the boss.
     7. Three or more loose enemies are within War Cry's radius: War Cry.
     8. A loose enemy that is not a boss and not fodder, and is not already
        going for me, is in Challenge's range: Challenge the one closest to
@@ -200,13 +199,10 @@ class WardenPolicy(_ClassPolicy):
             if action := _ability(state, warden, "intercede", guard.id):
                 return action
 
-        # 6. The boss is pulled by an ally it could reach this GM turn: Challenge it.
+        # 6. The boss has no Taunt cards: Challenge it.
         if boss is not None and "taunt" not in boss.stacks:
-            puller = puller_of(state, boss)
-            if puller is not None and puller is not warden:
-                if distance(boss.pos, puller.pos) <= boss.spec.move + boss.spec.range:
-                    if action := _ability(state, warden, "challenge", boss.id):
-                        return action
+            if action := _ability(state, warden, "challenge", boss.id):
+                return action
 
         # 7. Three or more loose enemies near me: War Cry.
         near = within(
