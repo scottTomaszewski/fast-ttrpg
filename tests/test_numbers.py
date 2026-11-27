@@ -216,3 +216,7 @@ def test_a_usage_target_must_be_a_number_and_make_sense(tmp_path):
     usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = true"), r"sap\.min")
     usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = -1"), r"sap\.min")
     usage_error(tmp_path, USAGE.read_text().replace("min = 0.7", "min = 5"), r"sap\.max")
+
+def test_the_real_test_fight_has_an_elite_for_sap_to_look_for():
+    f = load_fight(REAL_GAME / "fights" / "ogre_warlord.toml")
+    assert f.enemy_types["brute"].tier == "elite"

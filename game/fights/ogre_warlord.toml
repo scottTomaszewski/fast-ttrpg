@@ -38,6 +38,7 @@ range = 1
 prefers = "backline"
 
 [enemy_types.brute]    # Shielded: ignores hits below 5
+tier = "elite"         # plays like a normal enemy; Sap and the heroes' rules look for elites
 hp = 30
 damage = 4
 move = 4
