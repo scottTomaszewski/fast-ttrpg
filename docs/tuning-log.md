@@ -486,6 +486,153 @@ with the ogre on "backline", unless it says so):
   115: wins 77% and 81% (1000 fights, seeds 2000 to 2999); 110 is in the
   middle.
 
+## D3b: the Rogue's opening, a long Sap and a longer Polymorph, 2026-11-27
+
+The owner asked for three things: a Sap that puts an enemy out of most of
+the fight (try 10, 15 or 20 cards), an opening before round 1 (sneak with
+a stealth check, or Shadowstep in for less energy), and a Polymorph longer
+than 4. Every run here is `--n 500 --seed 100000` unless it says 2000
+(seeds 100000 to 101999), and plays the full party, which is the first
+part of `check`.
+
+### What woke a Sap before this step
+
+Almost nothing. With the D3 rules nobody aims at a stunned, sapped or
+sheeped enemy, the Mage never puts a Meteor over one, Frost Nova only
+roots (no damage), and enemy blasts hit only heroes, so no enemy can wake
+one. In 500 fights with Sap at 4 cards, one Sap of about 575 was woken: an
+Arcane Volley already under way on the enemy the Rogue then sapped. The
+real trouble with a long Sap was the other way round: nobody ever hit a
+sapped enemy, so once it was the last one left the party stood and
+waited. With the old rules and Sap at 20, only 17% of fights lasted 18 to
+22 rounds and 1.6% ran out of rounds.
+
+So this step changed how heroes play (`policies.py`):
+
+- Nobody hits a sapped or sheeped enemy while anything else is left. Once
+  every enemy left is controlled, they hit a stunned one first, then a
+  sapped or sheeped one, instead of waiting for its cards to run out.
+- The Rogue does not Sap, and the Mage does not sheep, an enemy a
+  Firebolt or a Volley is aimed at or a Meteor is coming down on (it
+  would wake at once). The Mage ends a Volley whose enemy was sapped
+  after it began.
+- Meteor still never covers a sapped or sheeped enemy. I looked for an
+  exception ("unless the fight is nearly won, or it is the only way to hit
+  three or more"): in 500 fights a sleeper stopped a Meteor 9 times, and
+  in 8 of them every enemy it would have hit was a goblin, which any hit
+  kills anyway. Not worth a rule.
+
+After: in 2000 fights at the picked numbers (Sap 20, Polymorph 12) every
+Sap or sheep woken by a hit was woken on purpose, when nothing else was
+left. (With Polymorph at 20 there was one exception in 2000 fights: a
+Firebolt started at a sheep when nothing else was left, which landed
+after the goblins had come in.)
+
+### The Sap length (Shadowstep in, Polymorph at 4)
+
+| Sap cards | wins | median rounds | 18 to 22 rounds | rounds sapped a fight | still sapped at the end | Saps woken |
+|---|---|---|---|---|---|---|
+| 4 (old) | 63.8% | 23 | 43.2% | 4.7 | 4.6% | 0% |
+| 10 | 68.8% | 23 | 38.4% | 12.0 | 13.4% | 6% |
+| 15 | 74.6% | 23 | 42.4% | 16.4 | 16.4% | 10% |
+| 20 | 75.8% | 23 | 44.4% | 19.4 | 14.6% | 33% |
+
+"Rounds sapped" is GM turns that enemies lost to Sap cards, all of them
+together, per fight. A win needs every enemy dead, so "still sapped at the
+end" only happens in fights the party lost. "Saps woken" is the share of
+Saps that a hit ended; every one of them was hit because nothing else was
+left, so the rest ran their cards out or outlasted the fight. With 2000
+fights: 15 cards 74.8% wins, 44.8% in 18 to 22; 20 cards 77.2%, 46.9%.
+
+**Picked: 20 cards.** It wins the most, has the best length, and keeps
+the sapped elite out for 19 rounds a fight on the mean: the whole fight,
+as the owner wanted. A third of the time the Sap is still on when every
+other enemy is dead, and then the party wakes it and kills it.
+
+### The Polymorph length (Sap at 20, 2000 fights)
+
+| Polymorph cards | wins | median rounds | 18 to 22 rounds | rounds a sheep a fight | still a sheep at the end |
+|---|---|---|---|---|---|
+| 4 (old) | 77.2% | 22 | 46.9% | 3.7 | 0.0% |
+| 8 | 73.8% | 22 | 47.4% | 7.4 | 0.0% |
+| 12 | 81.7% | 22 | 59.5% | 11.1 | 0.05% |
+| 20 | 87.5% | 22 | 49.9% | 14.4 | 2.75% |
+
+With 500 fights: 4: 75.8% and 44.4%; 8: 71.8% and 47.8%; 12: 81.8% and
+58.6%; 20: 87.4% and 48.8%.
+
+**Picked: 12 cards.** By far the best length (59.5% of fights in 18 to 22
+rounds, the closest any setting has come to the 60% target in this round
+of work), with wins well inside 70% to 90%. 20 cards wins more but pushes
+wins near the top of the band and makes fights less even in length. It
+also leaves Sap as the longer of the two, which is how it is in the game
+the kit comes from. Why 8 is worse than 4 is not clear; a sheep that wakes
+at about round 9, just before the goblins, is a guess.
+
+### The opening
+
+The rule is in the engine (`opening.py`): before round 1 each Rogue picks
+one enemy that is there from the start and is not a boss, and Sneaks
+(d6, 4 or more, `rules.sneak_die` and `rules.sneak_target`) or Shadowsteps
+in, or neither. The Rogue's policy picks the elite that hits hardest
+(the brute) and then Saps it in round 1.
+
+Three ways to choose, measured at the picked numbers (Sap 20, Polymorph
+12):
+
+| rule | wins | median rounds | 18 to 22 rounds | Sap uses a fight | stealth checks that worked |
+|---|---|---|---|---|---|
+| always Sneak | 82.8% | 22 | 54.8% | 0.61 | 50.2% |
+| always Shadowstep in | 81.8% | 22 | 58.6% | 1.11 | (none made) |
+| judgement (kept) | 81.8% | 22 | 58.6% | 1.11 | (none made) |
+| for comparison: no opening | 86.4% | 22 | 63.4% | 1.08 | (none made) |
+
+And at the old numbers (Sap 4, Polymorph 4): always Sneak 72.8% wins,
+48.4% in 18 to 22, 0.66 Saps; always Shadowstep in 63.8%, 43.2%, 1.21
+Saps; no opening 75.2%, 41.4%, 1.15 Saps.
+
+The judgement rule: Shadowstep in, if after paying for it and getting
+round 1's energy back she can still pay for the Sap; else Sneak. With
+today's numbers it is the same as always Shadowstepping in, so the two
+rows are the same fights.
+
+**Kept: the judgement rule (so, today, always Shadowstep in).** Always
+Sneak wins one point more, but only through the half of the fights where
+the stealth check fails and there is no round-1 Sap: it Saps 0.61 times a
+fight, under the owner's `use:sap` band (0.7 to 2), and the owner wants a
+Sap in almost every fight with an elite. The point lost is the Guardian
+grit problem below, which is for the retune, not for the opening.
+
+**The choice is not a real choice yet.** Shadowstep in always works and
+costs nothing in the end: the Rogue starts with 10 energy, pays 2, and
+gets 3 back at the top of round 1, so she has her full 10 on her first
+turn. Sneak can only lose. Any of these would make it a real choice (the
+owner's call, not changed here): a Shadowstep cost over 3 (her energy back
+per round), so that some energy is really lost; a pre-fight Shadowstep
+that also skips round 1's energy; or an easier stealth check (d6 on 2 or
+more is 5 in 6), so that a Sneak is a fair gamble against a real cost.
+
+### The Sap opener and the Guardian
+
+The D3 step found that a Sap in round 1 costs wins, because the Guardian
+only gets grit when he is hit, and the brute is what hits him early. A
+long Sap makes this stronger, and the Guardian's checks now fail:
+
+| Sap / Polymorph | wins | the Guardian on auto | the Guardian never Taunts the boss |
+|---|---|---|---|
+| before D3b (no opening, 4 / 4) | 75.2% | 37.0% | 54.2% |
+| 4 / 4 | 64% | 34% | 56% |
+| 10 / 12 | 71% | 65% | 63% |
+| 15 / 12 | 79% | 74% | 71% |
+| 20 / 12 (picked) | 82% | 79% | 76% |
+
+With the brute out of the fight the Guardian has little to do: he is
+starved 61% of rounds, Taunts the boss 3.2 times a fight (5.6 with no
+opening), and a Guardian who only auto-attacks wins nearly as often.
+`kit:guardian` and `taunt:boss` fail (see "Not met"). This is the retune's
+(D4) to fix, with grit (the tuner may change grit regen or grit per
+attack) or with the elite. Not tuned around here.
+
 ## Needs a decision
 
 These are things numbers alone could not fix well. Each needs a change
@@ -516,6 +663,8 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    After the third look: still true. Sap was used 0 times in the 3000
    confirm fights.
    After the fourth look: still true, 0 times in the 3000 confirm fights.
+   After D3 and D3b: fixed by how the Rogue plays. She opens next to the
+   brute before round 1 and Saps it in round 1: 1.1 Saps a fight.
 3. **Stalemates once the Guardian is out.** With the first pass's
    numbers, about 1 fight in 1100 was still going after 60 rounds (21 of
    24000; 2 of the 3000 confirm fights). In all 5 we looked at, the
@@ -601,6 +750,18 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    the Ground Slam comes moved "in band" anywhere from 47% to 75%,
    because the Guardian and Rogue lose a whole turn stepping out of it.
    If the slam timing changes later, length needs checking again.
+7. **Twenty Sap cards (and twelve sheep cards) at the table.** A pile of
+   20 cards on one enemy, one coming off each round, is a lot to handle.
+   A single card that says "until hurt, or for N rounds" with a die or a
+   tally for the rounds left may be better. That is the owner's call.
+8. **The opening is not a real choice yet.** Shadowstep in costs 2
+   energy, but the Rogue gets 3 back at the top of round 1, so it is free
+   and always works; a Sneak can only lose. See "The opening" in D3b for
+   numbers that would make it a choice.
+9. **A long Sap makes the Guardian matter less.** With the brute sapped
+   all fight, `kit:guardian` and `taunt:boss` fail (see D3b). Grit only
+   comes from being hit, and the brute was what hit him. For the retune,
+   or a rule change (grit from something else).
 
 ## Rules the simulator had to decide
 
@@ -663,6 +824,34 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - Meteor never goes where its area would cover a sapped or sheeped enemy:
   the hit would wake it, and keeping a dangerous add out of the fight is
   worth more than Meteor's damage on it.
+- (D3b) Nobody hits a sapped or sheeped enemy while anything else is left,
+  and once nothing else is, they hit it (a stunned one first). Nobody Saps
+  or sheeps an enemy a Firebolt, a Volley or a Meteor is on its way to,
+  and the Mage ends a Volley whose enemy was sapped after it began.
+- (D3b) The Rogue's opening: the elite that hits hardest and that nobody
+  stands next to yet. Shadowstep in, unless she could not then pay for the
+  Sap in round 1 (then Sneak). With no elite, no opening.
+
+The Rogue's opening (D3b), rules the owner left open:
+
+- She lands on the free square next to the enemy that is nearest to her
+  start square, the same square Shadowstep would put her on. Sneak and
+  Shadowstep in land on the same square.
+- Shadowstep in reaches any enemy on the map, not only one in
+  Shadowstep's range: before the fight she can get into place first.
+- Shadowstep in takes the cost off her starting energy, and she still gets
+  her energy back at the top of round 1 like everyone. (That is what makes
+  it free today; see "Needs a decision", item 8.)
+- Spotted means only that she is not hidden, on her own square. The
+  enemies do not come for her because of it; they pick targets as always.
+- A second Rogue opens after the first (id order). Her policy leaves an
+  elite that someone already stands next to, so she picks another elite or
+  none.
+- A refused opening (a boss, a dead enemy, no free square, too little
+  energy, a Rogue who is not hidden) does nothing, the same as an ability
+  that is refused, and counts as no opening.
+- The enemies' tally: a sapped, sheeped or stunned enemy "loses" each GM
+  turn it spends with those cards (`rounds_out` in the summary).
 
 ## Final (before the rename; being retuned)
 
@@ -739,3 +928,12 @@ Things to keep an eye on:
 Nothing: every check passed on the confirm run after the fourth look,
 `taunt:boss` included, with the round cap at 60. The items under "Needs
 a decision" are design goals the checks do not measure.
+
+Since then (D3 and D3b, 2026-11-27) checks fail again, waiting for the
+retune (D4). After D3b, `check --n 500 --seed 100000` fails `length`
+(58.6%), `resource:guardian` (starved 61.4%), `kit:guardian` (81.8% with
+the kit, 79.2% on auto), `taunt:boss` (81.8% with, 75.8% without), and
+these use bands: Challenging Shout, Intercede, Grip, Shield Plant, Last
+Stand, Eviscerate, Kidney Shot, Arcane Volley, Firebolt and Quicken. The
+slow test fails with them; it is left failing (not marked xfail) because
+D4 is the step that has to make them pass.

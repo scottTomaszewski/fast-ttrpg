@@ -75,7 +75,7 @@ and make the whole party fight faster.
 
 - 4 mana · Cast, 1 round · range
   10
-- When it lands, one enemy becomes a sheep: **4
+- When it lands, one enemy becomes a sheep: **12
   sheep cards**. It does nothing while it has them, but turns back the
   moment it takes any damage. Not on a boss. Only one sheep at a time:
   when a new Polymorph lands, any other sheep turns back.
@@ -98,7 +98,9 @@ and make the whole party fight faster.
   10 squares. Break the shaman's mend and the boss's
   big moves.
 - **Sheep the biggest add nobody is fighting** (an add is an extra enemy
-  that fights alongside the boss), when there are at least two adds. **Meteor** a spot with four or more
+  that fights alongside the boss), when there are at least two adds. Then
+  leave it, and any sapped enemy, alone until nothing else is left: a hit
+  wakes it. Never aim a Meteor where it would. **Meteor** a spot with four or more
   enemies and no heroes. Once the fight is going, **Quicken** when everyone is up.
 - **Otherwise Firebolt.** Hit the enemy casting a mend first, then the add
   with the least HP, and the boss last.

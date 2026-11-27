@@ -26,6 +26,10 @@ Some words these rules use a lot:
 
 A round is a **party turn**, then a **GM turn**.
 
+**Before round 1,** a Rogue may sneak or Shadowstep in next to one enemy
+(see the Rogue's sheet). That is the only thing that happens before the
+first party turn.
+
 ### The party turn
 
 1. **Top of the turn.** Everyone at once, in this order:
@@ -507,7 +511,9 @@ With {rules.bleeding_cards} Wounds, going down puts you straight out.
   move, no attack. It forgets any pull, and a cast it announced never
   lands.
 - Sap and sheep end the moment the enemy takes any damage. A hit a shield
-  turned aside does no damage, so it does not wake them.
+  turned aside does no damage, so it does not wake them. A sap lasts
+  {abilities.sap.cards} rounds and a sheep {abilities.polymorph.cards}
+  rounds, so it pays not to hit them while anything else is left.
 - A **rooted** enemy cannot move, but still attacks if a hero is in reach.
 - **Bosses cannot be stunned, sapped or sheeped**, but a stun still breaks
   the cast a boss has announced. A boss can be rooted.

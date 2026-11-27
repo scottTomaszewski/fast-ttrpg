@@ -18,9 +18,26 @@ hits, then spends them all on one huge blow or a long stun.
 - **Crit bonus:** 1 extra combo point, so a crit
   gives 2 in all.
 
+## Before the fight
+
+Before round 1 you may pick one enemy that is there from the start and is
+not a boss, and get next to it in one of two ways:
+
+- **Sneak.** Roll a d6. On 4 or more you
+  start on the empty square next to it that is nearest to you, still
+  hidden. Below that you are **spotted**: you start on your own square,
+  and you are not hidden.
+- **Shadowstep in.** It always works. You start on that same square,
+  hidden, but with 2 less energy (Shadowstep's
+  cost, spent before the fight).
+
+Or do neither, and start on your own square, hidden. If two Rogues play,
+the one whose name comes first picks first.
+
 ## Hiding
 
-- You **start every fight hidden**, and Vanish hides you again.
+- You **start every fight hidden** (unless you were spotted sneaking in),
+  and Vanish hides you again.
 - While you are hidden, no enemy can pick you as its target, and a pull
   by you counts for nothing. A blast still hits you if you stand in it.
 - Hiding ends once you auto-attack or use any ability except Vanish and
@@ -73,9 +90,11 @@ hits, then spends them all on one huge blow or a long stun.
 
 - 3 energy · Instant · range
   1 (next to you)
-- **Only while hidden.** Knock one enemy out: **4 sap
-  cards**. It does nothing while it has them, but wakes the moment it
-  takes any damage. Not on a boss. Using it ends your hiding.
+- **Only while hidden.** Knock one enemy out: **20 sap
+  cards**, so it is out of most of the fight. It does nothing while it
+  has them, but wakes the moment it takes any damage. Not on a boss.
+  Using it ends your hiding. You do not need Shadowstep for it: just be
+  hidden and next to the enemy.
 
 ### Shadowstep
 
@@ -102,9 +121,15 @@ hits, then spends them all on one huge blow or a long stun.
 
 ## How to play the Rogue
 
-- **Open from hiding.** Your first hit should be a Backstab from hiding,
-  for 2 times the damage. In round 1 you can Sap an enemy instead, if you can
-  get next to it.
+- **Open on the elite.** If the fight has an elite (a tough add, like the
+  brute), get next to the one that hits hardest before the fight and
+  Sap it in round 1. Shadowstep in: it always works, and a few points
+  of energy cost less than a failed sneak. With no elite, your first hit should
+  be a Backstab from hiding, for 2 times
+  the damage.
+- **Do not wake your own Sap.** Nobody hits a sapped or sheeped enemy
+  while there is anything else to hit. Once it is the last one left, hit
+  it.
 - **Stop casts next to you.** If an enemy next to you has announced a
   cast, Disrupt it, or Cheap Shot it if Disrupt is cooling down.
 - **If something is coming for you because of your Loud hit, Vanish.**

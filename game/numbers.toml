@@ -128,7 +128,7 @@ cards = 1
 hero = "rogue"
 cost = 3
 range = 1
-cards = 4
+cards = 20             # long: a sapped enemy is out for most of the fight, unless something hurts it
 
 [abilities.shadowstep]
 hero = "rogue"
@@ -230,7 +230,7 @@ hero = "mage"
 cost = 4
 cast = 1
 range = 10
-cards = 4
+cards = 12             # about half a fight; Sap is the longer one
 
 [abilities.disrupt]
 hero = "shared"

@@ -62,7 +62,8 @@ This is its own small game, not a layer on 5e.
 
 ### Round
 
-A round is a party turn, then a GM turn.
+A round is a party turn, then a GM turn. Before round 1, each Rogue makes
+her opening (see the Rogue).
 
 **Party turn**
 
@@ -232,14 +233,25 @@ Auto-attack hit: 1 combo point. Crit: 2. Maximum 5. **(call)**
 2. **Eviscerate:** finisher. Spend all combo points for damage per point. Loud.
 3. **Kidney Shot:** finisher. Spend combo points to stun; 2 rounds at full.
 4. **Cheap Shot:** small stun. Instant, low energy, 1 round.
-5. **Sap:** takes one enemy out for several rounds; breaks on damage. Only
-   from hiding (start of a fight, or right after Vanish).
+5. **Sap:** takes one enemy out for most of the fight (20 cards: the owner
+   asked to try 10, 15 or 20, and the simulator picked 20 on 2026-11-27); breaks on
+   damage. Only from hiding (start of a fight, or right after Vanish), and
+   next to the enemy. It does not need Shadowstep.
 6. **Shadowstep:** appear next to an enemy within range. Does not end hiding.
 7. **Vanish:** cancel any pull on you and go into hiding. From hiding your
    next move is a hard opener or a Sap. **(call)** The opener is not a new
    button: a Backstab from hiding works on any enemy and does double damage.
    Hiding ends when you act.
    While hidden, enemies cannot pick you as a target (blasts still hit you).
+
+**Before the fight (owner's decision, 2026-11-27).** Before round 1 the
+Rogue may pick one enemy that is there from the start and is not a boss,
+and either **sneak** (a stealth check, d6 on 4 or more; success: she
+starts on the free square next to it nearest to her, still hidden;
+failure: she is spotted, starts on her own square and is not hidden) or
+**Shadowstep in** (always works; she starts on that square, hidden, with
+Shadowstep's cost taken off her starting energy). Or neither. The point is
+an elite sapped in round 1, so it is out of most of the fight.
 
 ### Druid (healer). d6 ranged. Energy and Seeds (hold 2).
 
@@ -271,8 +283,9 @@ flash bang and so on) to keep the class simple.
 4. **Frost Nova:** instant. Enemies next to you cannot move for 2 rounds.
 5. **Blink:** short teleport.
 6. **Quicken:** the whole party rolls two auto-attack dice for 2 rounds.
-7. **Polymorph:** 1-round cast. Target is a sheep for up to 4 rounds; breaks
-   on damage. One at a time.
+7. **Polymorph:** 1-round cast. Target is a sheep for up to 12 rounds
+   (was 4; the owner found 4 low, the simulator picked 12 on 2026-11-27);
+   breaks on damage. One at a time.
 
 ### Shared
 
