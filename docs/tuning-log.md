@@ -1023,24 +1023,44 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - (D3b) The Rogue's opening: the elite that hits hardest and that nobody
   stands next to yet. Shadowstep in, unless she could not then pay for the
   Sap in round 1 (then Sneak). With no elite, no opening.
-- (D3c) The Guardian Shield Slams only when he can spare the turn: the
-  boss has 2 or more Taunt cards (`SLAM_TAUNT_CARDS`), every ally is above
-  75% HP (`SLAM_ALLIES_ABOVE`), and no add is loose (fodder too). It is
-  last before his auto-attack: the boss if it is next to him, else the
-  lowest-HP add next to him that is not fodder and not controlled.
-- (D3c) The Guardian stays to take a Stomp when a Druid is up (she will
-  Cleanse him) or when he holds an add that would get loose. Everyone else
-  steps out (it is danger). A Stomp is answered, so nobody Disrupts it,
-  when nobody is in its area or only Guardians are and a Druid is up.
+- (D3c, D4) The Guardian Shield Slams only when he can spare the turn: the
+  boss has a Taunt card (`SLAM_TAUNT_CARDS`, 1 since D4: a boss loses its
+  card at the end of the GM turn, after it attacks, so one card means it
+  still attacks him in the coming GM turn; D3c asked for 2, which only held
+  the turn right after a Taunt), every ally is above 75% HP
+  (`SLAM_ALLIES_ABOVE`), and no add is loose (fodder too). It is last
+  before his auto-attack: the boss if it is next to him, else the lowest-HP
+  add next to him that is not fodder and not controlled. Never on a boss
+  with no Taunt cards.
+- (D4) The Stomp and Disrupt. When the Stomp lands this round and someone
+  will Disrupt it (`_stomp_disrupter`: the Guardian next to the boss first,
+  then the others by id, each only if they can Disrupt the boss from where
+  they stand and their list will get to it), the Guardian and the Rogue
+  stay next to the boss and keep hitting, and that hero Disrupts it. Only
+  when nobody will do they step out. The Guardian also takes it when a
+  Druid is up to Cleanse him (D3c), and now walks next to the boss to take
+  it even when he starts the turn away from it (before, he stopped outside
+  its squares and could not hit the boss), or when he is in it holding an
+  add. The D3c rule "a Stomp only a Guardian is in, with a Druid up, is
+  answered" is gone: someone who can Disrupt it does.
+- (D4) A blast or a Stomp with no hero who is up in its area is answered:
+  nobody Disrupts it. (Before, the Mage Disrupted Ground Slams everyone had
+  walked out of.)
 - (D3c) The Druid Cleanses a stun right after her emergencies (her rule
   4), the Guardian first, but only a stun that still costs something: the
   ally acts after her this turn, or it has more than one card. Other bad
   cards (poison) come where poison did.
-- (D3c) The Mage Ice Blocks (her rule 1) an announced hit or blast that
+- (D3c, D4) The Mage Ice Blocks (her rule 1) an announced hit or blast that
   lands this GM turn, could take her to 0 at its biggest roll, that she is
-  still in after moving, and that she cannot Disrupt; or when she is
-  stunned or rooted at 35% HP or less (`ICE_BLOCK_AT`) with an enemy that
-  is not controlled next to her. She Disrupts first if she can.
+  still in after moving, and that she cannot Disrupt (she Disrupts first if
+  she can). Since D4 also, as a mage in an MMO does: at 35% HP or less
+  (`ICE_BLOCK_AT`) with the boss or an elite next to her and on her (it
+  went for her last turn and has no Taunt cards), when her rule 4 will not
+  get her out of its reach: she cannot Blink to a square it cannot reach
+  (stunned, in the middle of a cast, no mana, no square), or she would
+  Frost Nova first. A rooted enemy next to her still hits her, so Frost Nova
+  is never enough against one already next to her. The old "stunned or
+  rooted" line is gone (heroes cannot be rooted).
 - (D3c) The Mage Evokes below 6 mana (`EVOCATION_BELOW`, a whole Volley)
   when no awake enemy is next to her, no blast or stomp is coming down on
   her square, no cast in her Disrupt range is waiting, and the boss has

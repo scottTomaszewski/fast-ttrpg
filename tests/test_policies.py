@@ -25,7 +25,7 @@ def test_guardian_taunts_the_boss_whenever_it_has_no_taunt_cards():
     o.pos = (10, 6)                                                   # 7 away: out of Taunt's range 6
     assert act(s, "guardian").ability != "taunt"
     o.pos = (4, 6); add_stack(o, "taunt", 1)                          # it has a Taunt card already
-    assert act(s, "guardian") == Action("auto", target="ogre1")
+    assert act(s, "guardian") == Action("ability", "shield_slam", "ogre1")   # nothing needs him: the filler
 
 def test_a_guardian_who_never_taunts_the_boss_is_the_same_guardian_otherwise():
     # Rule 6 switched off, for the taunt:boss check. Nothing else changes.
@@ -763,6 +763,7 @@ def test_mage_does_not_sheep_an_enemy_a_meteor_is_coming_down_on():
 
 from fastcombat.combat import stun_hero
 from fastcombat.policies import SLAM_TAUNT_CARDS, SLAM_ALLIES_ABOVE, EVOCATION_BELOW, ICE_BLOCK_AT
+from fastcombat.policies import _stomp_disrupter
 
 def quiet_fight(s):
     """A taunted ogre next to the Guardian at (3, 6), and nothing else: all is well."""
@@ -770,10 +771,14 @@ def quiet_fight(s):
 
 def test_guardian_shield_slams_the_boss_only_when_nothing_needs_him():
     s = state(); o = quiet_fight(s)
+    # One card is enough: it comes off at the end of the GM turn, after the boss attacks him.
+    assert SLAM_TAUNT_CARDS == 1
     assert act(s, "guardian") == Action("ability", "shield_slam", "ogre1")
-    o.stacks["taunt"].cards = SLAM_TAUNT_CARDS - 1                    # the boss is nearly loose
+    del o.stacks["taunt"]                                             # the boss is loose: Taunt it
+    assert act(s, "guardian") == Action("ability", "taunt", "ogre1")
+    g = s.heroes["guardian"]; g.resource = 0                          # he cannot pay: no Slam on a loose boss
     assert act(s, "guardian") == Action("auto", target="ogre1")
-    o.stacks["taunt"].cards = SLAM_TAUNT_CARDS
+    g.resource = 10; add_stack(o, "taunt", SLAM_TAUNT_CARDS)
     m = s.heroes["mage"]; m.hp = int(m.max_hp * SLAM_ALLIES_ABOVE)    # an ally is hurt
     assert act(s, "guardian") == Action("auto", target="ogre1")
     m.hp = m.max_hp; add_stack(s.heroes["guardian"], "cd:shield_slam", 1)   # cooling down
@@ -802,8 +807,13 @@ def stomp_coming(s, o):
     o.announced = Announced("stomp", "stomp", s.round, None,
                             frozenset(within(o.pos, 1, 16, 12)), (1, 6), stun=1)
 
+def nobody_can_disrupt(s):
+    for h in s.heroes.values():
+        add_stack(h, "cd:disrupt", 2)
+
 def test_guardian_stays_to_take_the_stomp_when_a_druid_can_cleanse_him():
     s = state(); o = quiet_fight(s); stomp_coming(s, o); g = s.heroes["guardian"]
+    nobody_can_disrupt(s)
     assert default_policy("guardian").move(s, g) == g.pos           # he stays in it
     r = s.heroes["rogue"]; r.pos = (5, 7)                           # next to the ogre too
     assert default_policy("rogue").move(s, r) not in o.announced.area   # she steps out
@@ -812,14 +822,48 @@ def test_guardian_stays_to_take_the_stomp_when_a_druid_can_cleanse_him():
     enemy(s, "wolf", (2, 7))                                        # but he is holding a wolf
     assert default_policy("guardian").move(s, g) == g.pos
 
-def test_nobody_disrupts_a_stomp_only_the_guardian_is_taking():
+def test_a_stomp_a_hero_is_in_gets_disrupted_and_one_nobody_is_in_does_not():
     s = state(); o = quiet_fight(s); stomp_coming(s, o)
-    assert act(s, "mage").ability != "disrupt"                      # answered: the Druid will Cleanse him
-    assert act(s, "guardian").ability != "disrupt"
-    s.heroes["rogue"].pos = (5, 7)                                  # someone else is in it
-    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")
-    s.heroes["rogue"].pos = (9, 9); s.heroes["guardian"].pos = (2, 6)   # nobody in it
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("disrupt", "ogre1")   # he is in it, next to the boss
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")       # (if he had not)
+    s.heroes["guardian"].pos = (2, 6)                               # nobody in it: it hits nobody
     assert act(s, "mage").ability != "disrupt"
+
+def test_melee_heroes_stay_next_to_the_boss_when_someone_will_disrupt_the_stomp():
+    s = state(); o = quiet_fight(s); stomp_coming(s, o)
+    g, r, m = (s.heroes[h] for h in ("guardian", "rogue", "mage"))
+    r.hidden = False; r.pos = (5, 7)                                # next to the ogre, in the Stomp
+    assert _stomp_disrupter(s) is g                                 # the Guardian next to the boss first
+    dest = default_policy("rogue").move(s, r)
+    assert dest in o.announced.area and adjacent(dest, o.pos)       # she stays and keeps hitting
+    add_stack(g, "cd:disrupt", 2)                                   # his Disrupt is cooling down...
+    assert _stomp_disrupter(s) is m                                 # ...so the Mage will, from 3 squares
+    assert default_policy("rogue").move(s, r) in o.announced.area
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")
+    add_stack(m, "cd:disrupt", 2)                                   # the Rogue can Disrupt it herself
+    assert _stomp_disrupter(s) is r
+    add_stack(r, "cd:disrupt", 2)                                   # nobody will: she steps out
+    assert _stomp_disrupter(s) is None
+    assert default_policy("rogue").move(s, r) not in o.announced.area
+
+def test_the_mage_does_not_count_as_disrupting_the_stomp_when_her_list_will_not_get_there():
+    s = state(); o = quiet_fight(s); stomp_coming(s, o); m = s.heroes["mage"]
+    add_stack(s.heroes["guardian"], "cd:disrupt", 2); add_stack(s.heroes["rogue"], "cd:disrupt", 2)
+    assert _stomp_disrupter(s) is m
+    w = enemy(s, "wolf", (1, 4))                                    # an enemy next to her: rule 4 comes first
+    assert _stomp_disrupter(s) is None
+    w.dead = True; mending_shaman(s, (6, 2))                        # a mend for her to Disrupt first
+    assert _stomp_disrupter(s) is None
+
+def test_guardian_walks_next_to_the_boss_to_take_the_stomp():
+    # The ogre is 5 squares away when its Stomp is about to land. Before, he
+    # stopped outside its squares and could not hit the boss.
+    s = state(); o = enemy(s, "ogre", (8, 6)); add_stack(o, "taunt", 2); stomp_coming(s, o)
+    g = s.heroes["guardian"]; add_stack(s.heroes["mage"], "cd:disrupt", 2)   # nobody but the Druid's Cleanse
+    dest = default_policy("guardian").move(s, g)
+    assert dest in o.announced.area and adjacent(dest, o.pos)
+    damage_hero(s, s.heroes["druid"], 99, attacker=None)            # no Druid: he stays out of it
+    assert default_policy("guardian").move(s, g) not in o.announced.area
 
 def test_druid_cleanses_a_stun_the_guardian_first_before_poison():
     s = state(); g, r, m = (s.heroes[h] for h in ("guardian", "rogue", "mage"))
@@ -858,11 +902,38 @@ def test_mage_ice_blocks_a_blast_she_is_still_in_only_if_it_could_drop_her():
     m.hp = 19; assert act(s, "mage").ability != "ice_block"         # 3d6 is 18 at most
     m.hp = 18; assert act(s, "mage") == Action("ability", "ice_block")
 
-def test_a_stunned_mage_low_with_an_enemy_next_to_her_ice_blocks():
-    s = state(); m = s.heroes["mage"]; w = enemy(s, "wolf", (2, 4)); stun_hero(s, m, 1)
-    m.hp = int(m.max_hp * ICE_BLOCK_AT) + 1; assert act(s, "mage") == Action("none")
-    m.hp = int(m.max_hp * ICE_BLOCK_AT); assert act(s, "mage") == Action("ability", "ice_block")
-    add_stack(w, "stun", 1); assert act(s, "mage") == Action("none")   # a stunned wolf is no danger
+def test_mage_ice_blocks_when_low_with_the_boss_on_her_and_no_way_out():
+    s = state(); m = s.heroes["mage"]; o = enemy(s, "ogre", (2, 4)); o.target = "mage"   # next to her at (1, 5)
+    m.hp = int(m.max_hp * ICE_BLOCK_AT) + 1
+    assert act(s, "mage").ability == "blink"                        # not low enough: she Blinks away
+    m.hp = int(m.max_hp * ICE_BLOCK_AT)
+    assert act(s, "mage").ability == "blink"                        # low, but Blink gets her out of its reach
+    m.resource = 1                                                  # no mana for Blink
+    assert act(s, "mage") == Action("ability", "ice_block")
+    m.resource = 30; stun_hero(s, m, 1)                             # stunned: no Blink
+    assert act(s, "mage") == Action("ability", "ice_block")
+    del m.stacks["stun"]; m.cast = Cast("firebolt", "ogre1", None, 1, 0, False)   # in the middle of a cast
+    assert act(s, "mage") == Action("ability", "ice_block")
+    add_stack(o, "taunt", 2)                                        # it is on the Guardian now
+    assert act(s, "mage") != Action("ability", "ice_block")
+    del o.stacks["taunt"]; o.target = "druid"                       # it went for someone else
+    assert act(s, "mage") != Action("ability", "ice_block")
+
+def test_mage_ice_blocks_an_elite_on_her_that_frost_nova_would_not_stop():
+    s = state(); m = s.heroes["mage"]; m.hp = int(m.max_hp * ICE_BLOCK_AT)
+    b = elite(s, "brute", (2, 4)); b.target = "mage"                # rooted, it would still hit her
+    assert act(s, "mage") == Action("ability", "ice_block")
+    b.spec = replace(b.spec, tier="normal")                         # a plain add: Frost Nova and walk away
+    assert act(s, "mage").ability == "frost_nova"
+    w = enemy(s, "wolf", (2, 5)); b.dead = True; w.target = "mage"; stun_hero(s, m, 1)
+    assert act(s, "mage") == Action("none")                         # a wolf is not worth the Ice Block
+    add_stack(w, "rooted", 2); assert act(s, "mage") == Action("none")   # nor a rooted one (no rooted rule)
+
+def test_nobody_disrupts_a_ground_slam_nobody_stands_in():
+    s = state(); o = slam_coming(s); g = s.heroes["guardian"]; g.pos = (9, 9)   # everyone is out of it
+    assert act(s, "mage").ability != "disrupt"
+    s.heroes["rogue"].pos = (3, 5)                                  # 2 from the ogre: she is in it
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")
 
 def test_mage_evokes_when_low_on_mana_and_nothing_needs_her():
     s = state(); quiet_volley(s); m = s.heroes["mage"]; o = enemy(s, "ogre", (11, 6)); add_stack(o, "taunt", 2)

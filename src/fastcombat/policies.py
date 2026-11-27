@@ -44,6 +44,15 @@ Some rules use a word that means the same for every class:
   middle of a cast, or of a channel they must stand still for
   (Evocation), and is safe, stays put. So does a hero next to a downed
   ally they will haul up: that comes before where a class likes to stand.
+- The Stomp and Disrupt: when the boss's Stomp lands this round and a hero
+  will Disrupt it this turn (see `_stomp_disrupter`: the Guardian next to
+  the boss first, then the others by id, each only if they can Disrupt it
+  now and their list will get to it), the melee heroes (the Guardian and
+  the Rogue) do not count its squares as danger: they stay next to the
+  boss and keep hitting. Every hero acts before the Stomp lands (it lands
+  in the GM turn), so whoever Disrupts it is in time. Only when nobody
+  will Disrupt it do they step out (the Guardian may still stay to take
+  it; see his list).
 - The shield plan: the boss has announced a blast that lands this round,
   the Guardian stands in its area, the boss has Taunt cards, he is not
   about to haul anyone up, and he can pay for Shield Plant. Then he will
@@ -54,10 +63,10 @@ Some rules use a word that means the same for every class:
   ally hitting an enemy there, or one who cannot move, stays behind the
   shield instead of running.
 - An answered cast is a boss cast that is already dealt with this turn: a
-  blast a Guardian planted his shield against, a heavy hit on a hero who
-  holds a Last Stand card, or a stomp with nobody in its area but a
-  Guardian taking it while a Druid is up to Cleanse him (or nobody at
-  all). Nobody spends an interrupt on it.
+  blast or a stomp with no hero who is up in its area (everyone has moved
+  by the act step, so whoever is there now is there when it lands), a
+  blast a Guardian planted his shield against, or a heavy hit on a hero
+  who holds a Last Stand card. Nobody spends an interrupt on it.
 - An enemy is about to be hit when a hero's cast or channel that does
   damage (Firebolt, Arcane Volley) is aimed at it, or it stands in the
   marked area of a hero's blast (Meteor). Nobody saps or sheeps it: the
@@ -78,14 +87,17 @@ from fastcombat.grid import Pos, adjacent, approach, behind, distance, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.opening import NONE, Opening, can_open
 from fastcombat.targeting import held
-from fastcombat.units import BAD_STACKS, Enemy, FightState, Hero
+from fastcombat.units import BAD_STACKS, Announced, Enemy, FightState, Hero
 
 # How the policies play. These are not game rules: they are how careful or
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
 INTERCEDE_AT = 0.6  # Guardian: guard an ally at 60% HP or less
 SHOUT_ENEMIES = 2  # Guardian: Challenging Shout when this many loose adds near him go for allies
-SLAM_TAUNT_CARDS = 2  # Guardian: Shield Slam only while the boss has this many Taunt cards or more...
+# Guardian: Shield Slam only while the boss has this many Taunt cards or more. A boss
+# loses a card at the end of the GM turn, after it attacks, so with 1 card it still
+# attacks him in the coming GM turn...
+SLAM_TAUNT_CARDS = 1
 SLAM_ALLIES_ABOVE = 0.75  # ...and every ally is above 75% HP
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
@@ -103,7 +115,7 @@ QUICKEN_ROUND = 5  # Mage: the first Quicken from this round on...
 QUICKEN_BURN = 0.35  # ...and a second one when the boss is down to 35% HP or less
 QUICKEN_MOST = 2  # Mage: never more Quickens than this in one fight
 VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with this many Taunt cards
-ICE_BLOCK_AT = 0.35  # Mage: Ice Block when stunned or rooted at 35% HP or less with an enemy next to her
+ICE_BLOCK_AT = 0.35  # Mage: Ice Block at 35% HP or less, the boss or an elite on her, and no way out
 EVOCATION_BELOW = 6  # Mage: Evocation with less mana than this (a whole Arcane Volley)
 
 
@@ -182,10 +194,14 @@ class GuardianPolicy(_ClassPolicy):
     """The Guardian. Move: to a square next to the boss (or to the nearest
     enemy if there is no boss), out of danger if possible. When the shield
     plan is on, he stays where he is instead. When the boss's Stomp lands
-    this round on his square, he stays to take it (like a tank in an MMO)
-    if a Druid is up to Cleanse the stun, or if he is holding an add there
-    (an enemy that is not the boss and not controlled, next to him) that
-    would get loose if he stepped out. Everyone else steps out of it.
+    this round, he takes it (like a tank in an MMO), so he stays next to
+    the boss, or walks next to it, even though those squares are danger:
+    when someone will Disrupt it (see "The Stomp and Disrupt" at the top of
+    this file), or when a Druid is up to Cleanse the stun. He also stays in
+    it if he is already in it and holding an add there (an enemy that is
+    not the boss and not controlled, next to him) that would get loose if
+    he stepped out. The Rogue steps out only when nobody will Disrupt it,
+    and the Druid and the Mage always do.
 
     An enemy next to the Guardian is already held: it must attack him. So the
     Guardian spends a turn on a Taunt or a pull only for an enemy that would
@@ -226,12 +242,14 @@ class GuardianPolicy(_ClassPolicy):
     9. A loose add that is not fodder, and is not already going for me, is
        in Taunt's range: Taunt the one closest to any ally who is not a
        Guardian. (Fodder dies to any hit, so it is not worth the grit.)
-    10. Nothing needs me: the boss has 2 or more Taunt cards (or there is
-        no boss), every ally (not a Guardian) is above 75% HP, and no add
-        is loose. Then Shield Slam instead of an auto-attack: the boss if
-        it is next to me, else the lowest-HP enemy next to me that is not
-        fodder and not controlled. It is free, gives grit and has a
-        cooldown, so it is the filler for when things go very well.
+    10. Nothing needs me: the boss has a Taunt card (or there is no boss),
+        so it will still attack me in the coming GM turn (a boss loses its
+        card at the end of the GM turn, after it attacks); every ally (not
+        a Guardian) is above 75% HP; and no add is loose. Then Shield Slam
+        instead of an auto-attack: the boss if it is next to me, else the
+        lowest-HP enemy next to me that is not fodder and not controlled.
+        It is free, gives grit and has a cooldown, so it is the filler for
+        when things go very well.
     11. Auto-attack the focus if it is next to me, or else the lowest-HP
         enemy next to me that is not controlled.
     """
@@ -242,8 +260,11 @@ class GuardianPolicy(_ClassPolicy):
         plan = _shield_plan(state)
         if plan is not None and plan[0] is guardian:
             return guardian.pos
-        if _takes_the_stomp(state, guardian):
+        stomp = _stomp_landing(state)
+        if stomp is not None and guardian.pos in stomp.area and _takes_the_stomp(state, guardian):
             return guardian.pos
+        # When he takes the Stomp, its squares are not danger for him (see
+        # `_danger`), so this walks him next to the boss through them.
         goal = _boss(state) or _nearest_enemy(state, guardian)
         if goal is None:
             return _stay(state, guardian)
@@ -371,7 +392,8 @@ class GuardianNoBossTaunt(GuardianPolicy):
 
 class RoguePolicy(_ClassPolicy):
     """The Rogue. Move: next to the enemy her abilities are after, a square
-    also out of danger if possible. That enemy is, the first that applies:
+    also out of danger if possible (a Stomp someone will Disrupt is not
+    danger for her; see the top of this file). That enemy is, the first that applies:
     the elite to go for from hiding (rule 3), while she has one; while she
     has full combo points, the nearest enemy worth an Eviscerate (an elite,
     or the boss while it has Taunt cards; rule 8); or else the focus her
@@ -801,8 +823,14 @@ class MagePolicy(_ClassPolicy):
           could not walk out of it in the move step), its biggest roll
           could take me to 0, nobody has answered it, and I cannot Disrupt
           it now (stunned, cooling down or out of reach); or
-       b. I am stunned or rooted, at 35% HP or less, and an enemy that is
-          not controlled is next to me.
+       b. I am at 35% HP or less, the boss or an elite is next to me and on
+          me (it went for me on its last turn and has no Taunt cards, and
+          is not controlled), and rule 4 will not take me out of its reach:
+          I cannot Blink to a square it cannot reach this GM turn (stunned,
+          in the middle of a cast, no mana or no such square), or rule 4
+          would Frost Nova first (an add next to me that is not rooted). A
+          rooted enemy next to me still hits me, so Frost Nova is never
+          enough against one that is already next to me.
     2. Haul up.
     3. In the middle of a cast (not a channel): continue.
     4. An enemy that is not controlled is next to me:
@@ -880,8 +908,8 @@ class MagePolicy(_ClassPolicy):
             spec = abilities[ability]
             return mage.resource >= spec.cost * max(1, spec.hits)
 
-        # 1. A hit coming that could drop me and that I cannot stop, or stuck
-        # and low next to an enemy: Ice Block (even while stunned).
+        # 1. A hit coming that could drop me and that I cannot stop, or low with
+        # the boss or an elite on me and no way out: Ice Block (even while stunned).
         if _ice_block_now(state, mage):
             if action := _ability(state, mage, "ice_block"):
                 return action
@@ -1107,21 +1135,20 @@ def _answered(state: FightState, enemy: Enemy) -> bool:
     """True when `enemy`'s announced cast is already dealt with, so nobody
     spends an interrupt on it.
 
-    A blast is answered once a Guardian has planted his shield this turn (the
+    A blast or a stomp is answered when no hero who is up stands in its
+    area: it would hit nobody. Everyone has moved by the act step, where
+    this is asked, so whoever is in it now is in it when it lands. A blast
+    is also answered once a Guardian has planted his shield this turn (the
     card comes off at the top of the next party turn, so a card means it
     was this turn). A heavy hit is answered when the hero it is aimed at
-    holds a Last Stand card. A stomp is answered when the only heroes left
-    in its area (everyone has moved by the act step) are Guardians taking
-    it, and a Druid is up to Cleanse their stun; or when nobody is in it.
+    holds a Last Stand card.
     """
     cast = enemy.announced
     if cast is None:
         return False
-    if cast.kind == "stomp":
-        inside = [h for h in state.up_heroes() if h.pos in cast.area]
-        if not inside:
+    if cast.kind in ("blast", "stomp"):
+        if not any(h.pos in cast.area for h in state.up_heroes()):
             return True
-        return all(h.cls == "guardian" for h in inside) and _druid_to_cleanse(state)
     if cast.kind == "blast":
         return any(
             h.cls == "guardian" and "shield_plant" in h.stacks for h in state.up_heroes()
@@ -1135,22 +1162,77 @@ def _answered(state: FightState, enemy: Enemy) -> bool:
 # --- The Guardian's grit -------------------------------------------------------
 
 
-def _takes_the_stomp(state: FightState, guardian: Hero) -> bool:
-    """True when the boss's Stomp lands this round on the Guardian's square
-    and he stays to take it (see his move): a Druid is up to Cleanse him,
-    or he is holding an add there (an enemy that is not the boss and not
-    controlled, next to him) that would get loose if he stepped out."""
+def _stomp_landing(state: FightState) -> Announced | None:
+    """The boss's Stomp, if it lands this round. Otherwise None."""
     boss = _boss(state)
     cast = boss.announced if boss else None
     if cast is None or cast.kind != "stomp" or cast.lands_round != state.round:
-        return False
-    if guardian.pos not in cast.area:
+        return None
+    return cast
+
+
+def _takes_the_stomp(state: FightState, guardian: Hero) -> bool:
+    """True when the boss's Stomp lands this round and the Guardian takes it
+    (see his move), so he stays next to the boss or walks next to it: a
+    Druid is up to Cleanse him, or he is in its area already and holding an
+    add there (an enemy that is not the boss and not controlled, next to
+    him) that would get loose if he stepped out. (When someone will Disrupt
+    it, he stays in too, as every melee hero does: see `_stays_in_the_stomp`.)"""
+    stomp = _stomp_landing(state)
+    if stomp is None:
         return False
     if _druid_to_cleanse(state):
         return True
-    return any(
+    return guardian.pos in stomp.area and any(
         e.spec.tier != "boss" and not e.controlled for e in _enemies_next_to(state, guardian)
     )
+
+
+def _stays_in_the_stomp(state: FightState, hero: Hero) -> bool:
+    """True when the boss's Stomp lands this round and `hero` does not count
+    its squares as danger: a melee hero (the Guardian or the Rogue) when
+    someone will Disrupt it, or the Guardian when he takes it."""
+    if _stomp_landing(state) is None:
+        return False
+    if hero.cls == "guardian" and _takes_the_stomp(state, hero):
+        return True
+    melee = state.numbers.heroes[hero.cls].attack_range <= 1
+    return melee and _stomp_disrupter(state) is not None
+
+
+def _stomp_disrupter(state: FightState) -> Hero | None:
+    """The hero who will Disrupt the boss's Stomp this turn, or None.
+
+    The Guardian next to the boss first, then the other heroes by id. Each
+    one counts only if they can Disrupt the boss from where they stand now
+    (it is off cooldown and in their reach) and their list will get to that
+    rule this turn: they are not stunned or in an Ice Block and have nobody
+    to haul up; the Mage is also not in the middle of a cast, has no enemy
+    next to her (her rule 4 would come first), and has no other cast to
+    Disrupt (a mend comes first for her). The Druid's list has no Disrupt.
+    """
+    stomp = _stomp_landing(state)
+    boss = _boss(state)
+    if stomp is None or boss is None:
+        return None
+
+    def order(hero: Hero) -> tuple:
+        first = hero.cls == "guardian" and adjacent(hero.pos, boss.pos)
+        return (not first, hero.id)
+
+    for hero in sorted(state.up_heroes(), key=order):
+        if hero.cls not in ("guardian", "rogue", "mage") or hero.stunned or hero.iced:
+            continue
+        if _haul_up(state, hero) is not None:
+            continue
+        if hero.cls == "mage":
+            if _mid_cast(hero) or any(not e.controlled for e in _enemies_next_to(state, hero)):
+                continue
+            if any(e is not boss for e in _casting(state, state.living_enemies())):
+                continue
+        if _ability(state, hero, "disrupt", boss.id) is not None:
+            return hero
+    return None
 
 
 def _druid_to_cleanse(state: FightState) -> bool:
@@ -1326,9 +1408,32 @@ def _ice_block_now(state: FightState, mage: Hero) -> bool:
             continue
         if _ability(state, mage, "disrupt", enemy.id) is None:
             return True
-    stuck = mage.stunned or "rooted" in mage.stacks
-    near = any(not e.controlled for e in _enemies_next_to(state, mage))
-    return stuck and near and _share(mage) <= ICE_BLOCK_AT
+    if _share(mage) > ICE_BLOCK_AT:
+        return False
+    big = [
+        e
+        for e in _enemies_next_to(state, mage)
+        if e.spec.tier in ("boss", "elite")
+        and not e.controlled
+        and e.target == mage.id
+        and "taunt" not in e.stacks
+    ]
+    return bool(big) and not _blinks_away(state, mage)
+
+
+def _blinks_away(state: FightState, mage: Hero) -> bool:
+    """True when the Mage's rule 4 will Blink her out of reach this turn:
+    she can act (not stunned, not in the middle of a cast), no add next to
+    her makes her Frost Nova first, and Blink can take her to a square none
+    of the enemies next to her can reach this GM turn."""
+    if mage.stunned or _mid_cast(mage):
+        return False
+    threats = [e for e in _enemies_next_to(state, mage) if not e.controlled]
+    if any(e.spec.tier != "boss" and "rooted" not in e.stacks for e in threats):
+        if _ability(state, mage, "frost_nova") is not None:
+            return False  # rule 4a: she would Frost Nova, and the big one still hits her
+    square = _blink_square(state, mage, threats)
+    return square is not None and _ability(state, mage, "blink", pos=square) is not None
 
 
 def _nothing_needs_the_mage(state: FightState, mage: Hero) -> bool:
@@ -1413,27 +1518,34 @@ def _mid_cast(hero: Hero) -> bool:
     return hero.cast is not None and not hero.cast.is_channel
 
 
-def _danger(state: FightState) -> set[Pos]:
+def _danger(state: FightState, hero: Hero | None = None) -> set[Pos]:
     """The squares a hero keeps off: where a blast is going to land.
 
-    That is `state.danger_squares()`, except that while the shield plan is
-    on, the squares behind the Guardian's shield are safe from the boss's
-    blast (they are still danger if another blast covers them).
+    That is `state.danger_squares()`, with two exceptions. While the shield
+    plan is on, the squares behind the Guardian's shield are safe from the
+    boss's blast (they are still danger if another blast covers them). And
+    for `hero`, the boss's Stomp is no danger when they stay in it (see
+    `_stays_in_the_stomp`).
     """
     plan = _shield_plan(state)
-    if plan is None:
-        return state.danger_squares()
-    guardian, source = plan
     boss = _boss(state)
-    radius = state.numbers.abilities["shield_plant"].radius
-    shelter = behind(guardian.pos, source, radius, state.fight.width, state.fight.height)
-    other: set[Pos] = set()
+    squares: set[Pos] = set()
     for enemy in state.living_enemies():
-        if enemy is not boss and enemy.announced is not None:
-            other |= enemy.announced.area
+        cast = enemy.announced
+        if cast is None:
+            continue
+        area = cast.area
+        if enemy is boss and plan is not None:
+            guardian, source = plan
+            radius = state.numbers.abilities["shield_plant"].radius
+            area = area - behind(guardian.pos, source, radius, state.fight.width, state.fight.height)
+        if enemy is boss and hero is not None and cast.kind == "stomp":
+            if _stays_in_the_stomp(state, hero):
+                continue
+        squares |= area
     for area in state.marked.values():
-        other |= area
-    return other | (boss.announced.area - shelter)
+        squares |= area
+    return squares
 
 
 def _go(state: FightState, hero: Hero, goal: Pos, reach: int) -> Pos:
@@ -1452,7 +1564,7 @@ def _go(state: FightState, hero: Hero, goal: Pos, reach: int) -> Pos:
         state.fight.height,
         reach=reach,
     )
-    danger = _danger(state)
+    danger = _danger(state, hero)
     if dest not in danger:
         return dest
     safe = [square for square in _squares_in_reach(state, hero) if square not in danger]
@@ -1482,7 +1594,7 @@ def _stand(state: FightState, hero: Hero, goal: Pos, reach: int, worse) -> Pos:
     If no square in reach is close enough to `goal`, the hero walks toward
     it instead (see `_go`).
     """
-    danger = _danger(state)
+    danger = _danger(state, hero)
     squares = _squares_in_reach(state, hero)
     if all(distance(square, goal) > reach for square in squares):
         return _go(state, hero, goal, reach)
