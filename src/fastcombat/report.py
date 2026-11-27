@@ -12,6 +12,7 @@ import statistics
 from dataclasses import dataclass
 
 from fastcombat.fight import FightResult
+from fastcombat.numbers import SHARED
 
 # What the design asks for. These are not game numbers: they are the targets
 # the game numbers are tuned to meet.
@@ -60,6 +61,10 @@ class Summary:
     ended_full: dict[str, float]  # share of fights ending up, with a full pool
     lowest_hp: dict[str, float]  # mean of the lowest share of max HP they got to
     resource_curve: dict[str, list[float]]  # mean resource at each round
+    # Mean uses per fight of each button the party has, by ability id, with
+    # every hero's uses added together. A button never pressed is there at 0.
+    uses: dict[str, float]
+    kit: dict[str, str]  # whose each button in `uses` is: a class, or "shared"
 
 
 @dataclass
@@ -119,6 +124,11 @@ def summarize(results: list[FightResult]) -> Summary:
         ended_full={h: _share(results, lambda r: _ended_full(r, h)) for h in heroes},
         lowest_hp={h: sum(r.tally.lowest_hp[h] for r in results) / n for h in heroes},
         resource_curve={h: _curve([r.tally.resource_by_round[h] for r in results]) for h in heroes},
+        uses={
+            a: sum(used.get(a, 0) for r in results for used in r.tally.uses.values()) / n
+            for a in results[0].kit
+        },
+        kit=dict(results[0].kit),
     )
 
 
@@ -234,6 +244,13 @@ def format_summary(s: Summary) -> str:
             f"{_whole_pct(s.starved[h]):>9}{_whole_pct(s.ended_full[h]):>13}"
             f"{_whole_pct(s.down_rate[h]):>11}{_whole_pct(s.lowest_hp[h]):>11}"
         )
+    lines += ["", "Uses per fight (all heroes of a class together):"]
+    width = max((len(a) for a in s.uses), default=0)
+    owners = list(dict.fromkeys(s.kit.values()))
+    # Each class's own buttons under its name, then the ones anyone has.
+    for owner in sorted(owners, key=lambda o: o == SHARED):
+        lines.append(f"{'anyone' if owner == SHARED else owner}")
+        lines += [f"  {a:<{width}}  {s.uses[a]:5.1f}" for a in s.uses if s.kit[a] == owner]
     return "\n".join(lines)
 
 

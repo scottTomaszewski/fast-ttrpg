@@ -18,9 +18,13 @@ from fastcombat.combat import (
 )
 from fastcombat.enemy_ai import gm_turn
 from fastcombat.grid import Pos, adjacent, distance, on_map
-from fastcombat.numbers import FightDef, HeroSpec, Numbers
+from fastcombat.numbers import SHARED, FightDef, HeroSpec, Numbers
 from fastcombat.policies import Policy, default_policy
 from fastcombat.units import Enemy, FightState, Hero, Tally, new_state
+
+
+# Hauling an ally up is counted with the abilities, under this name.
+HAUL_UP = "haul_up"
 
 
 @dataclass
@@ -37,6 +41,9 @@ class FightResult:
     tally: Tally
     end_resource: dict[str, int]  # each hero's resource at the end, by hero id
     pool: dict[str, int]  # the most resource each hero can hold, by hero id
+    # Every button the party has, and whose it is: a class, or "shared" when
+    # any hero has it. In the numbers file's order, with "haul_up" last.
+    kit: dict[str, str]
 
 
 def run_fight(
@@ -178,10 +185,14 @@ def _act(state: FightState, hero: Hero, action: Action) -> None:
 
 
 def _haul_up(state: FightState, hero: Hero, target_id: str | None) -> None:
-    """`hero` hauls a downed ally next to them back up, on a little HP."""
+    """`hero` hauls a downed ally next to them back up, on a little HP.
+
+    It is counted in the tally as a use of "haul_up".
+    """
     target = state.heroes.get(target_id) if target_id else None
     if target is not None and target.down and adjacent(hero.pos, target.pos):
         get_up(state, target, state.numbers.rules["haul_up_hp"])
+        state.tally.count_use(hero.id, HAUL_UP)
 
 
 def _write_down_resources(state: FightState, heroes: list[Hero]) -> None:
@@ -235,4 +246,13 @@ def _result(
         tally=state.tally,
         end_resource={hero.id: hero.resource for hero in state.heroes.values()},
         pool={hero.id: state.numbers.heroes[hero.cls].pool for hero in state.heroes.values()},
+        kit=_kit(state.numbers, party),
     )
+
+
+def _kit(numbers: Numbers, party: list[str]) -> dict[str, str]:
+    """Every ability the party has, and whose it is, with hauling up last."""
+    owners = set(party) | {SHARED}
+    kit = {a.id: a.hero for a in numbers.abilities.values() if a.hero in owners}
+    kit[HAUL_UP] = SHARED
+    return kit

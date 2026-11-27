@@ -153,10 +153,14 @@ def use_ability(state: FightState, hero: Hero, action: Action) -> bool:
 
     Using an ability gives a hidden hero away: starting a cast does it at
     once, and anything else does it once it has happened (see `resolve`).
+
+    Each use is counted in the tally when it starts: a cast once, even if it
+    is stopped before it lands, and a channel once, not once for each hit.
     """
     if action.ability is None or not can_use(state, hero, action.ability, action):
         return False
     spec = state.numbers.abilities[action.ability]
+    state.tally.count_use(hero.id, spec.id)
     if spec.cast > 0:
         start_cast(state, hero, spec, action)
         hero.hidden = False

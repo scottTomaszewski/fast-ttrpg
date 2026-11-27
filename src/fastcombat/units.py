@@ -103,6 +103,9 @@ class Tally:
     resource_by_round: dict[str, list[int]]
     starved_rounds: dict[str, int]
     up_rounds: dict[str, int]  # rounds the hero was up after the act step
+    # How many times each hero used each ability, by hero id, then ability
+    # id. Hauling an ally up counts too, as "haul_up".
+    uses: dict[str, dict[str, int]]
 
     @classmethod
     def for_heroes(cls, hero_ids: list[str]) -> "Tally":
@@ -116,7 +119,13 @@ class Tally:
             resource_by_round={h: [] for h in hero_ids},
             starved_rounds={h: 0 for h in hero_ids},
             up_rounds={h: 0 for h in hero_ids},
+            uses={h: {} for h in hero_ids},
         )
+
+    def count_use(self, hero_id: str, ability_id: str) -> None:
+        """Write down that `hero_id` used `ability_id` once."""
+        used = self.uses[hero_id]
+        used[ability_id] = used.get(ability_id, 0) + 1
 
 
 @dataclass

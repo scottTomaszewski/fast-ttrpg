@@ -107,8 +107,45 @@ def test_the_printed_summary_shows_each_heros_lowest_hp():
     low = replace(r, tally=replace(r.tally, lowest_hp={"guardian": 0.5, "rogue": 0.25, "druid": 1.0, "mage": 0.0}))
     text = format_summary(summarize([low]))
     assert "lowest HP" in text
-    rows = {line.split()[0]: line.split() for line in text.splitlines()[-4:]}
+    lines = text.splitlines()
+    table = lines.index(next(line for line in lines if "lowest HP" in line))
+    rows = {line.split()[0]: line.split() for line in lines[table + 1:table + 5]}
     assert rows["guardian"][-1] == "50%" and rows["rogue"][-1] == "25%" and rows["mage"][-1] == "0%"
+
+def test_the_summary_counts_the_mean_uses_of_every_button_per_fight():
+    a = run_fight(N, F, PARTY, seed=1); b = run_fight(N, F, PARTY, seed=2)
+    s = summarize([a, b])
+    assert list(s.uses) == list(a.kit) and s.kit == a.kit
+    assert s.uses["taunt"] == (a.tally.uses["guardian"].get("taunt", 0)
+                               + b.tally.uses["guardian"].get("taunt", 0)) / 2
+    # a shared button adds up every hero's uses
+    disrupts = sum(r.tally.uses[h].get("disrupt", 0) for r in (a, b) for h in PARTY)
+    assert s.uses["disrupt"] == disrupts / 2
+
+def test_a_button_never_pressed_is_still_in_the_summary_at_zero():
+    r = run_fight(N, F, PARTY, seed=1)
+    none = replace(r, tally=replace(r.tally, uses={h: {} for h in PARTY}))
+    s = summarize([none])
+    assert s.uses["meteor"] == 0 and s.uses["haul_up"] == 0 and len(s.uses) == len(r.kit)
+
+def test_only_the_buttons_of_the_classes_in_the_party_are_counted():
+    r = run_fight(N, F, ["mage", "mage"], seed=1)
+    uses = {"mage": {"firebolt": 2}, "mage2": {"firebolt": 3}}
+    s = summarize([replace(r, tally=replace(r.tally, uses=uses))])
+    assert "meteor" in s.uses and "disrupt" in s.uses and "taunt" not in s.uses
+    assert s.uses["firebolt"] == 5                              # both mages count together
+
+def test_the_printed_summary_lists_the_uses_by_hero():
+    r = run_fight(N, F, PARTY, seed=1)
+    uses = {h: {} for h in PARTY} | {"guardian": {"taunt": 4}, "mage": {"meteor": 1}, "rogue": {"disrupt": 2}}
+    text = format_summary(summarize([replace(r, tally=replace(r.tally, uses=uses))]))
+    lines = [line.split() for line in text.splitlines()]
+    assert ["taunt", "4.0"] in lines and ["meteor", "1.0"] in lines and ["disrupt", "2.0"] in lines
+    assert ["vanish", "0.0"] in lines and ["haul_up", "0.0"] in lines
+    # each hero's buttons come under the hero's name; shared ones come last
+    names = [line[0] for line in lines if line]
+    assert names.index("guardian", names.index("Uses")) < names.index("taunt") < names.index("rogue", names.index("taunt"))
+    assert names.index("anyone") < names.index("disrupt") and names.index("mage", names.index("taunt")) < names.index("meteor")
 
 def test_a_fight_knows_each_heros_full_pool():
     r = run_fight(N, F, ["mage", "rogue", "rogue"], seed=0)
@@ -126,7 +163,7 @@ def good(**changes) -> Summary:
                 auto_share=0.3, damage_share={h: 0.5 for h in heroes},
                 healing_share={h: 0.5 for h in heroes}, starved={h: 0.2 for h in heroes},
                 ended_full={h: 0.2 for h in heroes}, lowest_hp={h: 0.5 for h in heroes},
-                resource_curve={h: [] for h in heroes})
+                resource_curve={h: [] for h in heroes}, uses={}, kit={})
     return replace(s, **changes)
 
 def passed(full, without=None, on_auto=None, no_boss_taunt=None):

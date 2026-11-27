@@ -12,6 +12,7 @@ from fastcombat.combat import damage_hero
 from fastcombat.grid import distance
 from fastcombat.numbers import Spawn
 from fastcombat.units import Cast, Stack
+from fastcombat.casting import continue_cast, drop_cast
 
 N = load_numbers(GAME / "numbers.toml")
 F = load_fight(GAME / "fights" / "ogre_warlord.toml")
@@ -280,3 +281,33 @@ def test_the_party_has_not_won_while_an_enemy_is_still_to_come():
     late = replace(F, spawns=[Spawn("goblin", (15, 3), round=1)], boss_script=[])
     r = run_fight(N, late, ["guardian", "rogue", "druid", "mage"], seed=1)
     assert r.won and r.rounds >= 2                                       # it comes in during round 1's GM turn
+
+
+# Counting how often each ability is used
+
+def test_each_ability_used_is_counted_once_a_cast_when_it_starts_and_a_channel_once():
+    s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (8, 5))
+    assert ab.use_ability(s, m, Action("ability", "firebolt", "wolf1"))      # a cast: counted as it starts
+    assert s.tally.uses["mage"] == {"firebolt": 1}
+    drop_cast(s, m)
+    assert ab.use_ability(s, m, Action("ability", "arcane_volley", "wolf1"))  # a channel: once, not per hit
+    continue_cast(s, m); continue_cast(s, m)
+    assert s.tally.uses["mage"] == {"firebolt": 1, "arcane_volley": 1}
+
+def test_an_ability_that_is_refused_is_not_counted():
+    s = state(); m = s.heroes["mage"]; m.resource = 0; enemy(s, "wolf", (8, 5))
+    assert not ab.use_ability(s, m, Action("ability", "firebolt", "wolf1"))
+    assert s.tally.uses["mage"] == {}
+
+def test_hauling_up_is_counted_as_a_use_only_when_it_happens():
+    s = state(); m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
+    party_turn(s, idle(s, druid=Plays(Action("haul_up", target="mage"))))   # 2 away: nothing
+    assert s.tally.uses["druid"] == {}
+    party_turn(s, idle(s, rogue=Plays(Action("haul_up", target="mage"))))
+    assert s.tally.uses["rogue"] == {"haul_up": 1}
+
+def test_the_result_lists_every_button_the_party_has():
+    r = run_fight(N, WOLF_ONLY, ["mage", "rogue"], seed=1)
+    assert r.kit == {a.id: a.hero for a in N.abilities.values() if a.hero in ("mage", "rogue", "shared")} \
+        | {"haul_up": "shared"}
+    assert list(r.kit)[-1] == "haul_up"
