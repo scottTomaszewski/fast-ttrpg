@@ -31,6 +31,32 @@ boss (the `guardian_no_boss_taunt` policy; AoE Taunt can still taunt it) and
 wants at least 10 points fewer wins; it is only there when the party has a
 Guardian.
 
+`resource:` is there for each hero: they should be starved (too little
+left to pay for their cheapest ability) in under 20% of the rounds they
+are up, because every hero should be able to act in an emergency, and
+end under half of the fights up with a full pool.
+
+## How often each ability is used
+
+Both commands print a uses table: for each hero, each ability and how many
+times it was used in a fight, on the mean (all heroes of a class added
+together). An ability never used shows 0.0, so a button nobody presses
+stands out. Starting a cast counts as one use, even if it is stopped; a
+channel counts once, not once per hit. Hauling a downed ally up is listed
+too, as `haul_up`.
+
+`check` also has a `use:` check for each ability. `game/usage_targets.toml`
+says how many times a fight each one should be used (`min`, and `max` if
+there is an upper limit), with a comment saying what kind of button it is
+in an MMO (a main builder, a big emergency, an interrupt...). The check
+passes when the mean is in that band. The bands are for the test party,
+one hero of each class, so with any other party the `use:` checks are left
+out. These are the owner's targets: tuning changes the game numbers to
+meet them, never this file. To try other targets, point `check` at
+another file:
+
+    uv run fastcombat check --usage my_targets.toml
+
 `uv run fastcombat run --help` lists every option: which fight, which
 party (`--party guardian,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.
@@ -55,6 +81,9 @@ Every number in the game is in one of two places:
 - `game/numbers.toml`: the rules, the heroes, and their abilities.
 - `game/fights/`: one file for each fight, with the map, the enemies and
   what the boss does.
+
+`game/usage_targets.toml` is not game numbers: it is how often each ability
+should be used, which the game numbers are tuned to meet.
 
 ## Trying a change
 
