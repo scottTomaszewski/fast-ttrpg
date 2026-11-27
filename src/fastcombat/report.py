@@ -29,7 +29,7 @@ NEEDED_AT_LEAST = 0.20  # wins should drop at least this much without any one he
 # kit makes the party weaker can still pass the check above. This one keeps
 # the hero in the fight and takes away only their kit.
 KIT_AT_LEAST = 0.10
-# Wins should drop at least this much when the Warden never Taunts the
+# Wins should drop at least this much when the Guardian never Taunts the
 # boss. A boss with no Taunt cards goes for whoever it likes, so keeping
 # Taunt cards on it should be worth real wins, as for a tank in an MMO.
 TAUNT_BOSS_AT_LEAST = 0.10
@@ -134,9 +134,9 @@ def check_targets(
     hero taken out. It gives one `needed:` check each. `on_auto` holds, for
     each hero id, the summary of the same party with only that hero playing
     the `auto` policy (it never uses an ability). It gives one `kit:` check
-    each. `no_boss_taunt` is the summary of the same party with the Warden
-    playing `warden_no_boss_taunt` (he never Taunts the boss). It gives
-    the `taunt:boss` check; with no Warden there is none, and no check.
+    each. `no_boss_taunt` is the summary of the same party with the Guardian
+    playing `guardian_no_boss_taunt` (he never Taunts the boss). It gives
+    the `taunt:boss` check; with no Guardian there is none, and no check.
     """
     low, high = WIN_RATE
     auto_low, auto_high = AUTO_SHARE
@@ -205,7 +205,7 @@ def check_targets(
                 "taunt:boss",
                 drop >= TAUNT_BOSS_AT_LEAST - _TINY,
                 f"wins {_pct(full.win_rate)} with, "
-                f"{_pct(no_boss_taunt.win_rate)} when the Warden never Taunts the boss",
+                f"{_pct(no_boss_taunt.win_rate)} when the Guardian never Taunts the boss",
                 f"at least {_pct(TAUNT_BOSS_AT_LEAST)} fewer wins without Taunting the boss",
             )
         )

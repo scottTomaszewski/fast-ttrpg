@@ -33,8 +33,8 @@ def _backstab_needs_an_enemy_busy_with_someone_else(
     """From hiding, any enemy will do. Otherwise it must be busy with someone else.
 
     Busy means: it has Taunt cards; or the Rogue did not pull it, and it is
-    going for another hero or the Warden is holding it. An enemy the Rogue
-    pulled is coming for her (a pull beats the Warden's hold), so it is not
+    going for another hero or the Guardian is holding it. An enemy the Rogue
+    pulled is coming for her (a pull beats the Guardian's hold), so it is not
     busy with someone else; only Taunt cards beat her pull.
     """
     enemy = target_enemy(state, action)

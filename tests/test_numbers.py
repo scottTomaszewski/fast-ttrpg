@@ -23,13 +23,13 @@ def test_the_frozen_files_load():
     assert len(n.abilities) == 28
     assert f.enemy_types["brute"].shielded == 5
     assert sum(1 for s in f.spawns if s.round == 6) == 6
-    assert f.hero_starts["warden"] == (3, 6)
+    assert f.hero_starts["guardian"] == (3, 6)
 
 def test_the_real_game_files_load():
     # Only that they load: the real numbers are tuned, so no number is checked.
     n = load_numbers(REAL_GAME / "numbers.toml")
     f = load_fight(REAL_GAME / "fights" / "ogre_warlord.toml")
-    assert {"warden", "rogue", "druid", "mage"} <= set(n.heroes)
+    assert {"guardian", "rogue", "druid", "mage"} <= set(n.heroes)
     assert len(f.spawns) >= 1
 
 def test_an_override_changes_one_number():
@@ -107,8 +107,8 @@ def test_replace_makes_a_changed_copy_of_an_enemy_and_a_fight():
     brute = f.enemy_types["brute"]
     tough = replace(brute, hp=10**6, damage=0)
     assert (tough.hp, tough.damage, tough.shielded, tough.move) == (10**6, 0, 5, 4)
-    small = replace(f, hero_starts={"warden": (3, 6)}, enemy_types={**f.enemy_types, "brute": tough})
-    assert small.hero_starts == {"warden": (3, 6)} and small.enemy_types["brute"].hp == 10**6
+    small = replace(f, hero_starts={"guardian": (3, 6)}, enemy_types={**f.enemy_types, "brute": tough})
+    assert small.hero_starts == {"guardian": (3, 6)} and small.enemy_types["brute"].hp == 10**6
     assert small.spawns == f.spawns and small.name == f.name
     assert brute.hp == 30 and f.enemy_types["brute"].hp == 30   # the old ones are untouched
 

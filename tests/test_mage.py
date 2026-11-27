@@ -1,6 +1,6 @@
 from dataclasses import replace
 from tests.helpers import state, enemy
-from tests.test_warden import use
+from tests.test_guardian import use
 from fastcombat.casting import land_casts, continue_cast
 from fastcombat.combat import add_stack, top_of_party_turn_cards
 from fastcombat.targeting import can_move
@@ -60,7 +60,7 @@ def mend():
 def test_the_mages_aimed_abilities_are_only_for_enemies():
     s = state(); m = s.heroes["mage"]
     for ability in AIMED:
-        assert not use(s, "mage", ability, "warden") and not use(s, "mage", ability)
+        assert not use(s, "mage", ability, "guardian") and not use(s, "mage", ability)
     assert m.resource == 30 and m.cast is None and "cd:disrupt" not in m.stacks
 
 def test_firebolt_lands_next_turn_and_is_not_loud():
@@ -130,7 +130,7 @@ def test_blink_stays_on_the_map_free_of_enemies_and_within_reach():
 def test_quicken_skips_a_hero_who_is_down_or_out():
     s = state(); s.heroes["rogue"].down = True; s.heroes["druid"].out = True
     assert use(s, "mage", "quicken")
-    assert "quicken" in s.heroes["mage"].stacks and "quicken" in s.heroes["warden"].stacks
+    assert "quicken" in s.heroes["mage"].stacks and "quicken" in s.heroes["guardian"].stacks
     assert "quicken" not in s.heroes["rogue"].stacks and "quicken" not in s.heroes["druid"].stacks
 
 def test_a_second_polymorph_only_frees_the_first_sheep_when_it_lands():
@@ -148,5 +148,5 @@ def test_any_hero_can_disrupt_next_to_them_and_a_boss_cast_breaks_too():
     s = state(); r = s.heroes["rogue"]; sh = enemy(s, "shaman", (3, 5)); sh.announced = mend()
     assert use(s, "rogue", "disrupt", "shaman1") and sh.announced is None and "cd:disrupt" in r.stacks
     o = enemy(s, "ogre", (9, 5))
-    o.announced = Announced("skull_crusher", "heavy", 2, "warden", frozenset(), (6, 6))
+    o.announced = Announced("skull_crusher", "heavy", 2, "guardian", frozenset(), (6, 6))
     assert use(s, "mage", "disrupt", "ogre1") and o.announced is None

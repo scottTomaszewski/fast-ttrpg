@@ -38,13 +38,13 @@ def test_how_many_dice_quicken_rolls_comes_from_the_numbers():
     s.numbers.abilities["quicken"] = replace(s.numbers.abilities["quicken"], value=3)
     add_stack(r, "quicken", 2); auto_attack(s, r, w); assert w.hp == 16 - 9 and r.combo == 3
 
-def test_a_held_enemy_stays_and_hits_the_warden():
+def test_a_held_enemy_stays_and_hits_the_guardian():
     s = state(); w = enemy(s, "wolf", (4, 6)); gm_turn(s)
-    assert w.pos == (4, 6) and s.heroes["warden"].hp == 56 and s.heroes["warden"].resource == 3
+    assert w.pos == (4, 6) and s.heroes["guardian"].hp == 56 and s.heroes["guardian"].resource == 3
 
 def test_a_stunned_enemy_does_nothing_and_the_card_comes_off_after():
     s = state(); w = enemy(s, "wolf", (4, 6)); add_stack(w, "stun", 1); gm_turn(s)
-    assert s.heroes["warden"].hp == 60 and "stun" not in w.stacks
+    assert s.heroes["guardian"].hp == 60 and "stun" not in w.stacks
 
 def test_a_controlled_enemy_forgets_its_pull_too():
     s = state(); w = enemy(s, "wolf", (10, 3)); w.pulled_by = "druid"; add_stack(w, "stun", 1)
@@ -60,16 +60,16 @@ def test_nobody_ever_shares_a_square():
         assert len(spots) == len(set(spots))
 
 def test_same_seed_same_fight():
-    a = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], seed=7)
-    b = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], seed=7)
+    a = run_fight(N, WOLF_ONLY, ["guardian", "rogue", "druid", "mage"], seed=7)
+    b = run_fight(N, WOLF_ONLY, ["guardian", "rogue", "druid", "mage"], seed=7)
     assert (a.won, a.rounds, a.tally.damage) == (b.won, b.rounds, b.tally.damage)
 
 def test_four_heroes_beat_two_wolves():
-    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], seed=1)
+    r = run_fight(N, WOLF_ONLY, ["guardian", "rogue", "druid", "mage"], seed=1)
     assert r.won and not r.timeout and r.rounds < 20
 
 def test_a_fight_nobody_can_finish_stops_as_a_timeout_and_a_loss():
-    r = run_fight(N, NO_ENEMY_DAMAGE, ["warden"], seed=1)
+    r = run_fight(N, NO_ENEMY_DAMAGE, ["guardian"], seed=1)
     assert r.timeout and not r.won and r.rounds == N.rules["max_rounds"]
 
 
@@ -112,7 +112,7 @@ def test_each_class_gets_its_crit_hook_and_never_goes_over_the_cap():
     s = state(rolls=[8, 2, 6, 1, 6, 2, 4, 3, 6, 2]); h = s.heroes
     w = enemy(s, "wolf", (4, 6)); w.hp = 999; r = enemy(s, "wolf", (3, 5)); r.hp = 999
     h["druid"].seeds = 1; h["mage"].resource = 20; h["rogue"].combo = 4
-    auto_attack(s, h["warden"], w); assert h["warden"].resource == 3     # one grit
+    auto_attack(s, h["guardian"], w); assert h["guardian"].resource == 3     # one grit
     auto_attack(s, h["druid"], w); assert h["druid"].seeds == 2          # a Seed
     auto_attack(s, h["druid"], w); assert h["druid"].seeds == 2          # seeds_max is 2
     auto_attack(s, h["mage"], w); assert h["mage"].resource == 22        # two mana
@@ -135,7 +135,7 @@ def test_an_auto_attack_out_of_reach_or_on_a_dead_or_missing_enemy_rolls_nothing
     assert far.hp == 16 and r.hidden
     enemy(s, "wolf", (3, 5)).dead = True
     party_turn(s, idle(s, rogue=Plays(Action("auto", target="wolf2")),
-                       warden=Plays(Action("auto", target="wolf9"))))
+                       guardian=Plays(Action("auto", target="wolf9"))))
     assert r.hidden
 
 
@@ -152,13 +152,13 @@ def test_an_enemy_that_gets_there_hits_the_same_turn_and_the_pull_is_used_up():
     assert w.pulled_by is None
 
 def test_a_shaman_poisons_who_it_hits():
-    s = state(rolls=[2]); sh = enemy(s, "shaman", (9, 5)); gm_turn(s)  # the die picks the mage
+    s = state(rolls=[3]); sh = enemy(s, "shaman", (9, 5)); gm_turn(s)  # druid, guardian, mage: the die picks the mage
     m = s.heroes["mage"]
     assert sh.pos == (9, 5) and m.hp == 25 and m.stacks["poison"] == Stack(3, 2)
 
 def test_an_enemy_with_dice_rolls_its_hit():
     s = state(rolls=[3, 4]); enemy(s, "ogre", (4, 6)); gm_turn(s)
-    assert s.heroes["warden"].hp == 51                                   # 2d6 + 2
+    assert s.heroes["guardian"].hp == 51                                   # 2d6 + 2
 
 def test_an_enemy_behind_a_crowd_still_closes_in():
     s = state(party=("mage",))                                           # the mage is at (1, 5)
@@ -182,7 +182,7 @@ def test_the_top_of_the_turn_gives_resource_back_up_to_the_pool():
     s = state(); s.heroes["rogue"].resource = 9; s.heroes["mage"].resource = 10
     party_turn(s, idle(s))
     assert s.heroes["rogue"].resource == 10 and s.heroes["mage"].resource == 11
-    assert s.tally.resource_by_round == {"warden": [2], "rogue": [10], "druid": [10], "mage": [11]}
+    assert s.tally.resource_by_round == {"guardian": [2], "rogue": [10], "druid": [10], "mage": [11]}
 
 def test_a_finished_cast_lands_after_the_resource_comes_back(beam):
     s = state(); add_beam(s); enemy(s, "wolf", (10, 3)); m = s.heroes["mage"]
@@ -192,19 +192,19 @@ def test_a_finished_cast_lands_after_the_resource_comes_back(beam):
 
 def test_a_hero_who_cannot_pay_for_anything_has_a_starved_round():
     s = state(); h = s.heroes
-    h["warden"].resource = 0                                             # Taunt, the cheapest, costs 1
+    h["guardian"].resource = 0                                             # Taunt, the cheapest, costs 1
     h["rogue"].resource = 0                                              # gets 3 back; Shadowstep costs 2
     damage_hero(s, h["mage"], 99, attacker=None); h["mage"].resource = 0  # down: not counted
     party_turn(s, idle(s))
-    assert s.tally.starved_rounds == {"warden": 1, "rogue": 0, "druid": 0, "mage": 0}
+    assert s.tally.starved_rounds == {"guardian": 1, "rogue": 0, "druid": 0, "mage": 0}
     assert s.tally.resource_by_round["mage"] == [0]
-    assert s.tally.up_rounds == {"warden": 1, "rogue": 1, "druid": 1, "mage": 0}   # the mage was down
+    assert s.tally.up_rounds == {"guardian": 1, "rogue": 1, "druid": 1, "mage": 0}   # the mage was down
 
 def test_a_hero_moves_only_within_reach_and_never_onto_someone_or_off_the_map():
     s = state(); h = s.heroes
     party_turn(s, idle(s, rogue=Plays(dest=(15, 5)), druid=Plays(dest=(1, 5)),
-                       mage=Plays(dest=(4, 4)), warden=Plays(dest=(-1, 6))))   # 4 steps, off the map
-    assert [h[x].pos for x in ("rogue", "druid", "mage", "warden")] == [(2, 5), (1, 7), (4, 4), (3, 6)]
+                       mage=Plays(dest=(4, 4)), guardian=Plays(dest=(-1, 6))))   # 4 steps, off the map
+    assert [h[x].pos for x in ("rogue", "druid", "mage", "guardian")] == [(2, 5), (1, 7), (4, 4), (3, 6)]
 
 def test_moving_breaks_a_cast_but_not_a_channel(beam):
     s = state(); add_beam(s); enemy(s, "wolf", (10, 3)); h = s.heroes
@@ -216,7 +216,7 @@ def test_moving_breaks_a_cast_but_not_a_channel(beam):
 
 def test_continue_keeps_a_cast_going_and_anything_else_ends_it():
     s = state(); h = s.heroes
-    h["druid"].cast = Cast("regrowth", "warden", None, 1, 0, False)
+    h["druid"].cast = Cast("regrowth", "guardian", None, 1, 0, False)
     h["mage"].cast = Cast("firebolt", None, None, 1, 0, False)
     s.marked["mage"] = frozenset({(8, 8)})
     party_turn(s, idle(s, druid=Plays(Action("continue"))))
@@ -249,7 +249,7 @@ def test_auto_only_leaves_controlled_enemies_alone():
     s = state(); h = s.heroes
     add_stack(enemy(s, "wolf", (3, 5)), "stun", 1); enemy(s, "wolf", (4, 7))
     assert AutoOnly().act(s, h["rogue"]) == Action("none")               # wolf2 is 2 away
-    assert AutoOnly().act(s, h["warden"]) == Action("auto", target="wolf2")
+    assert AutoOnly().act(s, h["guardian"]) == Action("auto", target="wolf2")
     assert AutoOnly().move(s, h["rogue"]) != h["rogue"].pos
     s.enemies["wolf2"].dead = True
     assert AutoOnly().move(s, h["rogue"]) == h["rogue"].pos and AutoOnly().act(s, h["rogue"]) == Action("none")
@@ -258,18 +258,18 @@ def test_auto_only_leaves_controlled_enemies_alone():
 # A whole fight
 
 def test_the_result_says_who_played_and_how_it_ended():
-    party = ["warden", "rogue", "druid", "mage"]
+    party = ["guardian", "rogue", "druid", "mage"]
     r = run_fight(N, WOLF_ONLY, party, seed=3)
     assert r.party == party and r.seed == 3 and set(r.end_resource) == set(party)
     assert all(len(seen) == r.rounds for seen in r.tally.resource_by_round.values())
 
 def test_each_hero_plays_the_policy_given_for_them():
-    plays = {"warden": AutoOnly(), "rogue": AutoOnly(), "druid": AutoOnly(), "mage": Plays()}
-    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], policies=plays, seed=1)
+    plays = {"guardian": AutoOnly(), "rogue": AutoOnly(), "druid": AutoOnly(), "mage": Plays()}
+    r = run_fight(N, WOLF_ONLY, ["guardian", "rogue", "druid", "mage"], policies=plays, seed=1)
     assert r.tally.damage["mage"] == 0 and r.tally.damage["druid"] > 0
 
 def test_heroes_with_no_policy_given_play_their_class_policy():
-    r = run_fight(N, WOLF_ONLY, ["warden", "rogue", "druid", "mage"], policies={"mage": Plays()}, seed=1)
+    r = run_fight(N, WOLF_ONLY, ["guardian", "rogue", "druid", "mage"], policies={"mage": Plays()}, seed=1)
     assert r.tally.damage["mage"] == 0 and r.tally.healing["druid"] > 0   # only the Druid's own policy heals
 
 def test_the_fight_is_lost_when_nobody_is_up():
@@ -278,5 +278,5 @@ def test_the_fight_is_lost_when_nobody_is_up():
 
 def test_the_party_has_not_won_while_an_enemy_is_still_to_come():
     late = replace(F, spawns=[Spawn("goblin", (15, 3), round=1)], boss_script=[])
-    r = run_fight(N, late, ["warden", "rogue", "druid", "mage"], seed=1)
+    r = run_fight(N, late, ["guardian", "rogue", "druid", "mage"], seed=1)
     assert r.won and r.rounds >= 2                                       # it comes in during round 1's GM turn

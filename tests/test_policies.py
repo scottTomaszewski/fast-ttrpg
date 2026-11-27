@@ -1,7 +1,7 @@
 from dataclasses import replace
 
 from tests.helpers import state, enemy, GAME
-from fastcombat.policies import default_policy, POLICIES, WardenPolicy
+from fastcombat.policies import default_policy, POLICIES, GuardianPolicy
 from fastcombat.abilities import Action
 from fastcombat.combat import damage_hero, add_stack
 from fastcombat.enemy_ai import announce
@@ -11,41 +11,41 @@ from fastcombat.numbers import load_numbers, load_fight
 def act(s, hero):
     return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
 
-def test_warden_taunts_the_boss_whenever_it_has_no_taunt_cards():
-    # A boss is never held by standing next to the Warden: only Taunt cards keep it on him.
-    s = state(); o = enemy(s, "ogre", (4, 6))                         # next to the warden at (3, 6)
-    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "ogre1")
+def test_guardian_taunts_the_boss_whenever_it_has_no_taunt_cards():
+    # A boss is never held by standing next to the Guardian: only Taunt cards keep it on him.
+    s = state(); o = enemy(s, "ogre", (4, 6))                         # next to the guardian at (3, 6)
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "ogre1")
     o.pos = (8, 8)                                                    # 5 away, and nobody pulled it
-    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "ogre1")
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "ogre1")
     o.pos = (10, 6)                                                   # 7 away: out of Taunt's range 6
-    assert act(s, "warden").ability != "taunt"
+    assert act(s, "guardian").ability != "taunt"
     o.pos = (4, 6); add_stack(o, "taunt", 1)                          # it has a Taunt card already
-    assert act(s, "warden") == Action("auto", target="ogre1")
+    assert act(s, "guardian") == Action("auto", target="ogre1")
 
-def test_a_warden_who_never_taunts_the_boss_is_the_same_warden_otherwise():
+def test_a_guardian_who_never_taunts_the_boss_is_the_same_guardian_otherwise():
     # Rule 6 switched off, for the taunt:boss check. Nothing else changes.
-    def act_as(name, s): return POLICIES[name]().act(s, s.heroes["warden"])
+    def act_as(name, s): return POLICIES[name]().act(s, s.heroes["guardian"])
     s = state(); o = enemy(s, "ogre", (4, 6))                         # an untaunted boss next to him
-    assert act_as("warden", s).ability == "taunt"
-    assert act_as("warden_no_boss_taunt", s) == Action("auto", target="ogre1")
+    assert act_as("guardian", s).ability == "taunt"
+    assert act_as("guardian_no_boss_taunt", s) == Action("auto", target="ogre1")
     w = enemy(s, "wolf", (5, 3))                                      # a loose add not coming for him
-    a = act_as("warden_no_boss_taunt", s); assert (a.ability, a.target) == ("taunt", "wolf1")
-    assert isinstance(POLICIES["warden_no_boss_taunt"](), WardenPolicy)
+    a = act_as("guardian_no_boss_taunt", s); assert (a.ability, a.target) == ("taunt", "wolf1")
+    assert isinstance(POLICIES["guardian_no_boss_taunt"](), GuardianPolicy)
 
-def test_warden_taunts_an_add_that_is_not_coming_for_him():
+def test_guardian_taunts_an_add_that_is_not_coming_for_him():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
     w = enemy(s, "wolf", (5, 3))
-    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "wolf1")
-    w.target = "warden"                                               # it is coming for him anyway
-    assert act(s, "warden") == Action("auto", target="ogre1")
-    g = enemy(s, "goblin", (5, 4)); assert act(s, "warden").ability != "taunt"   # fodder: any hit kills it
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "wolf1")
+    w.target = "guardian"                                               # it is coming for him anyway
+    assert act(s, "guardian") == Action("auto", target="ogre1")
+    g = enemy(s, "goblin", (5, 4)); assert act(s, "guardian").ability != "taunt"   # fodder: any hit kills it
 
-def test_warden_grips_a_caster_that_shoots_him_from_afar():
+def test_guardian_grips_a_caster_that_shoots_him_from_afar():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
-    sh = enemy(s, "shaman", (6, 2)); sh.target = "warden"
-    a = act(s, "warden"); assert (a.ability, a.target) == ("grip", "shaman1")
+    sh = enemy(s, "shaman", (6, 2)); sh.target = "guardian"
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("grip", "shaman1")
     sh.target = "mage"                                                # after the mage: a Taunt first, it is cheaper
-    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "shaman1")
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("taunt", "shaman1")
 
 def test_rogue_saps_the_brute_on_round_one():
     s = state(); enemy(s, "brute", (3, 4))
@@ -70,8 +70,8 @@ def test_heroes_walk_out_of_an_announced_blast():
 
 def test_any_party_plays_the_real_fight_to_an_end():
     n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
-    for party in (["warden", "rogue", "druid", "mage"], ["rogue", "rogue", "mage"],
-                  ["warden", "druid"], ["mage"], ["warden", "rogue", "druid", "mage", "mage"]):
+    for party in (["guardian", "rogue", "druid", "mage"], ["rogue", "rogue", "mage"],
+                  ["guardian", "druid"], ["mage"], ["guardian", "rogue", "druid", "mage", "mage"]):
         for seed in range(5):
             r = run_fight(n, f, party, seed=seed)
             assert 1 <= r.rounds <= n.rules["max_rounds"]     # it ended, without an error
@@ -79,7 +79,7 @@ def test_any_party_plays_the_real_fight_to_an_end():
 # The numbers are first guesses and nobody wins the whole fight yet; winning
 # it is the tuning task's job. So the kit is checked two other ways.
 def kit_against_auto(f, seeds=30):
-    n = load_numbers(GAME / "numbers.toml"); party = ["warden", "rogue", "druid", "mage"]
+    n = load_numbers(GAME / "numbers.toml"); party = ["guardian", "rogue", "druid", "mage"]
     auto = {h: POLICIES["auto"]() for h in party}
     smart = [run_fight(n, f, party, seed=i) for i in range(seeds)]
     dumb = [run_fight(n, f, party, policies=auto, seed=i) for i in range(seeds)]
@@ -103,13 +103,13 @@ def test_the_full_kit_wins_more_of_a_smaller_fight():
 # --- More tests: the shared rules and the edges of the lists -----------------
 
 from fastcombat.abilities import can_use
-from fastcombat.policies import AutoOnly, WardenNoBossTaunt, RoguePolicy, DruidPolicy, MagePolicy
+from fastcombat.policies import AutoOnly, GuardianNoBossTaunt, RoguePolicy, DruidPolicy, MagePolicy
 from fastcombat.units import Announced, Cast
 
 def test_the_registry_and_the_default_for_a_class_with_no_policy():
-    assert POLICIES == {"warden": WardenPolicy, "rogue": RoguePolicy, "druid": DruidPolicy,
+    assert POLICIES == {"guardian": GuardianPolicy, "rogue": RoguePolicy, "druid": DruidPolicy,
                         "mage": MagePolicy, "auto": AutoOnly,
-                        "warden_no_boss_taunt": WardenNoBossTaunt}
+                        "guardian_no_boss_taunt": GuardianNoBossTaunt}
     assert isinstance(default_policy("bard"), AutoOnly)
     assert isinstance(default_policy("druid"), DruidPolicy)
 
@@ -126,27 +126,27 @@ def test_no_policy_ever_asks_for_an_ability_it_cannot_use():
                 refused.append((s.round, hero.id, a))
             return a
 
-    party = ["warden", "rogue", "druid", "mage", "mage"]
+    party = ["guardian", "rogue", "druid", "mage", "mage"]
     for seed in range(10):
-        policies = {h: Checked(h.rstrip("2")) for h in ("warden", "rogue", "druid", "mage", "mage2")}
+        policies = {h: Checked(h.rstrip("2")) for h in ("guardian", "rogue", "druid", "mage", "mage2")}
         run_fight(n, f, party, policies=policies, seed=seed)
     assert refused == []
 
-def heavy_on_warden(s, dice=(6, 6)):
+def heavy_on_guardian(s, dice=(6, 6)):
     o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
-    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "warden", frozenset(), dice)
+    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "guardian", frozenset(), dice)
 
-def test_warden_braces_with_last_stand_only_when_the_heavy_hit_could_drop_them():
-    s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.resource = 10
-    w.hp = 36; assert act(s, "warden").ability == "last_stand"         # 6d6 can roll 36
-    w.hp = 37; assert act(s, "warden").ability != "last_stand"
+def test_guardian_braces_with_last_stand_only_when_the_heavy_hit_could_drop_them():
+    s = state(); heavy_on_guardian(s); w = s.heroes["guardian"]; w.resource = 10
+    w.hp = 36; assert act(s, "guardian").ability == "last_stand"         # 6d6 can roll 36
+    w.hp = 37; assert act(s, "guardian").ability != "last_stand"
     add_stack(w, "guarded", 1, 4)                                    # each hit 4 smaller: at most 32
-    w.hp = 32; assert act(s, "warden").ability == "last_stand"
-    w.hp = 33; assert act(s, "warden").ability != "last_stand"
+    w.hp = 32; assert act(s, "guardian").ability == "last_stand"
+    w.hp = 33; assert act(s, "guardian").ability != "last_stand"
 
-def test_warden_without_the_grit_for_last_stand_reads_on():
-    s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.hp = 10; w.resource = 4
-    assert act(s, "warden").ability != "last_stand"
+def test_guardian_without_the_grit_for_last_stand_reads_on():
+    s = state(); heavy_on_guardian(s); w = s.heroes["guardian"]; w.hp = 10; w.resource = 4
+    assert act(s, "guardian").ability != "last_stand"
 
 def test_a_hero_mid_cast_stays_put_unless_standing_in_danger():
     s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (12, 2))
@@ -176,7 +176,7 @@ def test_mage_never_drops_a_meteor_on_a_hero():
 
 def test_druid_centres_wild_growth_to_cover_the_most_hurt_allies():
     s = state()
-    for name in ("warden", "rogue", "druid", "mage"):
+    for name in ("guardian", "rogue", "druid", "mage"):
         h = s.heroes[name]; h.hp = h.max_hp * 7 // 10                # every one at 70% or less
         add_stack(h, "rejuvenation", 2, 4)                          # so rule 9 does not come first
     s.heroes["druid"].resource = 10
@@ -266,11 +266,11 @@ def test_mage_does_not_disrupt_a_caster_that_is_already_stopped():
     mending_shaman(s, (9, 7))                                       # this one is free
     a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "shaman2")
 
-def test_warden_does_not_disrupt_a_caster_that_is_already_stopped():
-    s = state(); sh = mending_shaman(s, (4, 6))                     # next to the Warden at (3, 6)
-    assert act(s, "warden").ability == "disrupt"
+def test_guardian_does_not_disrupt_a_caster_that_is_already_stopped():
+    s = state(); sh = mending_shaman(s, (4, 6))                     # next to the Guardian at (3, 6)
+    assert act(s, "guardian").ability == "disrupt"
     add_stack(sh, "sap", 2)
-    assert act(s, "warden").ability != "disrupt"
+    assert act(s, "guardian").ability != "disrupt"
 
 def test_rogue_does_not_disrupt_or_cheap_shot_a_caster_that_is_already_stopped():
     s = state(); r = s.heroes["rogue"]; r.hidden = False

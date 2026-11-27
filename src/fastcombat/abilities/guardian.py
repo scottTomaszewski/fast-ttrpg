@@ -1,4 +1,4 @@
-"""The Warden's six abilities. The Warden is the tank: they make the enemies
+"""The Guardian's six abilities. The Guardian is the tank: they make the enemies
 attack them, and stand between the enemies and everyone else.
 
 Each ability's numbers (what it costs, how far it reaches, how many cards it
@@ -18,23 +18,23 @@ from fastcombat.units import Enemy, FightState, Hero
 
 @check("taunt")
 def _taunt_needs_an_enemy(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     return target_enemy(state, action) is not None
 
 
 @effect("taunt")
 def taunt(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> None:
-    """Taunt cards on one enemy: while they last, it must attack the Warden."""
+    """Taunt cards on one enemy: while they last, it must attack the Guardian."""
     _taunt(state.enemies[action.target], spec.cards)
 
 
 @effect("aoe_taunt")
-def aoe_taunt(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
-    """Taunt cards on every living enemy near the Warden."""
-    near = within(warden.pos, spec.radius, state.fight.width, state.fight.height)
+def aoe_taunt(state: FightState, guardian: Hero, spec: AbilitySpec, action: Action) -> None:
+    """Taunt cards on every living enemy near the Guardian."""
+    near = within(guardian.pos, spec.radius, state.fight.width, state.fight.height)
     for enemy in state.living_enemies():
         if enemy.pos in near:
             _taunt(enemy, spec.cards)
@@ -42,86 +42,86 @@ def aoe_taunt(state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 
 @check("intercede")
 def _intercede_needs_an_ally_who_is_up(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     ally = state.heroes.get(action.target) if action.target else None
-    return ally is not None and ally is not warden and ally.up
+    return ally is not None and ally is not guardian and ally.up
 
 
 @effect("intercede")
 def intercede(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Leap next to an ally and guard them.
 
-    The Warden lands on the free square next to the ally that is closest to
-    where the Warden was, and stays put if there is none. The ally gets
+    The Guardian lands on the free square next to the ally that is closest to
+    where the Guardian was, and stays put if there is none. The ally gets
     Guarded cards (each hit on them is smaller) and Interceded cards (an
-    enemy that was going to attack them attacks the Warden instead; see
+    enemy that was going to attack them attacks the Guardian instead; see
     `targeting.choose_target`).
     """
     ally = state.heroes[action.target]
-    taken = state.occupied() - {warden.pos}
+    taken = state.occupied() - {guardian.pos}
     landing = free_next_to(
-        ally.pos, warden.pos, taken, state.fight.width, state.fight.height
+        ally.pos, guardian.pos, taken, state.fight.width, state.fight.height
     )
     if landing is not None:
-        warden.pos = landing
+        guardian.pos = landing
     add_stack(ally, "guarded", spec.cards, spec.value)
     add_stack(ally, "interceded", spec.cards)
 
 
 @check("grip")
 def _grip_needs_an_enemy_it_can_pull(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
-    """Not the boss, and there has to be a free square next to the Warden."""
+    """Not the boss, and there has to be a free square next to the Guardian."""
     enemy = target_enemy(state, action)
     if enemy is None or enemy.spec.tier == "boss":
         return False
-    return _grip_square(state, warden, enemy) is not None
+    return _grip_square(state, guardian, enemy) is not None
 
 
 @effect("grip")
 def grip(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> None:
-    """Pull one enemy to the free square next to the Warden closest to where it was."""
+    """Pull one enemy to the free square next to the Guardian closest to where it was."""
     enemy = state.enemies[action.target]
-    square = _grip_square(state, warden, enemy)
+    square = _grip_square(state, guardian, enemy)
     if square is not None:
         enemy.pos = square
 
 
 @check("shield_plant")
 def _shield_plant_needs_a_blast_square(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     return action.pos is not None
 
 
 @effect("shield_plant")
-def shield_plant(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
+def shield_plant(state: FightState, guardian: Hero, spec: AbilitySpec, action: Action) -> None:
     """Plant the shield against a blast coming from the square `action.pos`.
 
-    The Warden, and every ally in the squares behind the Warden (on the far
+    The Guardian, and every ally in the squares behind the Guardian (on the far
     side from the blast), gets a Shield Plant card: the blast hits them for less.
     """
     shelter = behind(
-        warden.pos, action.pos, spec.radius, state.fight.width, state.fight.height
+        guardian.pos, action.pos, spec.radius, state.fight.width, state.fight.height
     )
-    add_stack(warden, "shield_plant", spec.cards, spec.value)
+    add_stack(guardian, "shield_plant", spec.cards, spec.value)
     for ally in state.heroes.values():
-        if ally is not warden and not ally.out and ally.pos in shelter:
+        if ally is not guardian and not ally.out and ally.pos in shelter:
             add_stack(ally, "shield_plant", spec.cards, spec.value)
 
 
 @effect("last_stand")
 def last_stand(
-    state: FightState, warden: Hero, spec: AbilitySpec, action: Action
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
 ) -> None:
-    """While the card lasts, nothing can take the Warden below 1 HP."""
-    add_stack(warden, "last_stand", spec.cards)
+    """While the card lasts, nothing can take the Guardian below 1 HP."""
+    add_stack(guardian, "last_stand", spec.cards)
 
 
 def _taunt(enemy: Enemy, cards: int) -> None:
@@ -135,12 +135,12 @@ def _taunt(enemy: Enemy, cards: int) -> None:
         add_stack(enemy, "taunt", cards)
 
 
-def _grip_square(state: FightState, warden: Hero, enemy: Enemy) -> Pos | None:
+def _grip_square(state: FightState, guardian: Hero, enemy: Enemy) -> Pos | None:
     """Where Grip would put `enemy`.
 
-    None if no square next to the Warden is free.
+    None if no square next to the Guardian is free.
     """
     taken = state.occupied() - {enemy.pos}
     return free_next_to(
-        warden.pos, enemy.pos, taken, state.fight.width, state.fight.height
+        guardian.pos, enemy.pos, taken, state.fight.width, state.fight.height
     )

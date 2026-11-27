@@ -39,7 +39,7 @@ hits, then spends them all on one huge blow or a long stun.
   point.
 - Only on an enemy that is **busy with someone else**: it has Taunt cards,
   or it went for another hero on its last turn, or it is standing next to
-  the Warden (and is not a boss). Not on an enemy you pulled, unless it has
+  the Guardian (and is not a boss). Not on an enemy you pulled, unless it has
   Taunt cards.
 - **From hiding**, it works on any enemy, and the damage is multiplied by
   2.

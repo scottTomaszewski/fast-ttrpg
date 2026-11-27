@@ -35,7 +35,7 @@ Any heal gets a downed hero back up, on as much HP as the heal.
   8 · **Loud**
 - When it lands, heal one hero **3d6+4** and get a
   Seed. If they went down while you were casting, it gets them up.
-- **Loud:** every enemy with no Taunt cards that the Warden is not holding
+- **Loud:** every enemy with no Taunt cards that the Guardian is not holding
   comes for you on its next turn.
 
 ### Swiftmend
@@ -92,10 +92,10 @@ Any heal gets a downed hero back up, on as much HP as the heal.
 - **Someone is down? Get them up first.** Swiftmend them (it is free on a
   downed hero, if you have a Seed), or else Nourish them.
 - **Keep out of reach.** Stand within 8
-  squares of the Warden and as far from the enemies as you can. If an
+  squares of the Guardian and as far from the enemies as you can. If an
   enemy next to you, or one coming for you, could reach you this GM turn,
   Shadowmeld.
-- **Keep Rejuvenation on the Warden all the time.** He takes the most
+- **Keep Rejuvenation on the Guardian all the time.** He takes the most
   hits.
 - **Fix the worst first.** Swiftmend anyone at about a third of their HP.
   Wild Growth when three hurt heroes stand close together. Regrowth

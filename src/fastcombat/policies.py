@@ -46,8 +46,8 @@ from fastcombat.units import Enemy, FightState, Hero
 # How the policies play. These are not game rules: they are how careful or
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
-INTERCEDE_AT = 0.5  # Warden: guard an ally at half HP or less
-AOE_TAUNT_ENEMIES = 3  # Warden: AoE Taunt when this many loose enemies are near
+INTERCEDE_AT = 0.5  # Guardian: guard an ally at half HP or less
+AOE_TAUNT_ENEMIES = 3  # Guardian: AoE Taunt when this many loose enemies are near
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
 WILD_GROWTH_ALLIES = 3  # Druid: Wild Growth when it covers this many of them
@@ -116,12 +116,12 @@ class _ClassPolicy:
         raise NotImplementedError
 
 
-class WardenPolicy(_ClassPolicy):
-    """The Warden. Move: to a square next to the boss (or to the nearest
+class GuardianPolicy(_ClassPolicy):
+    """The Guardian. Move: to a square next to the boss (or to the nearest
     enemy if there is no boss), out of danger if possible.
 
-    An enemy next to the Warden is already held: it must attack him. So the
-    Warden spends a turn on a Taunt or a pull only for an enemy that would
+    An enemy next to the Guardian is already held: it must attack him. So the
+    Guardian spends a turn on a Taunt or a pull only for an enemy that would
     otherwise go for someone else. Anything else costs him an auto-attack
     and does nothing. A boss is never held that way: only Taunt cards keep
     it on him, so he keeps Taunt cards on it (rule 6). A loose enemy is one
@@ -134,60 +134,60 @@ class WardenPolicy(_ClassPolicy):
        Shield Plant, against the blast coming from the boss's square.
     4. An enemy next to me has an announced cast and is not controlled (a
        stunned, sapped or sheeped enemy's cast never lands): Disrupt.
-    5. An ally (not a Warden) at half HP or less is the target of an enemy
+    5. An ally (not a Guardian) at half HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
     6. The boss has no Taunt cards: Taunt the boss.
     7. Three or more loose enemies are within AoE Taunt's radius: AoE Taunt.
     8. A loose enemy that is not a boss and not fodder, and is not already
        going for me, is in Taunt's range: Taunt the one closest to
-       any ally who is not a Warden. (Fodder dies to any hit, so it is not
+       any ally who is not a Guardian. (Fodder dies to any hit, so it is not
        worth the grit.)
     9. A loose enemy that is not a boss and attacks from farther than one
        square away (like the shaman) is in Grip's range: Grip
-       the one closest to any ally who is not a Warden. Next to me it is
+       the one closest to any ally who is not a Guardian. Next to me it is
        held, and I can Disrupt its casts.
     10. Auto-attack the focus if it is next to me, or else the lowest-HP
         enemy next to me that is not controlled.
     """
 
-    taunts_boss = True  # rule 6; `WardenNoBossTaunt` switches it off
+    taunts_boss = True  # rule 6; `GuardianNoBossTaunt` switches it off
 
-    def where_to(self, state: FightState, warden: Hero) -> Pos:
-        goal = _boss(state) or _nearest_enemy(state, warden)
+    def where_to(self, state: FightState, guardian: Hero) -> Pos:
+        goal = _boss(state) or _nearest_enemy(state, guardian)
         if goal is None:
-            return _stay(state, warden)
-        return _go(state, warden, goal.pos, reach=1)
+            return _stay(state, guardian)
+        return _go(state, guardian, goal.pos, reach=1)
 
-    def act(self, state: FightState, warden: Hero) -> Action:
+    def act(self, state: FightState, guardian: Hero) -> Action:
         boss = _boss(state)
-        allies = [h for h in _up_heroes(state) if h.cls != "warden"]
+        allies = [h for h in _up_heroes(state) if h.cls != "guardian"]
         spots = [a.pos for a in allies]
         abilities = state.numbers.abilities
 
         # 1. Haul up.
-        if action := _haul_up(state, warden):
+        if action := _haul_up(state, guardian):
             return action
 
         # 2. A boss heavy hit on me that could take me to 0: Last Stand.
         cast = boss.announced if boss else None
-        if cast and cast.kind == "heavy" and cast.target == warden.id:
+        if cast and cast.kind == "heavy" and cast.target == guardian.id:
             most = cast.dice[0] * cast.dice[1]
-            guarded = warden.stacks.get("guarded")
+            guarded = guardian.stacks.get("guarded")
             if guarded is not None:
                 most -= guarded.value
-            if most >= warden.hp:
-                if action := _ability(state, warden, "last_stand"):
+            if most >= guardian.hp:
+                if action := _ability(state, guardian, "last_stand"):
                     return action
 
         # 3. A boss blast with an ally in its area: Shield Plant against it.
         if cast and cast.kind == "blast" and any(a.pos in cast.area for a in allies):
-            if action := _ability(state, warden, "shield_plant", pos=boss.pos):
+            if action := _ability(state, guardian, "shield_plant", pos=boss.pos):
                 return action
 
         # 4. An enemy next to me has an announced cast and is not controlled: Disrupt.
-        casting = _first(_casting(_enemies_next_to(state, warden)))
+        casting = _first(_casting(_enemies_next_to(state, guardian)))
         if casting is not None:
-            if action := _ability(state, warden, "disrupt", casting.id):
+            if action := _ability(state, guardian, "disrupt", casting.id):
                 return action
 
         # 5. A hurt ally is the target of an enemy with no Taunt cards: Intercede.
@@ -198,21 +198,21 @@ class WardenPolicy(_ClassPolicy):
             a for a in allies if a.id in hunted and _share(a) <= INTERCEDE_AT
         )
         if guard is not None:
-            if action := _ability(state, warden, "intercede", guard.id):
+            if action := _ability(state, guardian, "intercede", guard.id):
                 return action
 
         # 6. The boss has no Taunt cards: Taunt it.
         if self.taunts_boss and boss is not None and "taunt" not in boss.stacks:
-            if action := _ability(state, warden, "taunt", boss.id):
+            if action := _ability(state, guardian, "taunt", boss.id):
                 return action
 
         # 7. Three or more loose enemies near me: AoE Taunt.
         near = within(
-            warden.pos, abilities["aoe_taunt"].radius, state.fight.width, state.fight.height
+            guardian.pos, abilities["aoe_taunt"].radius, state.fight.width, state.fight.height
         )
         loose = [e for e in state.living_enemies() if _loose(state, e)]
         if sum(1 for e in loose if e.pos in near) >= AOE_TAUNT_ENEMIES:
-            if action := _ability(state, warden, "aoe_taunt"):
+            if action := _ability(state, guardian, "aoe_taunt"):
                 return action
 
         # 8. A loose add (not fodder) that is not coming for me: Taunt the one
@@ -222,12 +222,12 @@ class WardenPolicy(_ClassPolicy):
             e
             for e in loose
             if e.spec.tier not in ("boss", "fodder")
-            and e.target != warden.id
-            and distance(warden.pos, e.pos) <= reach
+            and e.target != guardian.id
+            and distance(guardian.pos, e.pos) <= reach
         ]
         if hunting:
             add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
-            if action := _ability(state, warden, "taunt", add.id):
+            if action := _ability(state, guardian, "taunt", add.id):
                 return action
 
         # 9. A loose enemy that hits from afar: Grip the one closest to an ally.
@@ -237,21 +237,21 @@ class WardenPolicy(_ClassPolicy):
             for e in loose
             if e.spec.tier != "boss"
             and e.spec.range > 1
-            and distance(warden.pos, e.pos) <= reach
+            and distance(guardian.pos, e.pos) <= reach
         ]
         if grippable:
             grip = min(grippable, key=lambda e: (_gap(e.pos, spots), e.id))
-            if action := _ability(state, warden, "grip", grip.id):
+            if action := _ability(state, guardian, "grip", grip.id):
                 return action
 
         # 10. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
-        if action := _auto(state, warden, _focus(state, warden)):
+        if action := _auto(state, guardian, _focus(state, guardian)):
             return action
-        return _auto(state, warden, _weakest_next_to(state, warden)) or Action("none")
+        return _auto(state, guardian, _weakest_next_to(state, guardian)) or Action("none")
 
 
-class WardenNoBossTaunt(WardenPolicy):
-    """The Warden with rule 6 switched off: he never Taunts the boss.
+class GuardianNoBossTaunt(GuardianPolicy):
+    """The Guardian with rule 6 switched off: he never Taunts the boss.
 
     Everything else is the same. It is not a way to play: the `taunt:boss`
     check plays it to see how many wins taunting the boss is worth.
@@ -383,8 +383,8 @@ class RoguePolicy(_ClassPolicy):
 
 
 class DruidPolicy(_ClassPolicy):
-    """The Druid. Move: within Rejuvenation range of the Warden (or of the
-    lowest-HP ally if there is no Warden), and as far from the nearest enemy
+    """The Druid. Move: within Rejuvenation range of the Guardian (or of the
+    lowest-HP ally if there is no Guardian), and as far from the nearest enemy
     as that allows. While an ally is down, within reach of them instead.
 
     1. An ally is down: Swiftmend them, else Nourish them.
@@ -393,7 +393,7 @@ class DruidPolicy(_ClassPolicy):
        is neither controlled nor rooted: Shadowmeld.
     3. An ally is at 35% HP or less: Swiftmend.
     4. In the middle of a cast: continue.
-    5. The Warden is up without Rejuvenation cards: Rejuvenation.
+    5. The Guardian is up without Rejuvenation cards: Rejuvenation.
     6. Three or more allies at 70% HP or less fit in one Wild Growth area:
        Wild Growth, centred to cover the most.
     7. An ally is at 60% HP or less: Regrowth on the lowest.
@@ -412,7 +412,7 @@ class DruidPolicy(_ClassPolicy):
             anchor, reach = downed, state.numbers.abilities["swiftmend"].range
         else:
             others = [h for h in _up_heroes(state) if h is not druid]
-            anchor = state.warden() or _lowest(others)
+            anchor = state.guardian() or _lowest(others)
             reach = state.numbers.abilities["rejuvenation"].range
         if anchor is None:
             return _stay(state, druid)
@@ -453,10 +453,10 @@ class DruidPolicy(_ClassPolicy):
         if druid.cast is not None:
             return Action("continue")
 
-        # 5. The Warden is up without Rejuvenation cards: Rejuvenation.
-        warden = state.warden()
-        if warden is not None and "rejuvenation" not in warden.stacks:
-            if action := _ability(state, druid, "rejuvenation", warden.id):
+        # 5. The Guardian is up without Rejuvenation cards: Rejuvenation.
+        guardian = state.guardian()
+        if guardian is not None and "rejuvenation" not in guardian.stacks:
+            if action := _ability(state, druid, "rejuvenation", guardian.id):
                 return action
 
         # 6. Three or more hurt allies fit in one Wild Growth area: Wild Growth.
@@ -623,12 +623,12 @@ class MagePolicy(_ClassPolicy):
 
 # Every policy by name, so one can be picked by its name.
 POLICIES: dict[str, type] = {
-    "warden": WardenPolicy,
+    "guardian": GuardianPolicy,
     "rogue": RoguePolicy,
     "druid": DruidPolicy,
     "mage": MagePolicy,
     "auto": AutoOnly,
-    "warden_no_boss_taunt": WardenNoBossTaunt,
+    "guardian_no_boss_taunt": GuardianNoBossTaunt,
 }
 
 
@@ -637,7 +637,7 @@ def default_policy(cls: str) -> Policy:
 
     Each of the four classes has its own. Any other class only auto-attacks.
     """
-    if cls in ("warden", "rogue", "druid", "mage"):
+    if cls in ("guardian", "rogue", "druid", "mage"):
         return POLICIES[cls]()
     return AutoOnly()
 
@@ -833,7 +833,7 @@ def _weakest_next_to(state: FightState, hero: Hero) -> Enemy | None:
 
 
 def _loose(state: FightState, enemy: Enemy) -> bool:
-    """Neither held by the Warden, nor taunted, nor controlled."""
+    """Neither held by the Guardian, nor taunted, nor controlled."""
     return not held(state, enemy) and "taunt" not in enemy.stacks and not enemy.controlled
 
 

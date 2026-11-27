@@ -3,7 +3,7 @@
     fastcombat run     plays the fights and prints a summary
     fastcombat check   also plays them with each hero left out in turn, with
                        each hero only auto-attacking in turn, and with the
-                       Warden never Taunting the boss, and checks everything
+                       Guardian never Taunting the boss, and checks everything
                        against the design's targets
     fastcombat rules   makes the player rules in rules/ from their templates,
                        with the numbers from the game files
@@ -97,14 +97,14 @@ def main(argv: list[str] | None = None) -> int:
             without[hero] = summarize(setup.play(rest))
     for i, hero in enumerate(setup.ids):
         on_auto[hero] = summarize(setup.play(everyone, swap={i: "auto"}))
-    # Every Warden who plays the Warden's rules stops Taunting the boss. A
-    # Warden made to play another way (like warden=auto) is left as he is.
-    wardens = {
-        i: "warden_no_boss_taunt"
+    # Every Guardian who plays the Guardian's rules stops Taunting the boss. A
+    # Guardian made to play another way (like guardian=auto) is left as he is.
+    guardians = {
+        i: "guardian_no_boss_taunt"
         for i, hero in enumerate(setup.ids)
-        if setup.party[i] == "warden" and setup.policies.get(hero, "warden") == "warden"
+        if setup.party[i] == "guardian" and setup.policies.get(hero, "guardian") == "guardian"
     }
-    no_boss_taunt = summarize(setup.play(everyone, swap=wardens)) if wardens else None
+    no_boss_taunt = summarize(setup.play(everyone, swap=guardians)) if guardians else None
     checks = check_targets(full, without, on_auto, no_boss_taunt)
     print()
     print(format_checks(checks))
@@ -134,8 +134,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     shared.add_argument(
         "--party",
-        default="warden,rogue,druid,mage",
-        help="the classes in the party, with commas; repeats are fine (default: warden,rogue,druid,mage)",
+        default="guardian,rogue,druid,mage",
+        help="the classes in the party, with commas; repeats are fine (default: guardian,rogue,druid,mage)",
     )
     shared.add_argument(
         "--numbers",
@@ -157,7 +157,7 @@ def _parser() -> argparse.ArgumentParser:
         default=[],
         metavar="HERO=NAME",
         help=f"make one hero play another way, like mage=auto. HERO is a hero id "
-        f"(warden, rogue2, ...); NAME is one of: {', '.join(POLICIES)}",
+        f"(guardian, rogue2, ...); NAME is one of: {', '.join(POLICIES)}",
     )
     shared.add_argument("--json", metavar="PATH", help="also write the results to this file as JSON")
 
@@ -172,7 +172,7 @@ def _parser() -> argparse.ArgumentParser:
         "check",
         parents=[shared],
         help="also play with each hero left out, with each hero only "
-        "auto-attacking, and with the Warden never Taunting the boss, and check "
+        "auto-attacking, and with the Guardian never Taunting the boss, and check "
         "the design's targets (exits 0 only if every check passes)",
     )
     commands.add_parser(

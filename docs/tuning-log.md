@@ -4,6 +4,12 @@ This is where we write down how the numbers were tuned: what we changed,
 why, and what the simulator said after. The targets are in the design
 (`docs/superpowers/specs/2026-11-24-fast-combat-design.md`, "Numbers").
 
+The Warden was renamed the Guardian on 2026-11-27, and his abilities took back
+their original names (Taunt, AoE Taunt, Intercede, Grip, Shield Plant, Last
+Stand). Because heroes act in name order, the Guardian now acts
+second (Druid, Guardian, Mage, Rogue), not last. That changed the results;
+the next tuning pass accounts for it.
+
 ## First pass: 2026-11-25
 
 ### Where we started
@@ -20,7 +26,7 @@ A hero in danger:       100% (down to 25% HP, or went down)
 Auto-attack damage:     4% of all damage
 
 hero        damage  healing  starved  up and full  went down
-warden          2%       0%       0%           0%       100%
+guardian          2%       0%       0%           0%       100%
 rogue          37%       0%       1%           0%       100%
 druid           0%     100%       0%           0%       100%
 mage           60%       0%       2%           0%       100%
@@ -30,11 +36,11 @@ FAIL  win_rate         0.0%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts      0.0%  (wanted: none)
 PASS  danger           100.0% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
 FAIL  auto_share       3.9% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:warden  starved 0.2% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
+PASS  resource:guardian  starved 0.2% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
 PASS  resource:rogue   starved 0.6% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
 PASS  resource:druid   starved 0.0% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
 PASS  resource:mage    starved 1.6% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-FAIL  needed:warden    wins 0.0% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+FAIL  needed:guardian    wins 0.0% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 FAIL  needed:rogue     wins 0.0% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 FAIL  needed:druid     wins 0.0% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 FAIL  needed:mage      wins 0.0% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
@@ -42,11 +48,11 @@ FAIL  needed:mage      wins 0.0% with, 0.0% without  (wanted: at least 20.0% few
 
 ### What was wrong
 
-- The party lost every fight, in about 10 rounds. The Warden lost 37 of
+- The party lost every fight, in about 10 rounds. The Guardian lost 37 of
   60 HP in the first two rounds and was down by round 5.
 - Twelve goblins and two shamans were too much on top of the ogre, the
   brute and two wolves.
-- The Warden almost never auto-attacked (about 2 damage a fight). Grit
+- The Guardian almost never auto-attacked (about 2 damage a fight). Grit
   came in so fast that there was always an ability to use.
 - Even when we made the heroes impossible to kill, a fight took 38
   rounds: the boss had too much HP for how fast the party hits.
@@ -66,10 +72,10 @@ Survival and the roster (changes 1 to 6) came before length on purpose:
 while the party lost every fight in about 10 rounds, how long a fight
 "should" last could not be measured yet.
 
-1. Warden HP 60 to 90. The tank fell first in every fight.
+1. Guardian HP 60 to 90. The tank fell first in every fight.
    After: wins 0%, median 12 rounds, in band 2%, auto 3%.
    (On its own this did not win fights yet. But the final numbers with
-   Warden HP 60 win only 67% of fights, with 59% in band: both fail.)
+   Guardian HP 60 win only 67% of fights, with 59% in band: both fail.)
 2. Goblins: two waves of six (rounds 6 and 12) to one wave of six
    (round 6). The second wave buried the party.
    After: wins 1%, median 12, in band 4%, auto 4%.
@@ -89,10 +95,10 @@ while the party lost every fight in about 10 rounds, how long a fight
 5. Add damage: brute 6 to 4, wolf 4 to 3, shaman 3 to 2. The party still
    lost half its fights to the adds.
    After: wins 69%, median 34, in band 8%, auto 24%. New problem: the
-   Warden ended fights full of grit 54% of the time.
-6. Taunt cost 1 to 2, Grip cost 2 to 4. Now the Warden has to
+   Guardian ended fights full of grit 54% of the time.
+6. Taunt cost 1 to 2, Grip cost 2 to 4. Now the Guardian has to
    save up, so it auto-attacks more, and ends with less grit.
-   After: wins 64%, median 33, in band 10%, auto 28%, Warden ends full
+   After: wins 64%, median 33, in band 10%, auto 28%, Guardian ends full
    17%.
 7. Ogre HP 320 to 130. Fights were 33 rounds; this is the big one for
    length.
@@ -100,7 +106,7 @@ while the party lost every fight in about 10 rounds, how long a fight
    check passes but one: 1 fight in 1000 ran out of rounds.
 8. Boss timings: Ground Slam first round 3 to 4, every 4 rounds to every
    6; Skull Crusher first round 5 to 6. When a Ground Slam is announced,
-   the Warden and the Rogue step out of it and lose that turn. With a
+   the Guardian and the Rogue step out of it and lose that turn. With a
    slam every 4 rounds, fights bunched up at 18-19 and 22-23 rounds and
    rarely ended on 20 or 21. Fewer, later slams make the lengths tighter.
    After: wins 81%, median 19, in band 71%, danger 83%, auto 24%.
@@ -118,22 +124,22 @@ the goblins were made a real threat again.
    change). It is a guard for the simulator, not a game number.
    After: FAIL no_timeouts 0.1% (1 fight in 1000). Length 70.9%, wins
    81.1%, danger 82.9%, auto 23.7%. Resources (starved / ended full):
-   Warden 31.8% / 3.7%, Rogue 1.2% / 5.4%, Druid 0.1% / 19.4%, Mage
-   11.1% / 0.0%. Needed (wins without): Warden 4.1%, Rogue 4.3%, Druid
+   Guardian 31.8% / 3.7%, Rogue 1.2% / 5.4%, Druid 0.1% / 19.4%, Mage
+   11.1% / 0.0%. Needed (wins without): Guardian 4.1%, Rogue 4.3%, Druid
    0.0%, Mage 0.8%. Every other check passes.
    On more seeds it is clearer: 21 of 24000 fights (seeds 40000 to
    63999) ran out of rounds, about 1 in 1100.
 10. Goblins: move 1 to 3, the wave comes in round 10 instead of 6, and
    five goblins instead of six. Now they reach the back line and hurt.
    After: FAIL no_timeouts 0.2%. Length 68.4%, wins 75.2%, danger
-   90.3%, auto 22.2%. Resources: Warden 29.5% / 4.0%, Rogue 1.0% /
-   16.3%, Druid 0.0% / 23.3%, Mage 11.1% / 0.0%. Needed: Warden 3.3%,
+   90.3%, auto 22.2%. Resources: Guardian 29.5% / 4.0%, Rogue 1.0% /
+   16.3%, Druid 0.0% / 23.3%, Mage 11.1% / 0.0%. Needed: Guardian 3.3%,
    Rogue 6.8%, Druid 0.0%, Mage 0.2%.
-11. Warden HP 90 to 100. Most stalemates start when the Warden is out
+11. Guardian HP 90 to 100. Most stalemates start when the Guardian is out
    (see "Needs a decision", item 3), and the goblins now hit harder.
    After: every check passes. Length 74.6%, wins 82.6%, no timeouts,
-   danger 85.9%, auto 22.3%. Resources: Warden 30.3% / 5.0%, Rogue
-   1.1% / 16.4%, Druid 0.0% / 25.2%, Mage 10.9% / 0.0%. Needed: Warden
+   danger 85.9%, auto 22.3%. Resources: Guardian 30.3% / 5.0%, Rogue
+   1.1% / 16.4%, Druid 0.0% / 25.2%, Mage 10.9% / 0.0%. Needed: Guardian
    3.3%, Rogue 8.9%, Druid 0.0%, Mage 0.3%.
 
 **What the goblins do now.** Five goblins come in at the far edge in
@@ -146,7 +152,7 @@ changes the fight a lot (`check --n 1000`, seeds 0 to 999):
 |---|---|---|
 | wins | 82.6% | 91.2% (fails: too easy) |
 | a hero in danger | 85.9% | 77.9% |
-| Warden went down | 37% | 22% |
+| Guardian went down | 37% | 22% |
 | Rogue went down | 28% | 21% |
 | Druid went down | 20% | 11% |
 | Mage went down | 48% | 41% |
@@ -172,7 +178,7 @@ other enemies' numbers and hero HP (300 fights each, seeds below
 - Intercede cost 2 to 3: no change. Put back.
 - Grip cost 6 (tried early, with Taunt 3): too many adds
   reached the back line (6% wins against 22% with cost 4).
-- Raising every Warden cost to 3 or more: the Warden was "starved" 71%
+- Raising every Guardian cost to 3 or more: the Guardian was "starved" 71%
   of rounds (it counts against the cheapest ability).
 - Goblin move 2: wins 73% and auto share right at 20%. Move 3: wins 53%.
 - Goblin wave in round 4 or round 8 instead of 6: worse length.
@@ -181,19 +187,19 @@ other enemies' numbers and hero HP (300 fights each, seeds below
 - Ground Slam every 3, 5 or 7 rounds, or first in round 1, 2 or 5: all
   worse than first 4, every 6 (worse length, or too many wins).
 - Putting back all three add damage cuts (brute 6, wolf 4, shaman 3):
-  wins fell to 70%, the very edge. With Warden HP 100 as well: 75%.
+  wins fell to 70%, the very edge. With Guardian HP 100 as well: 75%.
 - Moving the brute one square closer so the Rogue can Sap it. See
   "Needs a decision", item 2.
 
 Tried in the second look (300 fights each, seeds 0 to 299, cap 60,
-Warden HP 90 unless it says so):
+Guardian HP 90 unless it says so):
 
 - Goblin move 2, nothing else changed: auto share 19.4% (fails). With
   five goblins: every check passes at 300 fights. With five goblins and
-  Warden HP 100, Meteor is still cast 1.1 times a fight and wins are 81%
+  Guardian HP 100, Meteor is still cast 1.1 times a fight and wins are 81%
   (87% with goblin damage 0), but at 1000 fights auto share was only
   20.5%, and 8 of 24000 fights ran out of rounds. Six goblins and
-  Warden HP 100: auto 19.3% at 1000 fights (fails), 13 of 24000 ran out
+  Guardian HP 100: auto 19.3% at 1000 fights (fails), 13 of 24000 ran out
   of rounds. Not kept: too close to failing.
 - Goblin move 2 with other fixes: four goblins (a timeout), the wave in
   round 4 (length 51%, auto 15%) or round 8 (auto 19.8%), Firebolt cost
@@ -208,9 +214,9 @@ Warden HP 90 unless it says so):
   harm (with the ogre at move 6, goblin damage 0 moved wins only from
   79% to 83%). Five goblins in
   round 10: wins 75% at 1000 fights, with a fight that ran out of
-  rounds. Five with Warden HP 100 is what was kept.
+  rounds. Five with Guardian HP 100 is what was kept.
 - Goblin move 4: with six goblins in round 6, wins 41%. Four goblins in
-  round 10 passes (wins 76%). With Warden HP 100 and the ogre at move 6
+  round 10 passes (wins 76%). With Guardian HP 100 and the ogre at move 6
   wins are 79% (89% with goblin damage 0), but on 6000 fights some
   still ran out of rounds, with the ogre at move 4 or 6. Not kept.
 - Ogre move 4 to 6, so the boss can catch heroes who run: with the
@@ -223,10 +229,10 @@ Warden HP 90 unless it says so):
 ### Third look: after the review fixes, 2026-11-25
 
 The final review fixed how the heroes play. The biggest fix was the
-Warden's: he used to spend his turns on Taunts that did nothing. Enemies
+Guardian's: he used to spend his turns on Taunts that did nothing. Enemies
 also stopped picking hidden heroes, the Mage backs off further, and the
-Warden now starts with 0 grit. The first two passes were tuned to the
-old, weaker Warden, so with the fixes the fight became far too easy.
+Guardian now starts with 0 grit. The first two passes were tuned to the
+old, weaker Guardian, so with the fixes the fight became far too easy.
 
 Where we started (`check --n 1000`, seeds 0 to 999, the numbers above):
 
@@ -240,7 +246,7 @@ A hero in danger:       45% (down to 25% HP, or went down)
 Auto-attack damage:     31% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-warden         24%       0%      11%          76%         2%        34%
+guardian         24%       0%      11%          76%         2%        34%
 rogue          39%       0%       1%          20%         5%        38%
 druid           1%     100%       0%          22%         1%        50%
 mage           37%       0%      12%           0%         9%        37%
@@ -250,15 +256,15 @@ FAIL  win_rate         99.9%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts      0.0%  (wanted: none)
 FAIL  danger           44.7% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
 PASS  auto_share       31.0% of damage  (wanted: 20.0% to 50.0%)
-FAIL  resource:warden  starved 11.4% of rounds, ended up and full 76.0% of fights  (wanted: both under 50.0%)
+FAIL  resource:guardian  starved 11.4% of rounds, ended up and full 76.0% of fights  (wanted: both under 50.0%)
 PASS  resource:rogue   starved 1.2% of rounds, ended up and full 20.1% of fights  (wanted: both under 50.0%)
 PASS  resource:druid   starved 0.1% of rounds, ended up and full 21.9% of fights  (wanted: both under 50.0%)
 PASS  resource:mage    starved 12.1% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-PASS  needed:warden    wins 99.9% with, 3.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:guardian    wins 99.9% with, 3.0% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:rogue     wins 99.9% with, 46.6% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:druid     wins 99.9% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:mage      wins 99.9% with, 2.8% without  (wanted: at least 20.0% fewer wins without them)
-FAIL  kit:warden       wins 99.9% with the kit, 94.5% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+FAIL  kit:guardian       wins 99.9% with the kit, 94.5% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:rogue        wins 99.9% with the kit, 66.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 99.9% with the kit, 22.5% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 99.9% with the kit, 51.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
@@ -268,48 +274,48 @@ What was wrong:
 
 - The party almost never lost, and fights were a little short.
 - Nobody got into real danger in more than half the fights.
-- The Warden ended 76% of fights with a full pool of grit. Nothing
+- The Guardian ended 76% of fights with a full pool of grit. Nothing
   near the end of a fight made him spend it.
-- `kit:warden` could not pass: with the Warden only auto-attacking the
+- `kit:guardian` could not pass: with the Guardian only auto-attacking the
   party still won 94.5%, and no kit can win 10 points more than that.
 
 Kept changes (each line: `check --n 1000`, seeds 0 to 999, every check
 listed; the numbers carry on from change 11):
 
 12. Ogre melee hit 2d6+2 to 2d6+7 (the `bonus`, 2 to 7). The boss is the
-   one who should make the fight hard, and it hits the Warden every
-   round. A hurt Warden takes more of the Druid's healing, so the others
-   get low too, and the Warden spends grit on Intercede to save them.
+   one who should make the fight hard, and it hits the Guardian every
+   round. A hurt Guardian takes more of the Druid's healing, so the others
+   get low too, and the Guardian spends grit on Intercede to save them.
    After: every check passes. Length 63.6%, wins 87.1%, no timeouts,
-   danger 95.3%, auto 30.1%. Resources (starved / ended full): Warden
+   danger 95.3%, auto 30.1%. Resources (starved / ended full): Guardian
    12.4% / 33.2%, Rogue 3.4% / 20.9%, Druid 0.1% / 29.6%, Mage 12.3% /
-   0.0%. Needed (wins without): Warden 0.1%, Rogue 2.6%, Druid 0.0%,
-   Mage 0.0%. Kit (wins on auto): Warden 65.3%, Rogue 13.9%, Druid
+   0.0%. Needed (wins without): Guardian 0.1%, Rogue 2.6%, Druid 0.0%,
+   Mage 0.0%. Kit (wins on auto): Guardian 65.3%, Rogue 13.9%, Druid
    4.9%, Mage 1.5%.
 13. Ogre HP 130 to 150. Wins and length were both close to the edge.
    More boss HP makes the fight longer and a little harder.
    After: every check passes. Length 74.9%, wins 82.9%, no timeouts,
-   danger 97.8%, auto 29.8%. Resources: Warden 12.3% / 27.3%, Rogue
-   4.1% / 10.4%, Druid 0.1% / 30.2%, Mage 12.7% / 0.0%. Needed: Warden
-   0.1%, Rogue 0.9%, Druid 0.0%, Mage 0.0%. Kit: Warden 57.2%, Rogue
+   danger 97.8%, auto 29.8%. Resources: Guardian 12.3% / 27.3%, Rogue
+   4.1% / 10.4%, Druid 0.1% / 30.2%, Mage 12.7% / 0.0%. Needed: Guardian
+   0.1%, Rogue 0.9%, Druid 0.0%, Mage 0.0%. Kit: Guardian 57.2%, Rogue
    11.4%, Druid 1.1%, Mage 0.9%.
-14. Intercede cost 2 to 4. It is the Warden's most used button (about
+14. Intercede cost 2 to 4. It is the Guardian's most used button (about
    2.5 times a fight), so its cost decides how much grit he keeps. At 4
    he spends his grit faster and ends full about half as often. Wins
    did not drop.
    After: every check passes. Length 75.1%, wins 83.9%, no timeouts,
-   danger 97.7%, auto 30.4%. Resources: Warden 16.5% / 15.2%, Rogue
-   3.4% / 10.7%, Druid 0.1% / 30.9%, Mage 12.6% / 0.0%. Needed: Warden
-   0.1%, Rogue 0.8%, Druid 0.0%, Mage 0.0%. Kit: Warden 57.2%, Rogue
+   danger 97.7%, auto 30.4%. Resources: Guardian 16.5% / 15.2%, Rogue
+   3.4% / 10.7%, Druid 0.1% / 30.9%, Mage 12.6% / 0.0%. Needed: Guardian
+   0.1%, Rogue 0.8%, Druid 0.0%, Mage 0.0%. Kit: Guardian 57.2%, Rogue
    12.2%, Druid 1.1%, Mage 0.7%.
 15. Goblin damage 2 to 3. With the boss hitting harder, the goblins had
    become a small part of the fight (goblin damage 0 moved wins only
    from 83% to 89%). At 3 they matter again, and wins come down to
    about 4 in 5.
    After: every check passes. Length 76.0%, wins 79.6%, no timeouts,
-   danger 98.8%, auto 30.5%. Resources: Warden 16.7% / 14.0%, Rogue
-   3.4% / 10.4%, Druid 0.0% / 31.3%, Mage 12.9% / 0.0%. Needed: Warden
-   0.0%, Rogue 0.5%, Druid 0.0%, Mage 0.0%. Kit: Warden 53.2%, Rogue
+   danger 98.8%, auto 30.5%. Resources: Guardian 16.7% / 14.0%, Rogue
+   3.4% / 10.4%, Druid 0.0% / 31.3%, Mage 12.9% / 0.0%. Needed: Guardian
+   0.0%, Rogue 0.5%, Druid 0.0%, Mage 0.0%. Kit: Guardian 53.2%, Rogue
    10.6%, Druid 1.0%, Mage 0.6%.
 
 On more seeds: 0 of 24000 fights (seeds 40000 to 63999) ran out of
@@ -322,7 +328,7 @@ the fight a lot (`check --n 1000`, seeds 0 to 999):
 |---|---|---|
 | wins | 79.6% | 89.6% (right at the top edge) |
 | a hero in danger | 98.8% | 95.7% |
-| Warden went down | 58% | 44% |
+| Guardian went down | 58% | 44% |
 | Rogue went down | 54% | 46% |
 | Druid went down | 24% | 14% |
 | Mage went down | 38% | 25% |
@@ -330,33 +336,33 @@ the fight a lot (`check --n 1000`, seeds 0 to 999):
 Tried in the third look, and not kept (300 to 1000 fights each, seeds
 below 100000):
 
-- Each of these alone left wins at 97% or more: Warden HP 80; ogre HP
+- Each of these alone left wins at 97% or more: Guardian HP 80; ogre HP
   150; adds back to brute 6, wolf 4, shaman 3; goblin damage 4; Rogue
   and Druid HP 30 with Mage HP 24.
 - Ogre melee 3d6+3: wins 91%. 2d6+5: wins 95%.
 - Ogre melee 2d6+8 (with HP 145 or 150): wins 74% to 75%, and the
-  Warden went down in two fights of three.
+  Guardian went down in two fights of three.
 - Ogre melee 2d6+6 with goblin damage 3: wins 86%, too close to 90%.
   With a sixth goblin as well, wins were 80% and it looked fine (the
   `needed:` checks were not run), but it is one more change than what
   was kept, for the same result.
 - Taunt cost 2 to 3, or AoE Taunt cost 3 to 5, instead of Intercede:
-  the Warden ended full less often (27% of fights) but not as much as
+  the Guardian ended full less often (27% of fights) but not as much as
   with Intercede at 4 (18%). Intercede 3: 24%.
-- Intercede 3, Taunt 3 and AoE Taunt 4 together: the Warden was
+- Intercede 3, Taunt 3 and AoE Taunt 4 together: the Guardian was
   starved 23% of rounds, with no gain over Intercede alone.
 
 ### Fourth look: a boss that must be taunted, 2026-11-26
 
-The owner wants the Warden to need to taunt the boss, like a tank in an
-MMO. So bosses now ignore the hold: standing next to the Warden does not
-keep a boss on him, only Taunt cards do. And the Warden Taunts the
+The owner wants the Guardian to need to taunt the boss, like a tank in an
+MMO. So bosses now ignore the hold: standing next to the Guardian does not
+keep a boss on him, only Taunt cards do. And the Guardian Taunts the
 boss whenever it has no Taunt cards.
 
 That alone made taunting the boss worse than useless. The ogre went for
-the nearest hero, and the Warden stands next to it, so an untaunted ogre
+the nearest hero, and the Guardian stands next to it, so an untaunted ogre
 hit him anyway. The taunt only cost him grit and turns. A new check,
-`taunt:boss`, plays the same fights with the Warden never Taunting
+`taunt:boss`, plays the same fights with the Guardian never Taunting
 the boss (AoE Taunt can still taunt it), and wants at least 10 points fewer
 wins.
 
@@ -373,7 +379,7 @@ A hero in danger:       100% (down to 25% HP, or went down)
 Auto-attack damage:     28% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-warden         19%       0%      26%           2%        92%         1%
+guardian         19%       0%      26%           2%        92%         1%
 rogue          41%       0%       1%          12%        76%        12%
 druid           0%     100%       0%          19%        62%        12%
 mage           40%       0%      12%           0%        73%         6%
@@ -383,27 +389,27 @@ FAIL  win_rate         42.8%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts      0.0%  (wanted: none)
 PASS  danger           99.9% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
 PASS  auto_share       27.9% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:warden  starved 26.3% of rounds, ended up and full 1.8% of fights  (wanted: both under 50.0%)
+PASS  resource:guardian  starved 26.3% of rounds, ended up and full 1.8% of fights  (wanted: both under 50.0%)
 PASS  resource:rogue   starved 1.1% of rounds, ended up and full 11.7% of fights  (wanted: both under 50.0%)
 PASS  resource:druid   starved 0.0% of rounds, ended up and full 18.8% of fights  (wanted: both under 50.0%)
 PASS  resource:mage    starved 12.4% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-PASS  needed:warden    wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:guardian    wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:rogue     wins 42.8% with, 0.2% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:druid     wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:mage      wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-FAIL  kit:warden       wins 42.8% with the kit, 43.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+FAIL  kit:guardian       wins 42.8% with the kit, 43.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:rogue        wins 42.8% with the kit, 7.9% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 42.8% with the kit, 0.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 42.8% with the kit, 0.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+FAIL  taunt:boss       wins 42.8% with, 68.7% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
 ```
 
 What was wrong:
 
-- Taunting the boss cost wins: 69% without it, 43% with it. The Warden's
-  kit as a whole was worth nothing (`kit:warden`: 44% on auto).
+- Taunting the boss cost wins: 69% without it, 43% with it. The Guardian's
+  kit as a whole was worth nothing (`kit:guardian`: 44% on auto).
 - The party won less than half its fights. With the boss free to move,
-  the Warden spent his grit on Taunt (about 5 a fight) and had little
+  the Guardian spent his grit on Taunt (about 5 a fight) and had little
   left for Intercede.
 
 Kept changes (each line: `check --n 1000`, seeds 0 to 999, every check
@@ -413,28 +419,28 @@ listed, `taunt:boss` too; the numbers carry on from change 15):
    boss with no Taunt cards should go for the soft heroes, as in an MMO.
    Now the taunt is what keeps it off the Mage and the Druid.
    After: FAIL length 53.3%, FAIL wins 43.7%. No timeouts, danger 99.5%,
-   auto 24.2%. Resources (starved / ended full): Warden 44.9% / 2.2%,
+   auto 24.2%. Resources (starved / ended full): Guardian 44.9% / 2.2%,
    Rogue 1.2% / 15.5%, Druid 0.0% / 17.2%, Mage 11.5% / 0.0%. Needed
-   (wins without): Warden 0.2%, Rogue 0.0%, Druid 0.0%, Mage 0.0%. Kit
-   (wins on auto): Warden 20.1%, Rogue 6.4%, Druid 0.9%, Mage 0.6%.
+   (wins without): Guardian 0.2%, Rogue 0.0%, Druid 0.0%, Mage 0.0%. Kit
+   (wins on auto): Guardian 20.1%, Rogue 6.4%, Druid 0.9%, Mage 0.6%.
    Taunt:boss (wins without Taunting the boss): 10.9%. So the taunt now
    matters a lot, but the fight is far too hard.
 17. Ogre melee hit 2d6+7 to 2d6+4 (the `bonus`, 7 to 4). The +7 was
-   tuned for a boss that only ever hit the Warden (change 12). Now every
+   tuned for a boss that only ever hit the Guardian (change 12). Now every
    lapse in the taunt sends it at a hero with 28 to 36 HP, and a 2d6+7
    hit is a third of that or more.
    After: every check passes. Length 65.6%, wins 73.6%, no timeouts,
-   danger 94.8%, auto 25.8%. Resources: Warden 39.4% / 8.4%, Rogue 0.6%
-   / 17.6%, Druid 0.1% / 24.0%, Mage 10.6% / 0.0%. Needed: Warden 1.0%,
-   Rogue 0.5%, Druid 0.0%, Mage 0.1%. Kit: Warden 44.5%, Rogue 22.4%,
+   danger 94.8%, auto 25.8%. Resources: Guardian 39.4% / 8.4%, Rogue 0.6%
+   / 17.6%, Druid 0.1% / 24.0%, Mage 10.6% / 0.0%. Needed: Guardian 1.0%,
+   Rogue 0.5%, Druid 0.0%, Mage 0.1%. Kit: Guardian 44.5%, Rogue 22.4%,
    Druid 2.5%, Mage 3.5%. Taunt:boss: 34.8%.
-18. Warden HP 100 to 110. Wins were close to the bottom edge, and the
-   Warden still went down in about half the fights. More Warden HP keeps
+18. Guardian HP 100 to 110. Wins were close to the bottom edge, and the
+   Guardian still went down in about half the fights. More Guardian HP keeps
    the taunt going longer.
    After: every check passes. Length 69.2%, wins 80.4%, no timeouts,
-   danger 91.3%, auto 26.2%. Resources: Warden 37.2% / 10.9%, Rogue
-   0.6% / 17.2%, Druid 0.1% / 27.2%, Mage 10.3% / 0.0%. Needed: Warden
-   1.0%, Rogue 1.3%, Druid 0.0%, Mage 0.2%. Kit: Warden 45.5%, Rogue
+   danger 91.3%, auto 26.2%. Resources: Guardian 37.2% / 10.9%, Rogue
+   0.6% / 17.2%, Druid 0.1% / 27.2%, Mage 10.3% / 0.0%. Needed: Guardian
+   1.0%, Rogue 1.3%, Druid 0.0%, Mage 0.2%. Kit: Guardian 45.5%, Rogue
    26.9%, Druid 4.0%, Mage 6.6%. Taunt:boss: 36.7%.
 
 On more seeds: 0 of 24000 fights (seeds 40000 to 63999) ran out of
@@ -452,7 +458,7 @@ seeds):
 |---|---|---|
 | wins | 77.9% | 92.9% (fails: too easy) |
 | a hero in danger | 92.4% | 84.6% |
-| Warden went down | 50% | 30% |
+| Guardian went down | 50% | 30% |
 | Rogue went down | 23% | 9% |
 | Druid went down | 27% | 11% |
 | Mage went down | 56% | 41% |
@@ -461,19 +467,19 @@ Tried in the fourth look, and not kept (300 fights, seeds 0 to 299,
 with the ogre on "backline", unless it says so):
 
 - Taunt cost 2 to 1: wins fell to 43% and auto share to 18%
-  (fails). With cheap taunts the Warden spends more turns on abilities
+  (fails). With cheap taunts the Guardian spends more turns on abilities
   and fewer on auto-attacks.
-- Each of these alone, with the ogre at +7: Warden HP 120 (wins 56%),
+- Each of these alone, with the ogre at +7: Guardian HP 120 (wins 56%),
   ogre HP 130 (wins 57%, length 53%), Intercede cost 3 (wins 43%),
   goblin damage 2 (wins 55%).
-- Ogre +6: wins 52%. With Warden HP 120: 65%. With Warden HP 130:
+- Ogre +6: wins 52%. With Guardian HP 120: 65%. With Guardian HP 130:
   passes (74% at 500 fights), but more HP on the tank for the same
   result as a smaller hit.
-- Ogre +5: wins 63%. With ogre HP 140: 67%. With Warden HP 110: 70%,
-  the very edge. With Warden HP 115 or 120: passes (73% and 76% at 1000
+- Ogre +5: wins 63%. With ogre HP 140: 67%. With Guardian HP 110: 70%,
+  the very edge. With Guardian HP 115 or 120: passes (73% and 76% at 1000
   fights, seeds 2000 to 2999), but lower wins than +4 with HP 110.
 - Ogre +3: wins 85%, and one fight ran out of rounds.
-- Ogre +4 with ogre HP 160: wins 71%, length 63%. With Warden HP 105 or
+- Ogre +4 with ogre HP 160: wins 71%, length 63%. With Guardian HP 105 or
   115: wins 77% and 81% (1000 fights, seeds 2000 to 2999); 110 is in the
   middle.
 
@@ -507,18 +513,18 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    After the third look: still true. Sap was used 0 times in the 3000
    confirm fights.
    After the fourth look: still true, 0 times in the 3000 confirm fights.
-3. **Stalemates once the Warden is out.** With the first pass's
+3. **Stalemates once the Guardian is out.** With the first pass's
    numbers, about 1 fight in 1100 was still going after 60 rounds (21 of
    24000; 2 of the 3000 confirm fights). In all 5 we looked at, the
-   Warden was out and the ogre was left, with the Druid alone or with
-   the Rogue. Why: only the Warden gives Taunt cards, and Eviscerate on
+   Guardian was out and the ogre was left, with the Druid alone or with
+   the Rogue. Why: only the Guardian gives Taunt cards, and Eviscerate on
    the boss needs them; Backstab needs the boss to be attacking someone
    else, and it is attacking her; so the Rogue mostly does nothing. The
    Druid heals faster than the ogre hurts, and heroes move 6 while the
    ogre moves 4, so it cannot catch them. The slow goblins made it worse
    (the Rogue's auto-attack goes to the enemy with the least HP, which
    was a slow goblin far away), but they were not the main cause.
-   Numbers now make it rare: Warden HP 100 alone cuts it to 1 in 24000;
+   Numbers now make it rare: Guardian HP 100 alone cuts it to 1 in 24000;
    the new goblins alone to 5 in 24000; both together to 1 in 24000. The
    confirm run had none. It can still happen. Ogre move 6 removes it
    (0 in 24000) but makes the boss play differently. Choices: let the
@@ -526,14 +532,14 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    heroes who run.
    After the third look: 0 of 24000 fights (seeds 40000 to 63999) ran
    out of rounds. Best guess why: the boss now hits much harder, so
-   once the Warden is out the others go down too, instead of running
+   once the Guardian is out the others go down too, instead of running
    from it for 40 rounds. The cause is still there, so it could come
    back if the boss gets weaker.
    After the fourth look: 0 of 24000 fights ran out of rounds, even
    with the boss hitting for +4 instead of +7. Best guess why: once
    nobody taunts it, the boss now goes for the back line instead of
-   standing by the Warden, so the fight keeps moving. The cause (only
-   the Warden gives Taunt cards) is still there.
+   standing by the Guardian, so the fight keeps moving. The cause (only
+   the Guardian gives Taunt cards) is still there.
 4. **Meteor only hits enemies that stand still.** Its spot is fixed when
    the 2-round cast starts. With goblins at move 5 it was cast 0.1 times
    a fight; with move 1, about 1.1 times; with move 3 (now), 0.0. The
@@ -560,10 +566,10 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    (437), Grip 0.15 (451), Kidney Shot 0.28 (842), Wild Growth
    0.33 (1000), AoE Taunt 0.60 (1787).
    Why Grip is rare now: Taunt (2 grit) does its old job of
-   turning an add around for half the grit, so the Warden keeps Grip
+   turning an add around for half the grit, so the Guardian keeps Grip
    for an enemy that hits from far away (the shaman).
    Why Shield Plant is rare: every hero moves before anyone acts, so by the
-   time the Warden could plant his shield, everyone has already
+   time the Guardian could plant his shield, everyone has already
    stepped out of the Ground Slam.
    Every hero is still needed (without any one hero the party wins 9% or
    less), but "every button feels iconic" is not something the checks
@@ -574,13 +580,14 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    Arcane Volley 0 (0), Grip 0.20 (603), Cheap Shot 0 (0), Kidney
    Shot 0.19 (575). Also AoE Taunt 0.18 (529), Frost Ring 0.39 (1178),
    Wild Growth 0.32 (953). Taunt on the boss went from about 0.01 a
-   fight to 5.7: the Warden now keeps the boss taunted most of the
+   fight to 5.7: the Guardian now keeps the boss taunted most of the
    fight, which is what the owner asked for.
    Why Arcane Volley is never used (and was not before the fourth look
    either: 0 in 600 fights with the third look's numbers): the Mage only
    Volleys a focus with 3 Taunt cards on it (`VOLLEY_TAUNT_CARDS`). A
-   Taunt gives 3, but the Warden acts after the Mage (heroes act in
-   id order), and a card comes off at the end of the GM turn. So on the
+   Taunt gives 3, but back then the Guardian acted after the Mage (heroes
+   act in id order, and his old id came last), and a card comes off at
+   the end of the GM turn. So on the
    Mage's turn her focus has 2 cards at most. In 200 fights it had 3
    cards 0 times. With the rule at 2 cards, she Volleys about 1.8 times
    a fight, but the party won 155 of 200 instead of 170: Volley is Loud,
@@ -589,7 +596,7 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    Volley for fights where it fits better.
 6. **Fight length is touchy about the boss's timings.** Changing when
    the Ground Slam comes moved "in band" anywhere from 47% to 75%,
-   because the Warden and Rogue lose a whole turn stepping out of it.
+   because the Guardian and Rogue lose a whole turn stepping out of it.
    If the slam timing changes later, length needs checking again.
 
 ## Rules the simulator had to decide
@@ -611,18 +618,18 @@ to change any of them.
 - A channel (Arcane Volley) checks its reach again on every hit.
 - Vanish while already hidden keeps the Rogue hidden.
 - A cast that is cancelled or broken costs nothing.
-- Heroes move, and act, one after another in id order (druid, mage,
-  rogue, warden), not truly all at once. So a hero who acts before the
+- Heroes move, and act, one after another in id order (druid, guardian,
+  mage, rogue), not truly all at once. So a hero who acts before the
   Mage in that order gets one quickened turn fewer than one who acts
   after her: Quicken lands after they have already attacked that turn.
-- The Warden starts a fight with 0 grit.
-- Bosses ignore the hold: only Taunt cards make a boss attack the Warden
+- The Guardian starts a fight with 0 grit.
+- Bosses ignore the hold: only Taunt cards make a boss attack the Guardian
   (owner's decision).
 
-## Final
+## Final (before the rename; being retuned)
 
 These are the numbers after the fourth look: bosses ignore the hold, the
-Warden Taunts the boss whenever it has no Taunt cards, and the ogre
+Guardian Taunts the boss whenever it has no Taunt cards, and the ogre
 goes for the back line when nobody taunts it. `boss_loud_cards` is 1.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
@@ -639,7 +646,7 @@ A hero in danger:       92% (down to 25% HP, or went down)
 Auto-attack damage:     26% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-warden         19%       0%      39%           9%        50%        10%
+guardian         19%       0%      39%           9%        50%        10%
 rogue          48%       0%       1%          18%        23%        44%
 druid           1%     100%       0%          25%        27%        26%
 mage           32%       0%      11%           0%        56%        11%
@@ -649,19 +656,19 @@ PASS  win_rate         77.9%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts      0.0%  (wanted: none)
 PASS  danger           92.4% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
 PASS  auto_share       26.2% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:warden  starved 39.0% of rounds, ended up and full 8.8% of fights  (wanted: both under 50.0%)
+PASS  resource:guardian  starved 39.0% of rounds, ended up and full 8.8% of fights  (wanted: both under 50.0%)
 PASS  resource:rogue   starved 0.6% of rounds, ended up and full 17.7% of fights  (wanted: both under 50.0%)
 PASS  resource:druid   starved 0.2% of rounds, ended up and full 24.9% of fights  (wanted: both under 50.0%)
 PASS  resource:mage    starved 10.5% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-PASS  needed:warden    wins 77.9% with, 0.7% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:guardian    wins 77.9% with, 0.7% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:rogue     wins 77.9% with, 1.8% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:druid     wins 77.9% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
 PASS  needed:mage      wins 77.9% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
-PASS  kit:warden       wins 77.9% with the kit, 44.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:guardian       wins 77.9% with the kit, 44.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:rogue        wins 77.9% with the kit, 25.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 77.9% with the kit, 3.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 77.9% with the kit, 6.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+PASS  taunt:boss       wins 77.9% with, 35.2% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
 ```
 
 Every check passes with the round cap at 60, `taunt:boss` too. The
@@ -670,15 +677,15 @@ pinned test seeds (`check --n 600 --seed 500000`) pass too.
 Things to keep an eye on:
 
 - Taunting the boss now matters: without it the party wins 35% instead
-  of 78%. The Warden Taunts the boss about 5.7 times a fight.
-- The Warden is starved 39% of rounds (the line is 50%). Keeping the
+  of 78%. The Guardian Taunts the boss about 5.7 times a fight.
+- The Guardian is starved 39% of rounds (the line is 50%). Keeping the
   boss taunted costs him 2 grit about every three rounds, and he only
   gets grit by auto-attacking. A more costly Taunt, or one more
   grit-hungry button, would push him over.
-- The Warden goes down in 50% of fights and the Mage in 56%. The Rogue
+- The Guardian goes down in 50% of fights and the Mage in 56%. The Rogue
   went down in 54% after the third look and in 23% now. Best guess why:
   the boss used to hit whoever stood nearest, often her, and now it is
-  either on the Warden or going for the back line.
+  either on the Guardian or going for the back line.
 - A hero is in danger in 92% of fights, so nearly every fight is still
   a scare.
 - With goblin damage 0 wins go up from 78% to 93%, over the top of the

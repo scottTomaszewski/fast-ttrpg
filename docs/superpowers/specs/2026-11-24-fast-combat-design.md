@@ -6,6 +6,10 @@ heroes cannot be targeted, bosses ignore the weak hold so the tank has to
 taunt them (the owner's decision, 2026-11-26). See docs/tuning-log.md,
 "Rules the simulator had to decide".
 
+The Warden was renamed the Guardian on 2026-11-27, and his abilities took back
+their original names (Taunt, AoE Taunt, Intercede, Grip, Shield Plant, Last
+Stand).
+
 Things marked **(call)** were proposed by the assistant and not yet argued
 over. Everything else was decided by the owner in conversation.
 
@@ -85,7 +89,7 @@ A round is a party turn, then a GM turn.
 - The top face is a crit. Roll the die again and add it; if that is the top
   face too, keep going. **(call on the exact form; the owner wants crits to
   do more damage.)**
-- A crit also triggers the class's hook **(all calls)**: Warden gains 1 Grit;
+- A crit also triggers the class's hook **(all calls)**: Guardian gains 1 Grit;
   Rogue gains 2 combo points instead of 1; Druid gains a Seed; Mage gains
   2 mana.
 - Classes have different dice.
@@ -112,9 +116,9 @@ A round is a party turn, then a GM turn.
 
 - **Mana:** pool of 30, +1 per round. (Mage.)
 - **Energy:** pool of 10, +3 per round. (Rogue, Druid.)
-- **Grit (call):** the Warden starts at 0 and gains 1 each time an enemy
+- **Grit (call):** the Guardian starts at 0 and gains 1 each time an enemy
   attacks them, up to 10. If the owner prefers only two resource types, the
-  Warden becomes an energy class.
+  Guardian becomes an energy class.
 - **(call)** Cooldowns are kept rare, because the owner is wary of the
   tracking. Cost is the normal limit on an ability. Where a cooldown is
   truly needed (Disrupt is the only one so far) it uses the same countdown
@@ -151,19 +155,19 @@ The owner wants a grid and maps.
 
 No one tracks aggro.
 
-- **Weak hold:** an enemy that starts the GM turn next to the Warden (any of
-  the 8 squares around them) cannot move away and must attack the Warden.
+- **Weak hold:** an enemy that starts the GM turn next to the Guardian (any of
+  the 8 squares around them) cannot move away and must attack the Guardian.
   Bosses ignore it.
-- **Strong hold:** an enemy with Taunt cards on it must target the Warden,
+- **Strong hold:** an enemy with Taunt cards on it must target the Guardian,
   wherever it is.
 - **Loud abilities (call):** some big abilities are marked Loud. Hitting an
   enemy with one removes one Taunt card from it. If it has none, it targets
-  that hero on its next turn, even if it is next to the Warden.
+  that hero on its next turn, even if it is next to the Guardian.
   Auto-attacks are never Loud. A Loud heal
   pulls every enemy that has no hold on it.
 - An enemy with no hold and no pull is the GM's to direct.
 - Bosses obey taunts, and only Taunt cards hold a boss: standing next to the
-  Warden does not. Their answer is big announced casts aimed elsewhere and
+  Guardian does not. Their answer is big announced casts aimed elsewhere and
   heavy hits on the tank.
 
 ### Going down
@@ -204,13 +208,13 @@ the assistant's proposal. **(call)**
 
 Numbers are deliberately missing here. See "Numbers".
 
-### Warden (tank). d8. Grit.
+### Guardian (tank). d8. Grit.
 
 1. **Taunt:** put 3 Taunt cards on one enemy.
 2. **AoE Taunt:** one Taunt card on every enemy near you (1 GM turn).
 3. **Intercede:** leap to an ally and give them a Guarded card (they take
    less damage this round). **(call)** Any enemy with no Taunt card that was
-   going to attack that ally attacks the Warden instead.
+   going to attack that ally attacks the Guardian instead.
 4. **Grip:** pull one enemy to a square next to you.
 5. **Shield Plant:** plant your shield. Allies in the squares behind you take
    reduced damage from one blast.
@@ -347,8 +351,8 @@ can say whether the numbers are sound; it cannot say whether the game is fun.
 1. **The simulator.** Python 3.12 with `uv`, tests with `pytest`. **(call)**
    It models the grid, the round, cards, holds and Loud, the four kits and
    the test fight. Heroes follow simple written-down behaviour (for example:
-   the Warden keeps Taunt on the boss and grips loose adds; the
-   Druid keeps Rejuvenation on the Warden and casts Regrowth when someone is
+   the Guardian keeps Taunt on the boss and grips loose adds; the
+   Druid keeps Rejuvenation on the Guardian and casts Regrowth when someone is
    low).
    It runs a fight many times and reports length, win rate, lowest HP,
    resource levels over time, and each hero's share of damage and healing.

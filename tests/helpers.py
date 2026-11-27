@@ -35,7 +35,7 @@ def scripted(*rolls: int) -> Dice:
 
 
 def state(
-    party: tuple[str, ...] = ("warden", "rogue", "druid", "mage"),
+    party: tuple[str, ...] = ("guardian", "rogue", "druid", "mage"),
     rolls: list[int] | None = None,
     seed: int = 1,
 ) -> FightState:

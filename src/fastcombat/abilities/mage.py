@@ -63,7 +63,7 @@ def meteor(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> 
     That is every living enemy there, and every hero there who is up, the
     Mage too. A hero who is down is left alone. For a hero it counts as a
     blast, but Shield Plant does not make it smaller in this fight: the
-    Warden uses Shield Plant against the boss's blasts, and a one-card Shield
+    Guardian uses Shield Plant against the boss's blasts, and a one-card Shield
     Plant comes off at the top of the next party turn, before a cast lands.
     """
     amount = state.dice.roll_many(*spec.dice, spec.bonus)

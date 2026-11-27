@@ -64,9 +64,9 @@ and make the whole party fight faster.
   2 dice instead of one.
 - The cards come off at the top of the party turn like any other, so
   Quicken lasts for the rest of this turn and
-  1 more party turn after it. The Druid acts
-  before you, so she misses this turn's extra dice and gets one quickened
-  turn fewer than the Rogue and the Warden.
+  1 more party turn after it. The Druid and
+  the Guardian act before you, so they miss this turn's extra dice and get
+  one quickened turn fewer than the Rogue.
 
 ### Polymorph
 

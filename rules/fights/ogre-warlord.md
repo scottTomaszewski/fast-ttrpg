@@ -18,14 +18,14 @@ walls. The heroes start on the left, the enemies on the right.
 . . . . . . . . . . w . . s . g
 . . . . . . . . . . . . . . . g
 . M R . . . . . . . . . . . . g
-. + + W . . . . . . . o . . . g
+. + + G . . . . . . . o . . . g
 . D + . . . . . . . b . . . . g
 . + . . . . . . . . . . . . . .
 . . . . . . . . . . w . . . . .
 . . . . . . . . . . . . . . . .
 . . . . . . . . . . . . . . . .
 
-W Warden
+G Guardian
 R Rogue
 D Druid
 M Mage
@@ -47,22 +47,22 @@ g goblin (fodder, comes in round 10)
 | Wolf | 2 | 16 | 3 | 1 (next to it) | 7 | the back line |
 | Goblin (fodder) | 5, in round 10 | 1 | 3 | 1 (next to it) | 3 | the back line |
 
-"The back line" is the hero with the fewest max HP who is not the Warden:
+"The back line" is the hero with the fewest max HP who is not the Guardian:
 the Mage (28 HP) while she is up, then the Druid or the Rogue
 (36 each; the Druid first, being first in alphabetical
-order). If the Warden is the only hero who is up and not hidden, they go
+order). If the Guardian is the only hero who is up and not hidden, they go
 for him. Remember the order for every enemy (core rules, section 8): Taunt
-cards first, then a pull, then the Warden's hold (not the Ogre), then what
+cards first, then a pull, then the Guardian's hold (not the Ogre), then what
 it likes.
 
 - **Ogre Warlord.** The boss. He rolls 2d6+4 for each hit. Only
-  Taunt cards keep him on the Warden: standing next to the Warden does not.
+  Taunt cards keep him on the Guardian: standing next to the Guardian does not.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
   sheeped or Gripped, but a stun still breaks the move he announced,
   and Frost Ring can root him. His big moves are below.
 - **Brute.** Big and slow. Shielded 5: any single hit
   under 5 does nothing to him. He walks to the nearest
-  hero, so he often ends up held by the Warden.
+  hero, so he often ends up held by the Guardian.
 - **Shaman.** Stands back and hits from 8 squares away.
   Each of his hits also gives the hero 3 poison
   cards worth 2 each, unless the hit took them
@@ -70,7 +70,7 @@ it likes.
   not hidden: number them in alphabetical order, roll a die with at least
   that many sides, and roll again on a number with no hero (core rules,
   section 8). And he heals the Ogre (below).
-- **Wolves.** Fast. They run straight past the Warden for the Mage.
+- **Wolves.** Fast. They run straight past the Guardian for the Mage.
 - **Goblins.** Fodder: any hit kills one. **5 goblins
   come in at step 2 of the GM turn in round 10**, on
   their squares on the right edge (if one is taken, on the nearest empty
@@ -92,7 +92,7 @@ move lands in step 1 of the next GM turn.
 
 Heroes can stop an announced move with **Disrupt**, or with a stun such as
 **Cheap Shot**. Taunt cards make no difference to the boulder, and neither
-the Ground Slam nor the boulder gives the Warden grit. The Skull Crusher
+the Ground Slam nor the boulder gives the Guardian grit. The Skull Crusher
 does.
 
 ### The shaman's mend
@@ -112,7 +112,7 @@ where, and what they can do about it.
 - **Ground Slam:** "The Ogre Warlord lifts his club high over his head,
   and the ground starts to shake! Next turn he SMASHES it down." Mark every
   square within 2 of him. "Anyone still in these
-  squares takes the hit. Get out, or get behind the Warden's shield!"
+  squares takes the hit. Get out, or get behind the Guardian's shield!"
 - **Skull Crusher:** "The Ogre glares at (say the hero's name) and winds
   up a huge swing! Next turn it lands on you, wherever you run." Then:
   "Can anyone stop him? Disrupt him or stun him now, or brace yourself!"

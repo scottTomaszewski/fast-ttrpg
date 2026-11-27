@@ -15,7 +15,7 @@ grit_per_attack = 1
 boss_loud_cards = 1    # Taunt cards a Loud hit takes off a boss
 max_rounds = 60        # the simulator gives up after this many
 
-[heroes.warden]
+[heroes.guardian]
 hp = 60
 die = 8
 attack_range = 1
@@ -62,38 +62,38 @@ crit_gain = 2          # mana
 # it is used on yourself, or around you. Range 1 means next to you.
 
 [abilities.taunt]
-hero = "warden"
+hero = "guardian"
 cost = 1
 range = 6
 cards = 3
 
 [abilities.aoe_taunt]
-hero = "warden"
+hero = "guardian"
 cost = 3
 radius = 3
 cards = 1
 
 [abilities.intercede]
-hero = "warden"
+hero = "guardian"
 cost = 2
 range = 6
 cards = 1
 value = 4              # damage taken off each hit on the guarded ally
 
 [abilities.grip]
-hero = "warden"
+hero = "guardian"
 cost = 2
 range = 6
 
 [abilities.shield_plant]
-hero = "warden"
+hero = "guardian"
 cost = 4
 radius = 2             # how deep "behind you" goes
 cards = 1
 value = 8              # damage taken off the blast
 
 [abilities.last_stand]
-hero = "warden"
+hero = "guardian"
 cost = 5
 cards = 1
 

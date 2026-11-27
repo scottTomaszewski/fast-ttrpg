@@ -1,19 +1,19 @@
 from tests.helpers import state, enemy
-from tests.test_warden import use
+from tests.test_guardian import use
 from fastcombat.casting import land_casts
 from fastcombat.combat import damage_hero, add_stack
 from fastcombat.grid import distance
 
 def test_rejuvenation_does_not_stack():
-    s = state(); w = s.heroes["warden"]; s.heroes["druid"].resource = 10
-    use(s, "druid", "rejuvenation", "warden"); w.stacks["rejuvenation"].cards = 1
-    use(s, "druid", "rejuvenation", "warden")
+    s = state(); w = s.heroes["guardian"]; s.heroes["druid"].resource = 10
+    use(s, "druid", "rejuvenation", "guardian"); w.stacks["rejuvenation"].cards = 1
+    use(s, "druid", "rejuvenation", "guardian")
     assert w.stacks["rejuvenation"].cards == 4 and s.heroes["druid"].resource == 6
 
 def test_regrowth_lands_next_turn_heals_gives_a_seed_and_is_loud():
     from fastcombat.casting import land_casts
-    s = state(rolls=[2, 2, 2]); w = s.heroes["warden"]; w.hp = 20; far = enemy(s, "wolf", (12, 2))
-    use(s, "druid", "regrowth", "warden"); assert w.hp == 20
+    s = state(rolls=[2, 2, 2]); w = s.heroes["guardian"]; w.hp = 20; far = enemy(s, "wolf", (12, 2))
+    use(s, "druid", "regrowth", "guardian"); assert w.hp == 20
     land_casts(s)
     assert w.hp == 30 and s.heroes["druid"].seeds == 1 and far.pulled_by == "druid"
 
@@ -30,12 +30,12 @@ def test_swiftmend_gets_a_downed_ally_up():
 
 def test_wild_growth_gives_two_cards_to_allies_in_the_area():
     s = state(); use(s, "druid", "wild_growth", pos=(2, 6))
-    assert s.heroes["warden"].stacks["wild_growth"].cards == 2
+    assert s.heroes["guardian"].stacks["wild_growth"].cards == 2
     assert s.heroes["rogue"].stacks["wild_growth"].value == 4
 
 def test_nourish_heals_the_roll_and_the_top_face_gives_energy_back():
-    s = state(rolls=[6]); d = s.heroes["druid"]; d.resource = 4; w = s.heroes["warden"]; w.hp = 30
-    use(s, "druid", "nourish", "warden"); assert w.hp == 36 and d.resource == 6
+    s = state(rolls=[6]); d = s.heroes["druid"]; d.resource = 4; w = s.heroes["guardian"]; w.hp = 30
+    use(s, "druid", "nourish", "guardian"); assert w.hp == 36 and d.resource == 6
 
 def test_cleanse_removes_poison():
     s = state(); m = s.heroes["mage"]; add_stack(m, "poison", 3, 2)
@@ -80,7 +80,7 @@ def test_regrowth_on_an_ally_who_is_out_by_then_costs_nothing_and_gives_nothing(
 
 def test_regrowth_seeds_stop_at_the_most_a_druid_can_hold():
     s = state(rolls=[2, 2, 2]); d = s.heroes["druid"]; d.seeds = 2
-    use(s, "druid", "regrowth", "warden"); land_casts(s)
+    use(s, "druid", "regrowth", "guardian"); land_casts(s)
     assert d.seeds == 2
 
 def test_swiftmend_costs_full_price_on_an_ally_at_half_hp_or_more():
@@ -91,11 +91,11 @@ def test_swiftmend_costs_full_price_on_an_ally_at_half_hp_or_more():
 
 def test_wild_growth_skips_heroes_who_are_down_out_or_outside_and_does_not_stack():
     s = state(); d = s.heroes["druid"]; add_stack(d, "wild_growth", 1, 4)
-    s.heroes["warden"].pos = (8, 6)                                   # outside the area
+    s.heroes["guardian"].pos = (8, 6)                                   # outside the area
     damage_hero(s, s.heroes["mage"], 99, attacker=None); s.heroes["rogue"].out = True
     assert use(s, "druid", "wild_growth", pos=(2, 6))
     assert d.stacks["wild_growth"].cards == 2
-    assert all("wild_growth" not in s.heroes[h].stacks for h in ("warden", "mage", "rogue"))
+    assert all("wild_growth" not in s.heroes[h].stacks for h in ("guardian", "mage", "rogue"))
 
 def test_wild_growth_needs_a_centre():
     s = state(); assert not use(s, "druid", "wild_growth") and s.heroes["druid"].resource == 10
@@ -107,9 +107,9 @@ def test_cleanse_needs_poison_and_takes_off_only_the_poison():
     assert use(s, "druid", "cleanse", "mage") and "poison" not in m.stacks and "rejuvenation" in m.stacks
 
 def test_nourish_heals_on_a_one_and_energy_stops_at_the_pool():
-    s = state(rolls=[1, 6]); d = s.heroes["druid"]; d.resource = 9; w = s.heroes["warden"]; w.hp = 30
-    use(s, "druid", "nourish", "warden"); assert w.hp == 31 and d.resource == 9   # a 1 does not miss
-    use(s, "druid", "nourish", "warden"); assert w.hp == 37 and d.resource == 10
+    s = state(rolls=[1, 6]); d = s.heroes["druid"]; d.resource = 9; w = s.heroes["guardian"]; w.hp = 30
+    use(s, "druid", "nourish", "guardian"); assert w.hp == 31 and d.resource == 9   # a 1 does not miss
+    use(s, "druid", "nourish", "guardian"); assert w.hp == 37 and d.resource == 10
 
 def test_nourish_gets_a_downed_ally_up():
     s = state(rolls=[4]); m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
@@ -132,7 +132,7 @@ def test_shadowmeld_does_not_run_from_a_dead_enemy():
 
 def test_nourish_rolls_its_dice_count_and_adds_its_bonus():
     from dataclasses import replace
-    s = state(rolls=[3, 4, 2, 6]); d = s.heroes["druid"]; d.resource = 4; w = s.heroes["warden"]; w.hp = 30
+    s = state(rolls=[3, 4, 2, 6]); d = s.heroes["druid"]; d.resource = 4; w = s.heroes["guardian"]; w.hp = 30
     s.numbers.abilities["nourish"] = replace(s.numbers.abilities["nourish"], dice=(2, 6), bonus=1)
-    use(s, "druid", "nourish", "warden"); assert w.hp == 30 + 3 + 4 + 1 and d.resource == 4
-    use(s, "druid", "nourish", "warden"); assert w.hp == 38 + 2 + 6 + 1 and d.resource == 6   # any die on its top face
+    use(s, "druid", "nourish", "guardian"); assert w.hp == 30 + 3 + 4 + 1 and d.resource == 4
+    use(s, "druid", "nourish", "guardian"); assert w.hp == 38 + 2 + 6 + 1 and d.resource == 6   # any die on its top face

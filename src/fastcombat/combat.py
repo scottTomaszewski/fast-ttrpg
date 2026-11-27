@@ -114,7 +114,7 @@ def damage_hero(
     taken = max(0, min(taken, hero.hp - lowest))
     hero.hp -= taken
 
-    if attacker is not None and not blast and hero.cls == "warden":
+    if attacker is not None and not blast and hero.cls == "guardian":
         pool = state.numbers.heroes[hero.cls].pool
         grit = state.numbers.rules["grit_per_attack"]
         hero.resource = min(pool, hero.resource + grit)

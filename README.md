@@ -26,13 +26,13 @@ so a hero whose abilities make the party weaker could still pass
 `needed:`; `kit:` catches that. The same fights (the same seeds) are
 played each time, so the numbers can be compared.
 
-`taunt:boss` plays the fight with the Warden never using Taunt on the
-boss (the `warden_no_boss_taunt` policy; AoE Taunt can still taunt it) and
+`taunt:boss` plays the fight with the Guardian never using Taunt on the
+boss (the `guardian_no_boss_taunt` policy; AoE Taunt can still taunt it) and
 wants at least 10 points fewer wins; it is only there when the party has a
-Warden.
+Guardian.
 
 `uv run fastcombat run --help` lists every option: which fight, which
-party (`--party warden,rogue,rogue`), the first seed, and `--json PATH` to
+party (`--party guardian,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.
 
 ## The rules
@@ -61,7 +61,7 @@ Every number in the game is in one of two places:
 `--set` changes one number for one run, without editing the file. Give it
 as many times as you like:
 
-    uv run fastcombat check --set abilities.meteor.cost=12 --set heroes.warden.hp=70
+    uv run fastcombat check --set abilities.meteor.cost=12 --set heroes.guardian.hp=70
 
 The name is the place in `game/numbers.toml`, with dots between the parts.
 If the change helps, write it into the file. A misspelled name stops the

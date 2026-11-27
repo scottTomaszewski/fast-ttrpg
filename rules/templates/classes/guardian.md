@@ -1,18 +1,16 @@
-<!-- Made from templates/classes/warden.md by `uv run fastcombat rules`. Change the template, not this file. -->
+# The Guardian
 
-# The Warden
-
-The Warden is the tank: a big shield and a bigger voice. He makes the
+The Guardian is the tank: a big shield and a bigger voice. He makes the
 enemies fight him, and stands between them and everyone else.
 
-- **HP:** 110
-- **Auto-attack:** d8, on an enemy next to you.
-- **Resource:** grit. At most 10, and you start a fight
-  with 0. You get 1 grit each
+- **HP:** {heroes.guardian.hp}
+- **Auto-attack:** d{heroes.guardian.die}, on an enemy next to you.
+- **Resource:** grit. At most {heroes.guardian.pool}, and you start a fight
+  with {heroes.guardian.start}. You get {rules.grit_per_attack} grit each
   time an enemy attacks you (its normal attack, or a heavy hit it
   announced), even if the hit does no damage. Blasts, throws and poison
   give no grit. Grit does not come back at the top of the turn.
-- **Crit bonus:** 1 grit.
+- **Crit bonus:** {heroes.guardian.crit_gain} grit.
 - **The hold:** an enemy standing next to you must attack you, and cannot
   walk away. Bosses ignore the hold: only Taunt cards keep a boss on you.
 
@@ -20,62 +18,62 @@ enemies fight him, and stands between them and everyone else.
 
 ### Taunt
 
-- 2 grit · Instant · range
-  6
-- Put **3 Taunt cards** on one enemy. While it
+- {abilities.taunt.cost} grit · {abilities.taunt.timing} · range
+  {abilities.taunt.range}{abilities.taunt.loud_tag}
+- Put **{abilities.taunt.cards} Taunt cards** on one enemy. While it
   has them it must attack you, wherever you are. It never makes a longer
   Taunt stack shorter.
 
 ### AoE Taunt
 
-- 3 grit · Instant · around you
-- Every enemy within 3 squares of you gets
-  **1 Taunt card**.
+- {abilities.aoe_taunt.cost} grit · {abilities.aoe_taunt.timing} · around you{abilities.aoe_taunt.loud_tag}
+- Every enemy within {abilities.aoe_taunt.radius} squares of you gets
+  **{abilities.aoe_taunt.cards} Taunt card**.
 
 ### Intercede
 
-- 4 grit · Instant · range
-  6
+- {abilities.intercede.cost} grit · {abilities.intercede.timing} · range
+  {abilities.intercede.range}{abilities.intercede.loud_tag}
 - Leap to an ally who is up: you land on the empty square next to them
   that is closest to where you were (if there is none, you stay put). They
-  get **1 Guarded card**: they take
-  4 less each time they are hurt. While they hold it, any
+  get **{abilities.intercede.cards} Guarded card**: they take
+  {abilities.intercede.value} less each time they are hurt. While they hold it, any
   enemy with no Taunt cards that goes for them attacks you instead.
 
 ### Grip
 
-- 4 grit · Instant · range
-  6
+- {abilities.grip.cost} grit · {abilities.grip.timing} · range
+  {abilities.grip.range}{abilities.grip.loud_tag}
 - Pull one enemy to the empty square next to you that is closest to where
   it was. Now it is next to you, so the hold keeps it on you. Not on a
   boss. You need an empty square next to you.
 
 ### Shield Plant
 
-- 4 grit · Instant · around you
+- {abilities.shield_plant.cost} grit · {abilities.shield_plant.timing} · around you{abilities.shield_plant.loud_tag}
 - Plant your shield against a blast that is coming from one square (the
   boss's square, for a Ground Slam). You, and every ally in the squares
-  behind you, get **1 Shield Plant card**: take
-  8 less from a blast. "Behind you" means within
-  2 squares of you, and farther from the blast's
+  behind you, get **{abilities.shield_plant.cards} Shield Plant card**: take
+  {abilities.shield_plant.value} less from a blast. "Behind you" means within
+  {abilities.shield_plant.radius} squares of you, and farther from the blast's
   square than you are.
 
 ### Last Stand
 
-- 5 grit · Instant · yourself
-- Take **1 Last Stand card**: while you hold it,
+- {abilities.last_stand.cost} grit · {abilities.last_stand.timing} · yourself{abilities.last_stand.loud_tag}
+- Take **{abilities.last_stand.cards} Last Stand card**: while you hold it,
   nothing can take you below 1 HP. Use it when a heavy hit is coming.
 
 ### Disrupt (every hero has this)
 
-- 0 grit · Instant · range
-  1 (next to you) · cooldown
-  3
+- {abilities.disrupt.cost} grit · {abilities.disrupt.timing} · range
+  {abilities.disrupt.range} (next to you) · cooldown
+  {abilities.disrupt.cooldown}{abilities.disrupt.loud_tag}
 - Break the cast an enemy has announced, so it never lands. Only on an
-  enemy that has announced one. Then put 3
+  enemy that has announced one. Then put {abilities.disrupt.cooldown}
   cooldown cards on Disrupt.
 
-## How to play the Warden
+## How to play the Guardian
 
 - **Keep Taunt cards on the boss, always.** The moment it has none,
   Taunt it. Without them it walks off to hit the Mage or the Druid.

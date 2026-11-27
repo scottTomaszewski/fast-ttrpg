@@ -126,7 +126,7 @@ def auto_attack(state: FightState, hero: Hero, enemy: Enemy) -> None:
 def _crit_bonus(state: FightState, hero: Hero, spec: HeroSpec) -> None:
     """What a crit gives: `crit_gain` of something, never past its cap.
 
-    The Warden gets grit, the Rogue extra combo points, the Druid Seeds,
+    The Guardian gets grit, the Rogue extra combo points, the Druid Seeds,
     and the Mage mana.
     """
     rules = state.numbers.rules
@@ -134,7 +134,7 @@ def _crit_bonus(state: FightState, hero: Hero, spec: HeroSpec) -> None:
         hero.combo = min(rules["combo_max"], hero.combo + spec.crit_gain)
     elif hero.cls == "druid":
         hero.seeds = min(rules["seeds_max"], hero.seeds + spec.crit_gain)
-    elif hero.cls in ("warden", "mage"):
+    elif hero.cls in ("guardian", "mage"):
         hero.resource = min(spec.pool, hero.resource + spec.crit_gain)
 
 

@@ -2,7 +2,7 @@
 
 A fight's whole state is one FightState. Every rule reads it and changes it;
 nothing else is kept anywhere. Heroes and enemies are found by their id:
-heroes are named after their class ("warden", and "warden2" for a second
+heroes are named after their class ("guardian", and "guardian2" for a second
 one), enemies after their type and a count ("wolf1", "wolf2").
 """
 
@@ -130,9 +130,9 @@ class FightState:
     tally: Tally
     marked: dict[str, frozenset[Pos]]  # hero blasts waiting to land, by hero id
 
-    def warden(self) -> Hero | None:
-        """The first Warden in the party who is up, or None."""
-        return next((h for h in self.up_heroes() if h.cls == "warden"), None)
+    def guardian(self) -> Hero | None:
+        """The first Guardian in the party who is up, or None."""
+        return next((h for h in self.up_heroes() if h.cls == "guardian"), None)
 
     def living_enemies(self) -> list[Enemy]:
         return [e for e in self.enemies.values() if not e.dead]

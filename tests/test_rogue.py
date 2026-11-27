@@ -1,11 +1,11 @@
 from dataclasses import replace
 from tests.helpers import state, enemy
-from tests.test_warden import use
+from tests.test_guardian import use
 from fastcombat.combat import add_stack
 from fastcombat.units import Announced
 
 def near(s, type="wolf"):
-    return enemy(s, type, (3, 5))        # adjacent to the rogue at (2, 5) and the warden at (3, 6)
+    return enemy(s, type, (3, 5))        # adjacent to the rogue at (2, 5) and the guardian at (3, 6)
 
 def test_backstab_from_hiding_doubles_and_works_on_anyone():
     s = state(party=("rogue",), rolls=[3, 4]); w = enemy(s, "brute", (3, 5))
@@ -15,7 +15,7 @@ def test_backstab_from_hiding_doubles_and_works_on_anyone():
 def test_backstab_needs_the_enemy_to_be_busy_with_someone_else():
     s = state(party=("rogue",)); s.heroes["rogue"].hidden = False; near(s)
     assert not use(s, "rogue", "backstab", "wolf1")
-    s2 = state(); s2.heroes["rogue"].hidden = False; near(s2)   # held by the warden
+    s2 = state(); s2.heroes["rogue"].hidden = False; near(s2)   # held by the guardian
     assert use(s2, "rogue", "backstab", "wolf1")
 
 def test_eviscerate_spends_every_point_and_is_loud():
@@ -40,7 +40,7 @@ def test_vanish_drops_the_pull_and_hides():
 
 def test_a_stun_breaks_a_boss_cast_but_does_not_stun_the_boss():
     s = state(); o = near(s, "ogre")
-    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "warden", frozenset(), (6, 6))
+    o.announced = Announced("skull_crusher", "heavy", s.round + 1, "guardian", frozenset(), (6, 6))
     use(s, "rogue", "cheap_shot", "ogre1")
     assert o.announced is None and "stun" not in o.stacks
 
@@ -64,7 +64,7 @@ AIMED = ("backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "shadowst
 def test_the_rogues_aimed_abilities_are_only_for_enemies():
     s = state(); r = s.heroes["rogue"]; r.combo = 3   # hidden, with points: only the target is wrong
     for ability in AIMED:
-        assert not use(s, "rogue", ability, "warden") and not use(s, "rogue", ability)
+        assert not use(s, "rogue", ability, "guardian") and not use(s, "rogue", ability)
     assert r.resource == 10 and r.combo == 3 and r.hidden and r.pos == (2, 5)
 
 def test_backstab_on_an_enemy_going_for_someone_else_or_taunted():
@@ -75,8 +75,8 @@ def test_backstab_on_an_enemy_going_for_someone_else_or_taunted():
     add_stack(w2, "taunt", 1); assert use(s2, "rogue", "backstab", "wolf1")
 
 def test_backstab_is_refused_on_an_enemy_the_rogue_pulled():
-    s = state(); r = s.heroes["rogue"]; r.hidden = False; w = near(s)   # held by the warden at (3, 6)
-    w.target = "warden"; w.pulled_by = "rogue"                         # but it is coming for her now
+    s = state(); r = s.heroes["rogue"]; r.hidden = False; w = near(s)   # held by the guardian at (3, 6)
+    w.target = "guardian"; w.pulled_by = "rogue"                         # but it is coming for her now
     assert not use(s, "rogue", "backstab", "wolf1")
     add_stack(w, "taunt", 1)                                           # a Taunt beats her pull
     assert use(s, "rogue", "backstab", "wolf1")

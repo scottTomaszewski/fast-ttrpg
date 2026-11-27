@@ -58,8 +58,8 @@ A round is a **party turn**, then a **GM turn**.
 
 Heroes move at the same time and act at the same time. When it matters who
 goes first (two heroes want the same square, or one hero's action changes
-what another can do), heroes go in this order: **Druid, Mage, Rogue,
-Warden**. Two heroes of the same kind go in the order they joined the
+what another can do), heroes go in this order: **Druid, Guardian, Mage,
+Rogue**. Two heroes of the same kind go in the order they joined the
 party. For example, the Druid acts before the Mage, so when the Mage uses
 Quicken, the Druid has already rolled her attack for that turn without
 it. Enemies take their turns in alphabetical order of their names
@@ -75,25 +75,25 @@ Druid goes first.
 
 This is round 5 of a fight with all four heroes,
 the Ogre Warlord (the boss) and one wolf. The heroes are told in their
-order: Druid, Mage, Rogue, Warden.
+order: Druid, Guardian, Mage, Rogue.
 
 At the end of the last GM turn the Ogre **announced a Ground Slam**, so
 the GM marked every square within 2 of him. The
-Ogre has no Taunt cards. The Warden is next to the Ogre, inside the marked
+Ogre has no Taunt cards. The Guardian is next to the Ogre, inside the marked
 squares. The wolf went for the Mage last turn and bit her for
 3, so she has 25 of her
 28 HP. The Mage started a Firebolt on the Ogre last turn. The
 Rogue is **not hidden**: she came out of hiding when she attacked earlier
-in the fight. The Warden still has 2 Rejuvenation heal cards.
+in the fight. The Guardian still has 2 Rejuvenation heal cards.
 
 **Top of the turn.**
 
-- Cards: the Warden turns in a heal card and heals
+- Cards: the Guardian turns in a heal card and heals
   4 HP. He has 1 heal card left.
 - Resource: the Druid gets back 3 energy (never more
   than 10), the Mage 1 mana (never more
   than 30), and the Rogue 3 energy
-  (never more than 10). The Warden's grit does not come
+  (never more than 10). The Guardian's grit does not come
   back this way.
 - Casts: the Mage's Firebolt lands. She rolls 4d6
   and gets 15, so the Ogre loses 15 HP. She pays the
@@ -103,10 +103,10 @@ in the fight. The Warden still has 2 Rejuvenation heal cards.
 
 - The Druid stays where she can reach everyone
   (8 squares).
+- The Guardian steps 3 squares away from the
+  Ogre, out of the marked squares.
 - The Mage steps back.
 - The Rogue steps next to the wolf.
-- The Warden steps 3 squares away from the
-  Ogre, out of the marked squares.
 
 **Act.** Everyone at once, but told in order.
 
@@ -115,6 +115,11 @@ in the fight. The Warden still has 2 Rejuvenation heal cards.
   Mage is missing, so the Mage heals 3 HP and is back to
   her full 28 (a heal never goes past full HP). The top face
   also gives the Druid 2 energy back.
+- The Guardian: the Ogre has no Taunt cards, and standing next to a boss
+  does not hold it, so nothing keeps the Ogre on him. He uses
+  **Taunt** on it (it reaches 6 squares), so
+  the Ogre gets 3 Taunt cards. He pays
+  2 grit.
 - The Mage: an **auto-attack** on the wolf with her d4.
   She rolls a 4, the top face: a crit! She rolls again and
   gets a 2, so the hit is 6. The wolf had
@@ -125,11 +130,6 @@ in the fight. The Warden still has 2 Rejuvenation heal cards.
   and a 3, so 8. She is not hidden, so it is not made bigger. The
   wolf is down to 2 HP. She
   gets 1 combo point.
-- The Warden: the Ogre has no Taunt cards, and standing next to a boss
-  does not hold it, so nothing keeps the Ogre on him. He uses
-  **Taunt** on it (it reaches 6 squares), so
-  the Ogre gets 3 Taunt cards. He pays
-  2 grit.
 
 **End of the turn.** Nobody is down, so there are no Bleeding cards to
 take off.
@@ -140,12 +140,12 @@ take off.
    gets 11. Every hero still on a marked square takes 11. Nobody is there.
 2. No new enemies come in this round.
 3. The Ogre goes first (alphabetical order). It has Taunt cards, so it
-   must go for the Warden. It moves up to 4 squares to him
+   must go for the Guardian. It moves up to 4 squares to him
    and hits for 2d6+4: the GM rolls a 3 and a 5, and adds
-   4, so 12. The Warden loses
+   4, so 12. The Guardian loses
    12 HP, and gains 1 grit
    for being attacked. Then the wolf: no Taunt cards, it is not next to
-   the Warden, and nobody pulled it, so it goes where wolves like to go,
+   the Guardian, and nobody pulled it, so it goes where wolves like to go,
    the back line. It runs at the Mage and bites her for
    3.
 4. Nothing new is announced this round.
@@ -164,19 +164,19 @@ one enemy in reach:
 
 | Hero | Die | Reach |
 |---|---|---|
-| Warden | d8 | 1 (next to you) |
+| Guardian | d8 | 1 (next to you) |
 | Rogue | d6 | 1 (next to you) |
 | Druid | d6 | 8 squares |
 | Mage | d4 | 10 squares |
 
 - A **1 misses.** No damage.
 - The **top face is a crit.** Roll the die again and add it. If that is
-  the top face too, keep going. A Warden who rolls 8,
+  the top face too, keep going. A Guardian who rolls 8,
   then 8, then 3 hits for
   19.
 - Anything else hits for what it shows. There is no roll to hit and no
   roll to dodge.
-- A crit also gives your hero a **crit bonus**: the Warden gets
+- A crit also gives your hero a **crit bonus**: the Guardian gets
   1 grit, the Rogue 1 extra
   combo point, the Druid 1 Seed, and the Mage
   2 mana.
@@ -258,7 +258,7 @@ Every hero has a resource that pays for their abilities.
 
 | Hero | Resource | Most you can hold | At the start | Gets back |
 |---|---|---|---|---|
-| Warden | grit | 10 | 0 | 1 each time an enemy attacks him |
+| Guardian | grit | 10 | 0 | 1 each time an enemy attacks him |
 | Rogue | energy | 10 | 10 | 3 at the top of each party turn |
 | Druid | energy | 10 | 10 | 3 at the top of each party turn |
 | Mage | mana | 30 | 30 | 1 at the top of each party turn |
@@ -266,7 +266,7 @@ Every hero has a resource that pays for their abilities.
 - You never go above the most you can hold.
 - A downed hero gets nothing back.
 - Crits give a little extra (section 3).
-- **Grit** comes when an enemy attacks the Warden: its normal attack, or a
+- **Grit** comes when an enemy attacks the Guardian: its normal attack, or a
   heavy hit it announced. He gets the grit even if the hit is made smaller
   or does no damage at all. A blast, a boss's throw and poison are not
   attacks on him and give no grit. Grit does not come back at the top of
@@ -344,7 +344,7 @@ turn that follows:
 - A downed hero still takes up their square. A hero who is out is taken off
   the map.
 - **No opportunity attacks.** You can walk right past an enemy. The
-  Warden's hold (section 8) does that job.
+  Guardian's hold (section 8) does that job.
 - **Areas** are square blocks. An area "within 2" of a square is every
   square 2 or fewer steps from it: a block 5 squares across. "Within 1" is
   the 3 by 3 block around it.
@@ -358,14 +358,14 @@ Nobody keeps track of anger or threat. Each enemy picks who to attack at
 its own turn, with this list. Read from the top: the first rule that names
 a hero who is up and not hidden wins.
 
-1. **Taunt cards.** An enemy with Taunt cards must go for the Warden,
+1. **Taunt cards.** An enemy with Taunt cards must go for the Guardian,
    wherever he is.
 2. **A pull.** An enemy pulled by a hero goes for that hero.
-3. **The hold.** An enemy standing next to the Warden must attack the
-   Warden, and cannot move away. **Bosses ignore the hold.**
+3. **The hold.** An enemy standing next to the Guardian must attack the
+   Guardian, and cannot move away. **Bosses ignore the hold.**
 4. **What it likes.** Otherwise each kind of enemy goes for whoever it
    likes best: the **nearest** hero, the **back line** (the hero with the
-   fewest max HP who is not the Warden; if the Warden is the only hero who
+   fewest max HP who is not the Guardian; if the Guardian is the only hero who
    is up and not hidden, it goes for him), or a **random** hero (see
    below). The fight sheet says which. Ties go to the hero first in
    alphabetical order.
@@ -377,17 +377,17 @@ heroes, roll a d4 and roll again on a 4. With only one, there is nothing
 to roll.
 
 Then one last check: if the hero it picked holds a **Guarded card from
-Intercede**, and the enemy has no Taunt cards, the Warden steps in and is
+Intercede**, and the enemy has no Taunt cards, the Guardian steps in and is
 attacked instead.
 
-"The Warden" means a Warden who is up. With two Wardens, it is the first
-one on the party list who is up. If no Warden is up, Taunt cards and the
+"The Guardian" means a Guardian who is up. With two Guardians, it is the first
+one on the party list who is up. If no Guardian is up, Taunt cards and the
 hold do nothing.
 
 ### Taunt cards
 
-The Warden's Taunt and AoE Taunt put Taunt cards on enemies. Taunt cards
-are the only thing that keeps a boss on the Warden.
+The Guardian's Taunt and AoE Taunt put Taunt cards on enemies. Taunt cards
+are the only thing that keeps a boss on the Guardian.
 
 ### Loud
 
@@ -396,18 +396,18 @@ Some big abilities are **Loud**. Your sheet says which.
 - A Loud hit on an enemy **with Taunt cards** takes Taunt cards off it:
   a boss loses 1, and any other enemy loses 1.
 - A Loud hit on an enemy **with no Taunt cards** pulls it: on its next
-  turn it goes for you, even if it is next to the Warden.
+  turn it goes for you, even if it is next to the Guardian.
 - It still counts as Loud if a shield turned the whole hit aside. It does
   nothing if the hit killed the enemy.
 - A **Loud heal** (Regrowth) pulls every enemy that has no Taunt cards and
-  is not held by the Warden. A boss is pulled if it has no Taunt cards.
+  is not held by the Guardian. A boss is pulled if it has no Taunt cards.
 - Auto-attacks are never Loud.
 
 ### Pulls
 
 - A pull lasts for the enemy's next turn only. Put a small marker by the
   enemy pointing at the hero, and take it away after the enemy's turn.
-- A pull beats the hold: a pulled enemy walks away from the Warden.
+- A pull beats the hold: a pulled enemy walks away from the Guardian.
 - A pull by a hero who is down, out or hidden counts for nothing.
 - The Rogue's Vanish and the Druid's Shadowmeld drop every pull on you.
 - A stunned, sapped or sheeped enemy loses its pull.
@@ -423,12 +423,12 @@ Some big abilities are **Loud**. Your sheet says which.
 
 ### Bosses
 
-- Only Taunt cards make a boss attack the Warden. Standing next to it does
+- Only Taunt cards make a boss attack the Guardian. Standing next to it does
   not.
 - A boss with no Taunt cards goes where its kind likes. The Ogre Warlord
   goes for the back line.
 - A boss can be pulled by a Loud hit, like anyone.
-- A boss's answer to the Warden is big announced moves, aimed where it
+- A boss's answer to the Guardian is big announced moves, aimed where it
   hurts (section 10).
 
 ## 9. Going down
@@ -517,7 +517,7 @@ reaches 10 squares.
   too. Walk out and you are safe.
 - A **heavy hit** is aimed at one hero, and lands on that hero wherever
   they go, if they are still up. Hiding does not stop it. It counts as an
-  attack, so the Warden gets grit for it.
+  attack, so the Guardian gets grit for it.
 - A **mend** heals the boss.
 - An enemy with a cast already waiting does not announce another.
 - A cast never lands if the enemy is stunned, sapped or sheeped when it
@@ -529,7 +529,7 @@ A boss may also **throw** something in its own turn, right after its
 attack and before the next enemy takes its turn. A throw is not
 announced. It goes at a random hero who is up, not hidden and not
 next to the boss. Taunt cards make no difference, and it is not an attack
-on the Warden, so it gives him no grit.
+on the Guardian, so it gives him no grit.
 
 ## 11. Quick reference
 
@@ -537,13 +537,13 @@ on the Warden, so it gives him no grit.
 |---|---|
 | **Party turn** | 1. Top: cards (heals, then poison), then resource, then casts land. 2. Move (up to 6). 3. Act (one thing). 4. End: downed heroes take one Bleeding card off. |
 | **GM turn** | 1. Announced casts land. 2. New enemies arrive. 3. Each enemy picks, moves, attacks; the boss throws in its own turn, right after its attack. 4. Announce new casts. 5. One card off each enemy stack. |
-| **Order** | Heroes: Druid, Mage, Rogue, Warden. Enemies: alphabetical. |
+| **Order** | Heroes: Druid, Guardian, Mage, Rogue. Enemies: alphabetical. |
 | **Auto-attack** | One die. 1 misses. Top face rolls again and adds, and gives the crit bonus. |
 | **Abilities** | Never miss, never crit. Pay when it happens. |
 | **Casts** | Land at the top of a party turn. Stand still. Cancelled or broken costs nothing. |
 | **Channels** | One hit each act step. May move. Pay each hit. |
 | **Cards** | Hero cards: top of party turn. Bleeding: end of party turn. Enemy cards: end of GM turn. A new stack replaces the old (Taunt, stun, sap and sheep never get shorter). |
-| **Who enemies attack** | Taunt cards, then a pull, then the hold (not bosses), then what it likes. Guarded from Intercede sends it to the Warden. Hidden heroes are never picked. |
+| **Who enemies attack** | Taunt cards, then a pull, then the hold (not bosses), then what it likes. Guarded from Intercede sends it to the Guardian. Hidden heroes are never picked. |
 | **Loud** | Takes Taunt cards off (a boss loses 1, any other enemy 1), or pulls an enemy with none. |
 | **Moving** | Corners cost 1. No opportunity attacks. Enemies walk around bodies. |
 | **Going down** | 3 Bleeding cards, one fewer per Wound. Any heal or a haul up (5 HP) gets you up, and gives you a Wound. |
@@ -551,7 +551,7 @@ on the Warden, so it gives him no grit.
 
 | Hero | HP | Die | Resource | Most | Start | Back each round |
 |---|---|---|---|---|---|---|
-| Warden | 110 | d8 | grit | 10 | 0 | 1 each time attacked |
+| Guardian | 110 | d8 | grit | 10 | 0 | 1 each time attacked |
 | Rogue | 36 | d6 | energy | 10 | 10 | 3 |
 | Druid | 36 | d6 | energy | 10 | 10 | 3 |
 | Mage | 28 | d4 | mana | 30 | 30 | 1 |

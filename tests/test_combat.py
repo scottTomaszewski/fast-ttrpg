@@ -25,11 +25,11 @@ def test_guarded_takes_damage_off():
     assert damage_hero(s, m, 6, attacker=None) == 2
 
 def test_last_stand_stops_at_one():
-    s = state(); w = s.heroes["warden"]; add_stack(w, "last_stand", 1)
+    s = state(); w = s.heroes["guardian"]; add_stack(w, "last_stand", 1)
     damage_hero(s, w, 999, attacker=None); assert w.hp == 1 and not w.down
 
-def test_warden_gains_grit_when_attacked():
-    s = state(); w = s.heroes["warden"]; o = enemy(s, "wolf", (4, 6))
+def test_guardian_gains_grit_when_attacked():
+    s = state(); w = s.heroes["guardian"]; o = enemy(s, "wolf", (4, 6))
     damage_hero(s, w, 4, attacker=o); assert w.resource == 3
 
 def test_going_down_and_bleeding_out():
@@ -78,14 +78,14 @@ def test_each_wound_shortens_the_next_bleed():
     damage_hero(s2, m2, 99, attacker=None); assert m2.out
 
 def test_heal_cards_heal_one_card_a_turn():
-    s = state(); w = s.heroes["warden"]; w.hp = 40; add_stack(w, "rejuvenation", 4, 4)
+    s = state(); w = s.heroes["guardian"]; w.hp = 40; add_stack(w, "rejuvenation", 4, 4)
     top_of_party_turn_cards(s)
     assert w.hp == 44 and w.stacks["rejuvenation"].cards == 3
 
 def test_a_second_rogue_gets_its_own_id_and_square():
     s = state(party=("rogue", "rogue"))
     assert set(s.heroes) == {"rogue", "rogue2"}
-    assert s.heroes["rogue"].pos != s.heroes["rogue2"].pos and s.warden() is None
+    assert s.heroes["rogue"].pos != s.heroes["rogue2"].pos and s.guardian() is None
 
 
 # More tests, for the details later steps rely on.
@@ -94,18 +94,18 @@ def files():
     return load_numbers(GAME / "numbers.toml"), load_fight(GAME / "fights" / "ogre_warlord.toml")
 
 def test_a_new_fight_puts_everyone_in_place():
-    n, f = files(); s = new_state(n, f, ["warden", "rogue", "druid", "mage"], seed=1)
-    assert s.round == 1 and s.heroes["warden"].pos == (3, 6) and s.heroes["mage"].hp == 28
-    assert s.heroes["warden"].resource == 2 and s.heroes["mage"].resource == 30
+    n, f = files(); s = new_state(n, f, ["guardian", "rogue", "druid", "mage"], seed=1)
+    assert s.round == 1 and s.heroes["guardian"].pos == (3, 6) and s.heroes["mage"].hp == 28
+    assert s.heroes["guardian"].resource == 2 and s.heroes["mage"].resource == 30
     assert s.heroes["rogue"].hidden and not s.heroes["druid"].hidden
     assert list(s.enemies) == ["ogre1", "brute1", "shaman1", "shaman2", "wolf1", "wolf2"]
     assert s.enemies["ogre1"].hp == 320 and s.enemies["wolf2"].pos == (10, 9)
 
 def test_repeats_and_classes_with_no_start_square_take_the_extra_squares_in_order():
-    n, f = files(); f = replace(f, hero_starts={"warden": (3, 6)})
-    s = new_state(n, f, ["mage", "warden", "mage", "mage"], seed=1)
+    n, f = files(); f = replace(f, hero_starts={"guardian": (3, 6)})
+    s = new_state(n, f, ["mage", "guardian", "mage", "mage"], seed=1)
     assert [(h.id, h.pos) for h in s.heroes.values()] == [
-        ("mage", (2, 7)), ("warden", (3, 6)), ("mage2", (1, 6)), ("mage3", (2, 6))]
+        ("mage", (2, 7)), ("guardian", (3, 6)), ("mage2", (1, 6)), ("mage3", (2, 6))]
 
 def test_a_party_that_cannot_be_placed_says_why():
     n, f = files()
@@ -129,7 +129,7 @@ def test_enemy_cards_come_off_one_a_turn_and_a_hit_breaks_sheep_but_not_stun():
     assert "sheep" not in w.stacks and w.controlled                     # still stunned
 
 def test_shield_plant_only_softens_blasts_and_any_attack_gives_grit():
-    s = state(); w = s.heroes["warden"]; o = enemy(s, "ogre", (4, 6)); add_stack(w, "shield_plant", 1, 8)
+    s = state(); w = s.heroes["guardian"]; o = enemy(s, "ogre", (4, 6)); add_stack(w, "shield_plant", 1, 8)
     assert damage_hero(s, w, 10, attacker=o, blast=True) == 2 and w.resource == 2   # a blast gives none
     assert damage_hero(s, w, 10, attacker=o) == 10 and w.resource == 3
     add_stack(w, "guarded", 1, 4)
@@ -137,7 +137,7 @@ def test_shield_plant_only_softens_blasts_and_any_attack_gives_grit():
 
 def test_the_tally_counts_only_real_damage_and_healing():
     s = state(); t = s.tally
-    assert t.damage == {"warden": 0, "rogue": 0, "druid": 0, "mage": 0}
+    assert t.damage == {"guardian": 0, "rogue": 0, "druid": 0, "mage": 0}
     assert t.lowest_hp["mage"] == 1.0 and t.resource_by_round["mage"] == [] and t.times_down["mage"] == 0
     w = enemy(s, "wolf", (8, 8)); g = enemy(s, "goblin", (9, 8))
     assert damage_enemy(s, "rogue", w, 10, auto=True) == 10
@@ -162,20 +162,20 @@ def test_going_down_drops_everything_and_a_downed_hero_takes_no_more_hits():
     damage_hero(s, r, 99, attacker=None); assert not r.hidden
 
 def test_heal_cards_are_credited_to_whoever_put_them_on_and_poison_hurts():
-    s = state(); w = s.heroes["warden"]; w.hp = 40
+    s = state(); w = s.heroes["guardian"]; w.hp = 40
     add_stack(w, "wild_growth", 2, 4, source="druid"); add_stack(w, "poison", 3, 2)
     top_of_party_turn_cards(s)
     assert w.hp == 42 and s.tally.healing["druid"] == 4 and w.resource == 2   # poison is no attack
-    s2 = state(party=("warden",)); w2 = s2.heroes["warden"]; w2.hp = 40
+    s2 = state(party=("guardian",)); w2 = s2.heroes["guardian"]; w2.hp = 40
     add_stack(w2, "rejuvenation", 4, 4); top_of_party_turn_cards(s2)
-    assert s2.tally.healing["warden"] == 4                               # nobody put them on: your own
+    assert s2.tally.healing["guardian"] == 4                               # nobody put them on: your own
 
 def test_the_second_druids_heal_cards_are_the_second_druids_healing():
-    s = state(party=("warden", "druid", "druid")); w = s.heroes["warden"]; w.hp = 40
-    assert use_ability(s, s.heroes["druid2"], Action("ability", "rejuvenation", "warden"))
+    s = state(party=("guardian", "druid", "druid")); w = s.heroes["guardian"]; w.hp = 40
+    assert use_ability(s, s.heroes["druid2"], Action("ability", "rejuvenation", "guardian"))
     assert use_ability(s, s.heroes["druid2"], Action("ability", "wild_growth", pos=w.pos))
     top_of_party_turn_cards(s)
-    assert s.tally.healing == {"warden": 0, "druid": 0, "druid2": 8}
+    assert s.tally.healing == {"guardian": 0, "druid": 0, "druid2": 8}
 
 def test_poison_that_takes_you_down_costs_a_bleeding_card_only_at_the_end_of_the_turn():
     s = state(); m = s.heroes["mage"]; m.hp = 2; add_stack(m, "poison", 3, 2)
@@ -185,15 +185,15 @@ def test_poison_that_takes_you_down_costs_a_bleeding_card_only_at_the_end_of_the
     assert m.down and m.stacks == {"bleeding": Stack(2)}
 
 def test_who_stands_where_and_which_squares_are_dangerous():
-    s = state(party=("warden", "mage")); m = s.heroes["mage"]
+    s = state(party=("guardian", "mage")); m = s.heroes["mage"]
     w = enemy(s, "wolf", (8, 8)); g = enemy(s, "goblin", (9, 9))
-    damage_hero(s, m, 99, attacker=None); damage_enemy(s, "warden", g, 1)
+    damage_hero(s, m, 99, attacker=None); damage_enemy(s, "guardian", g, 1)
     assert s.occupied() == {(3, 6), (1, 5), (8, 8)}                    # a downed hero still takes up a square
-    assert [h.id for h in s.up_heroes()] == ["warden"] and s.living_enemies() == [w]
+    assert [h.id for h in s.up_heroes()] == ["guardian"] and s.living_enemies() == [w]
     for _ in range(3): end_of_party_turn_cards(s)
     assert m.out and not m.down and s.occupied() == {(3, 6), (8, 8)}
-    assert heal_hero(s, "warden", m, 10) == 0 and m.out                 # nobody comes back from out
+    assert heal_hero(s, "guardian", m, 10) == 0 and m.out                 # nobody comes back from out
     w.announced = Announced("slam", "blast", 2, None, frozenset({(1, 1)}), (3, 6))
     g.announced = Announced("slam", "blast", 2, None, frozenset({(5, 5)}), (3, 6))   # g is dead
-    s.marked["warden"] = frozenset({(2, 2)})
+    s.marked["guardian"] = frozenset({(2, 2)})
     assert s.danger_squares() == {(1, 1), (2, 2)}

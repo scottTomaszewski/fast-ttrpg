@@ -24,9 +24,9 @@ holds.
 |---|---|---|---|
 | **Heal** (Rejuvenation) | "Heal 4 at the top of your turn." | The hero healed | Druid's Rejuvenation: 4 cards |
 | **Heal** (Wild Growth) | "Heal 4 at the top of your turn." | Each hero in the area | Druid's Wild Growth: 2 cards each. A separate stack from Rejuvenation: both heal. |
-| **Guarded** | "Take 4 less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Warden instead." | The ally the Warden leapt to | Warden's Intercede: 1 card |
-| **Shield Plant** | "Take 8 less from a blast." | The Warden, and each ally behind him | Warden's Shield Plant: 1 card each |
-| **Last Stand** | "You cannot drop below 1 HP." | The Warden | Warden's Last Stand: 1 card |
+| **Guarded** | "Take 4 less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Guardian instead." | The ally the Guardian leapt to | Guardian's Intercede: 1 card |
+| **Shield Plant** | "Take 8 less from a blast." | The Guardian, and each ally behind him | Guardian's Shield Plant: 1 card each |
+| **Last Stand** | "You cannot drop below 1 HP." | The Guardian | Guardian's Last Stand: 1 card |
 | **Quicken** | "Roll 2 dice for each auto-attack." | Every hero who was up | Mage's Quicken: 2 cards each |
 | **Poison** | "Lose 2 HP at the top of your turn." | The hero the shaman hit | The shaman's attack: 3 cards. The Druid's Cleanse takes them all off. |
 | **Bleeding** | "You are down. When the last one goes, you are out." | A downed hero | Going down: 3 cards, one fewer for each Wound. They come off at the end of the party turn. |
@@ -37,7 +37,7 @@ holds.
 
 | Card | Written on it | Who holds it | Where it comes from |
 |---|---|---|---|
-| **Taunt** | "Attack the Warden." | The enemy | Warden's Taunt: 3 cards. AoE Taunt: 1 card. A Loud hit takes Taunt cards off: a boss loses 1, any other enemy 1. |
+| **Taunt** | "Attack the Guardian." | The enemy | Guardian's Taunt: 3 cards. AoE Taunt: 1 card. A Loud hit takes Taunt cards off: a boss loses 1, any other enemy 1. |
 | **Stun** | "Do nothing this turn. Any cast you announced is broken." | The enemy (not a boss) | Rogue's Kidney Shot: 1 card, or 2 at full combo points. Cheap Shot: 1 card. |
 | **Sap** | "Do nothing. Wake up the moment you are hurt." | The enemy (not a boss) | Rogue's Sap: 4 cards |
 | **Sheep** | "You are a sheep: do nothing. Turn back the moment you are hurt." | The enemy (not a boss). Only one sheep at a time. | Mage's Polymorph: 4 cards |

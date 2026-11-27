@@ -3,7 +3,7 @@
 Every file in rules/templates/ is a Markdown template, and the command
 `uv run fastcombat rules` makes each one into the file of the same name in
 rules/ (this one becomes rules/README.md). A name in braces is a
-placeholder, filled in from the game files: {heroes.warden.hp} and
+placeholder, filled in from the game files: {heroes.guardian.hp} and
 {abilities.meteor.cost} from game/numbers.toml; {enemy.ogre.hp},
 {boss.ground_slam.dice} and {spawns.goblin.round} from the fight file.
 Dice come out like 8d6, or 2d6+4 with a bonus; yes-or-no settings come out
@@ -47,7 +47,7 @@ three slow ones.
 ## Who plays
 
 One person is the GM and runs the enemies. Everyone else plays one hero.
-There are four kinds of hero: the Warden (the tank: the tough one who
+There are four kinds of hero: the Guardian (the tank: the tough one who
 makes the enemies fight him instead of the others), the Rogue, the Druid
 (the healer) and the Mage. The test fight is made for one of each, but any
 mix works.
@@ -55,7 +55,7 @@ mix works.
 ## What to read, in order
 
 1. [`core.md`](core.md): the whole game. Everyone reads this.
-2. Your hero's sheet: [Warden](classes/warden.md),
+2. Your hero's sheet: [Guardian](classes/guardian.md),
    [Rogue](classes/rogue.md), [Druid](classes/druid.md) or
    [Mage](classes/mage.md).
 3. [`cards.md`](cards.md): every kind of card, what goes on it, and who

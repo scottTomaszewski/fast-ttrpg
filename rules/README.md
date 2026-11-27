@@ -27,7 +27,7 @@ three slow ones.
 ## Who plays
 
 One person is the GM and runs the enemies. Everyone else plays one hero.
-There are four kinds of hero: the Warden (the tank: the tough one who
+There are four kinds of hero: the Guardian (the tank: the tough one who
 makes the enemies fight him instead of the others), the Rogue, the Druid
 (the healer) and the Mage. The test fight is made for one of each, but any
 mix works.
@@ -35,7 +35,7 @@ mix works.
 ## What to read, in order
 
 1. [`core.md`](core.md): the whole game. Everyone reads this.
-2. Your hero's sheet: [Warden](classes/warden.md),
+2. Your hero's sheet: [Guardian](classes/guardian.md),
    [Rogue](classes/rogue.md), [Druid](classes/druid.md) or
    [Mage](classes/mage.md).
 3. [`cards.md`](cards.md): every kind of card, what goes on it, and who

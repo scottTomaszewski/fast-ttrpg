@@ -99,7 +99,7 @@ def throw(state: FightState, boss: Enemy, step: ScriptStep) -> None:
 
     A die with one side for each hero who is up, not hidden, and not next
     to the boss picks who, counting them in id order. Taunts make no
-    difference: a throw is not the boss's attack, so it gives a Warden no
+    difference: a throw is not the boss's attack, so it gives a Guardian no
     grit either. If there is no such hero, nothing is thrown and no die is
     rolled.
     """

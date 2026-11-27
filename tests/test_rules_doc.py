@@ -18,8 +18,8 @@ def game():
 
 
 def test_a_number_is_filled_in(game):
-    text = "Meteor costs {abilities.meteor.cost} mana. The Warden has {heroes.warden.hp} HP."
-    assert render(text, game, "core.md") == "Meteor costs 10 mana. The Warden has 60 HP."
+    text = "Meteor costs {abilities.meteor.cost} mana. The Guardian has {heroes.guardian.hp} HP."
+    assert render(text, game, "core.md") == "Meteor costs 10 mana. The Guardian has 60 HP."
 
 
 def test_rules_enemies_and_boss_moves_are_filled_in(game):
@@ -137,11 +137,11 @@ def test_the_map_shows_where_everyone_starts(game):
     lines = render("{fight.map}", game, "core.md").splitlines()
     rows = [line.split(" ") for line in lines[:12]]
     assert len(rows) == 12 and all(len(row) == 16 for row in rows)
-    assert rows[6][3] == "W" and rows[5][2] == "R" and rows[7][1] == "D" and rows[5][1] == "M"
+    assert rows[6][3] == "G" and rows[5][2] == "R" and rows[7][1] == "D" and rows[5][1] == "M"
     assert rows[6][11] == "o" and rows[7][10] == "b" and rows[3][10] == "w"
     assert rows[7][2] == "+"  # a start square for a fifth hero
     legend = "\n".join(lines[12:])
-    assert "W Warden" in legend and "o ogre" in legend
+    assert "G Guardian" in legend and "o ogre" in legend
     assert "g goblin" in legend and "round 6" in legend
 
 
@@ -203,7 +203,7 @@ def test_the_rules_in_the_repo_are_up_to_date():
     If this fails, a number or a template changed and nobody ran the command.
     """
     made = render_all(RULES, load_game(REAL_GAME))
-    assert Path("core.md") in made and Path("classes/warden.md") in made
+    assert Path("core.md") in made and Path("classes/guardian.md") in made
     for path, text in made.items():
         written = RULES / path
         assert written.exists(), f"rules/{path} is missing: run `uv run fastcombat rules`"

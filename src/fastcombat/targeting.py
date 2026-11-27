@@ -4,13 +4,13 @@ Nobody keeps track of anger or threat. An enemy's target comes from a short
 list of rules, read from the top; the first one that names a hero who is up
 wins:
 
-1. Taunt cards on the enemy: it must go for the Warden, wherever they are.
+1. Taunt cards on the enemy: it must go for the Guardian, wherever they are.
 2. A pull: a Loud hero made it angry, so it goes for that hero.
-3. A hold: it is standing next to the Warden, so it must hit the Warden.
-   A boss ignores this hold: only Taunt cards make a boss attack the Warden.
+3. A hold: it is standing next to the Guardian, so it must hit the Guardian.
+   A boss ignores this hold: only Taunt cards make a boss attack the Guardian.
 4. Otherwise it goes for whoever its kind likes best (see `choose_target`).
 
-"The Warden" is always the first Warden in the party who is up.
+"The Guardian" is always the first Guardian in the party who is up.
 
 An enemy never picks a hero who is hidden, by any of these rules. A pull by
 a hero who is hidden counts as no pull. If every hero who is up is hidden,
@@ -23,15 +23,15 @@ from fastcombat.units import Enemy, FightState, Hero
 
 
 def held(state: FightState, enemy: Enemy) -> bool:
-    """True when the enemy stands next to the Warden (the weak hold).
+    """True when the enemy stands next to the Guardian (the weak hold).
 
-    Never true for a boss. A boss may walk away from the Warden and hit
+    Never true for a boss. A boss may walk away from the Guardian and hit
     someone else; only Taunt cards make it attack him.
     """
     if enemy.spec.tier == "boss":
         return False
-    warden = state.warden()
-    return warden is not None and adjacent(enemy.pos, warden.pos)
+    guardian = state.guardian()
+    return guardian is not None and adjacent(enemy.pos, guardian.pos)
 
 
 def choose_target(state: FightState, enemy: Enemy) -> Hero | None:
@@ -39,42 +39,42 @@ def choose_target(state: FightState, enemy: Enemy) -> Hero | None:
 
     After the rules at the top of this file pick a hero, one more rule:
     if that hero has Interceded cards, the enemy has no Taunt cards, and the
-    Warden is up, the Warden steps in and is attacked instead. A hidden hero
+    Guardian is up, the Guardian steps in and is attacked instead. A hidden hero
     is never picked, by any rule.
     """
     up = sorted(seen_heroes(state), key=lambda hero: hero.id)
     if not up:
         return None
-    warden = state.warden()
-    if warden is not None and warden.hidden:
-        warden = None
-    target = _first_rule_that_names_a_hero(state, enemy, warden, up)
+    guardian = state.guardian()
+    if guardian is not None and guardian.hidden:
+        guardian = None
+    target = _first_rule_that_names_a_hero(state, enemy, guardian, up)
     if (
         "interceded" in target.stacks
         and "taunt" not in enemy.stacks
-        and warden is not None
+        and guardian is not None
     ):
-        return warden
+        return guardian
     return target
 
 
 def _first_rule_that_names_a_hero(
-    state: FightState, enemy: Enemy, warden: Hero | None, up: list[Hero]
+    state: FightState, enemy: Enemy, guardian: Hero | None, up: list[Hero]
 ) -> Hero:
     """Rules 1 to 4. `up` is every hero who is up and not hidden, in id order,
-    and is never empty. `warden` is None if the Warden is hidden."""
-    if "taunt" in enemy.stacks and warden is not None:
-        return warden
+    and is never empty. `guardian` is None if the Guardian is hidden."""
+    if "taunt" in enemy.stacks and guardian is not None:
+        return guardian
     puller = puller_of(state, enemy)
     if puller is not None:
         return puller
-    if held(state, enemy) and warden is not None:
-        return warden
+    if held(state, enemy) and guardian is not None:
+        return guardian
     if enemy.spec.prefers == "nearest":
         return min(up, key=lambda hero: (distance(enemy.pos, hero.pos), hero.id))
     if enemy.spec.prefers == "backline":
-        # The weakest hero who is not a Warden. A Warden only if nobody else is up.
-        others = [hero for hero in up if hero.cls != "warden"] or up
+        # The weakest hero who is not a Guardian. A Guardian only if nobody else is up.
+        others = [hero for hero in up if hero.cls != "guardian"] or up
         return min(others, key=lambda hero: (hero.max_hp, hero.id))
     # "random": a die with one side for each hero who is up.
     return up[state.dice.roll(len(up)) - 1]
@@ -83,7 +83,7 @@ def _first_rule_that_names_a_hero(
 def can_move(state: FightState, enemy: Enemy) -> bool:
     """False when the enemy must stay where it is this turn.
 
-    A hold keeps it next to the Warden, unless a pull is dragging it away
+    A hold keeps it next to the Guardian, unless a pull is dragging it away
     (a pull by a hero who is down, out or hidden counts for nothing). Rooted cards
     keep it in place, and so does a stun, sap or sheep.
     """
@@ -126,7 +126,7 @@ def loud_heal(state: FightState, hero_id: str) -> None:
     """A Loud heal by `hero_id` pulls every living enemy that nothing holds.
 
     An enemy with Taunt cards stays put, and so does one standing next to
-    the Warden, unless it is a boss (nothing but Taunt cards holds a boss).
+    the Guardian, unless it is a boss (nothing but Taunt cards holds a boss).
     """
     for enemy in state.living_enemies():
         if "taunt" not in enemy.stacks and not held(state, enemy):
