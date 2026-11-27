@@ -116,3 +116,15 @@ kind = "throw"
 first = 2
 every = 2
 dice = [2, 6]
+
+# Stomp comes in rounds 8, 14 and 20 of a 20-round fight, never with the
+# Ground Slam (4, 10, 16) or the Skull Crusher (6, 11, 16, 21). It is last
+# in the list, so in a long fight a Crusher due the same round (26) wins.
+[[boss_script]]
+name = "stomp"         # announced; stuns every hero next to the boss
+kind = "stomp"
+first = 8
+every = 6
+radius = 1             # the squares next to him
+dice = [1, 6]
+stun = 1               # stun cards for each hero it hits

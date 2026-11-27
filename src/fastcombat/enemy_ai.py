@@ -11,13 +11,15 @@ The GM turn has five steps, in this order:
 5. One card comes off every stack on every enemy.
 
 The boss plays a script from the fight file. Each step in the script comes
-up first in one round, then again every few rounds. A blast or a heavy hit
-is announced one GM turn before it lands, so the heroes have a party turn
-to get out of the way, get ready for it, or break it with Disrupt or a
-stun. A throw is not announced: it happens at once, in the boss's turn.
+up first in one round, then again every few rounds. A blast, a stomp or a
+heavy hit is announced one GM turn before it lands, so the heroes have a
+party turn to get out of the way, get ready for it, or break it with
+Disrupt or a stun. A throw is not announced: it happens at once, in the
+boss's turn. A stomp is a small blast around the boss that also stuns
+every hero it hits.
 """
 
-from fastcombat.combat import add_stack, damage_hero, tick_stacks
+from fastcombat.combat import add_stack, damage_hero, stun_hero, tick_stacks
 from fastcombat.grid import adjacent, approach, distance, nearest_free, within
 from fastcombat.numbers import ScriptStep
 from fastcombat.targeting import can_move, choose_target, seen_heroes
@@ -55,7 +57,9 @@ def land_announced(state: FightState) -> None:
     """Step 1: enemy casts announced last GM turn land now.
 
     A blast makes one roll, and every hero who is up and still in its area
-    takes all of it; someone who walked out is safe. A heavy hit lands on
+    takes all of it; someone who walked out is safe. A stomp is the same,
+    and then every hero it hit who is still up gets its stun cards (see
+    `combat.stun_hero`; a Mage in an Ice Block gets none). A heavy hit lands on
     the hero it was aimed at, if they are still up. A mend heals every
     living boss, never past its full HP. A cast is used up once it lands.
 
@@ -74,10 +78,11 @@ def land_announced(state: FightState) -> None:
 def announce(state: FightState) -> None:
     """Step 4: enemies announce their casts, one GM turn before they land.
 
-    The boss announces at most one move from its script: the first blast or
-    heavy hit that is due this round. A blast covers every square near
-    where the boss stands now, and those squares are marked on the map (see
-    `FightState.danger_squares`). A heavy hit is aimed at the hero the boss
+    The boss announces at most one move from its script: the first blast,
+    stomp or heavy hit that is due this round. A blast or a stomp covers
+    every square near where the boss stands now, and those squares are
+    marked on the map (see `FightState.danger_squares`). A heavy hit is
+    aimed at the hero the boss
     went for this turn. If it went for nobody, or that hero is not up any
     more, it has no heavy hit to announce, and the next move due is looked
     at instead.
@@ -124,11 +129,13 @@ def throw(state: FightState, boss: Enemy, step: ScriptStep) -> None:
 
 def _land(state: FightState, enemy: Enemy, cast: Announced) -> None:
     """`enemy`'s announced `cast` happens now. See `land_announced`."""
-    if cast.kind == "blast":
+    if cast.kind in ("blast", "stomp"):
         amount = state.dice.roll_many(*cast.dice)
         for hero in state.up_heroes():
             if hero.pos in cast.area:
                 damage_hero(state, hero, amount, attacker=enemy, blast=True)
+                if cast.kind == "stomp":
+                    stun_hero(state, hero, cast.stun)
     elif cast.kind == "heavy":
         hero = _up_hero(state, cast.target)
         if hero is not None:
@@ -142,7 +149,7 @@ def _land(state: FightState, enemy: Enemy, cast: Announced) -> None:
 
 
 def _boss_cast(state: FightState, boss: Enemy) -> Announced | None:
-    """The blast or heavy hit `boss` announces this round, or None. See `announce`.
+    """The blast, stomp or heavy hit `boss` announces this round, or None. See `announce`.
 
     A throw in the script is never announced, so it is passed over here.
     """
@@ -150,10 +157,10 @@ def _boss_cast(state: FightState, boss: Enemy) -> Announced | None:
     for step in state.fight.boss_script:
         if not _due(state, step.first, step.every):
             continue
-        if step.kind == "blast":
+        if step.kind in ("blast", "stomp"):
             area = within(boss.pos, step.radius, state.fight.width, state.fight.height)
             return Announced(
-                step.name, "blast", lands, None, frozenset(area), step.dice
+                step.name, step.kind, lands, None, frozenset(area), step.dice, stun=step.stun
             )
         if step.kind == "heavy" and _up_hero(state, boss.target) is not None:
             return Announced(

@@ -31,7 +31,7 @@ class NumbersError(ValueError):
 RESOURCES = ("grit", "energy", "mana")
 TIERS = ("normal", "elite", "boss", "fodder")
 PREFERS = ("nearest", "backline", "random")
-KINDS = ("blast", "heavy", "throw")
+KINDS = ("blast", "heavy", "throw", "stomp")
 SHARED = "shared"  # an ability's `hero` when any hero may use it
 HAUL_UP = "haul_up"  # hauling an ally up is counted with the abilities, under this name
 
@@ -133,6 +133,7 @@ class ScriptStep:
     every: int
     dice: tuple[int, int]
     radius: int = 0
+    stun: int = 0  # stun cards a stomp gives each hero it hits
 
 
 @dataclass(frozen=True)

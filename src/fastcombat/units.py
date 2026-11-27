@@ -48,12 +48,13 @@ class Announced:
     """An enemy cast waiting to land. It lands in `lands_round`."""
 
     name: str
-    kind: str  # "blast" "heavy" "mend"
+    kind: str  # "blast" "heavy" "stomp" "mend"
     lands_round: int
     target: str | None
     area: frozenset[Pos]
     dice: tuple[int, int]
     heal: int = 0
+    stun: int = 0  # a stomp's stun cards for each hero it hits
 
 
 @dataclass

@@ -125,3 +125,61 @@ def test_a_blast_still_hits_a_hidden_hero_in_its_area():
     r = s.heroes["rogue"]; r.pos = (5, 5); assert r.hidden
     land_announced(s)
     assert r.hp == 36 - 12
+
+
+# --- The ogre's Stomp (a step added to the frozen fight here; the real fight has it) ---
+
+from dataclasses import replace
+from fastcombat.numbers import ScriptStep
+from fastcombat.fight import party_turn
+
+STOMP = ScriptStep("stomp", "stomp", first=8, every=6, dice=(1, 6), radius=1, stun=1)
+
+def stomp_state(rolls=None):
+    s, o = boss_state(8, rolls=rolls)
+    s.fight = replace(s.fight, boss_script=[*s.fight.boss_script, STOMP]); return s, o
+
+def test_stomp_is_announced_on_the_squares_next_to_the_boss():
+    s, o = stomp_state(); announce(s)
+    assert o.announced.kind == "stomp" and o.announced.lands_round == 9 and o.announced.stun == 1
+    assert (3, 6) in s.danger_squares() and (2, 6) not in s.danger_squares()
+
+def test_stomp_hits_and_stuns_every_hero_next_to_the_boss():
+    s, o = stomp_state(rolls=[4]); announce(s); s.round = 9
+    g, r = s.heroes["guardian"], s.heroes["rogue"]; r.pos = (5, 7)  # both next to the ogre at (4, 6)
+    land_announced(s)
+    assert g.hp == 56 and r.hp == 32                                # one roll, a blast: no grit
+    assert g.stacks["stun"].cards == 1 and r.stacks["stun"].cards == 1 and g.resource == 2
+    assert "stun" not in s.heroes["mage"].stacks                    # far away
+
+def test_a_hero_who_walked_out_of_a_stomp_is_not_stunned():
+    s, o = stomp_state(rolls=[4]); announce(s); s.round = 9
+    s.heroes["guardian"].pos = (2, 6); land_announced(s)
+    assert "stun" not in s.heroes["guardian"].stacks
+
+def test_a_stomp_costs_the_stunned_hero_his_next_party_turn():
+    s, o = stomp_state(rolls=[4, 5]); announce(s); s.round = 9; land_announced(s)
+    g = s.heroes["guardian"]; assert g.stunned
+    from tests.test_fight import Plays, idle
+    from fastcombat.abilities import Action
+    s.round = 10; party_turn(s, idle(s, guardian=Plays(Action("auto", target="ogre1"), dest=(3, 7))))
+    assert g.pos == (3, 6) and o.hp == 320 and not g.stunned        # lost the turn; the card is gone
+
+def test_disrupt_or_a_stun_breaks_a_stomp():
+    s, o = stomp_state(); announce(s)
+    assert use(s, "mage", "disrupt", "ogre1") and o.announced is None
+    s, o = stomp_state(); announce(s); s.round = 9
+    from fastcombat.combat import control
+    control(s, o, "stun", 1); land_announced(s)                     # a stun breaks a boss's cast
+    assert "stun" not in s.heroes["guardian"].stacks
+
+def test_the_real_ogre_stomps_three_times_in_twenty_rounds_never_with_another_move():
+    from tests.helpers import REAL_GAME
+    from fastcombat.numbers import load_fight
+    f = load_fight(REAL_GAME / "fights" / "ogre_warlord.toml")
+    steps = {step.name: step for step in f.boss_script}
+    def rounds(step): return {r for r in range(1, 21) if r >= step.first and (r - step.first) % step.every == 0}
+    stomps = rounds(steps["stomp"])
+    assert 2 <= len(stomps) <= 3
+    assert not stomps & (rounds(steps["ground_slam"]) | rounds(steps["skull_crusher"]))
+    assert steps["stomp"].kind == "stomp" and steps["stomp"].stun >= 1
