@@ -13,7 +13,8 @@ enemy.wolf.damage}` becomes the sum, and `{# a note #}` is left out.
 What a placeholder can name:
 
 - `rules.NAME`, `heroes.CLASS.FIELD`, `abilities.ID.FIELD`: the numbers file.
-  An ability also has `timing` ("Instant", "Cast, 1 round", "Channel, 3 hits").
+  An ability also has `timing` ("Instant", "Cast, 1 round", "Channel, 3 hits")
+  and `loud_tag` (" · **Loud**" for a Loud ability, and nothing for others).
 - `enemy.TYPE.FIELD`, `boss.MOVE.FIELD`, `spawns.TYPE.count` and
   `spawns.TYPE.round`, `fight.name`, `fight.width`, `fight.height` and
   `fight.map`: the fight. A boss move also has `rounds` (the rounds it comes
@@ -196,7 +197,8 @@ def _term(part: str, game: Game, fight: str | None) -> object:
         return _field(_one(rest[:1], game.numbers.heroes, "hero class"), rest[1:])
     if head == "abilities":
         ability = _one(rest[:1], game.numbers.abilities, "ability")
-        return _field(ability, rest[1:], {"timing": _timing(ability)})
+        extra = {"timing": _timing(ability), "loud_tag": " · **Loud**" if ability.loud else ""}
+        return _field(ability, rest[1:], extra)
     if head == "dice":
         return _one(rest, {"sides": _sides(game), "most": _most(game)}, "dice placeholder")
     raise _Unknown(f"{head!r} is not something a placeholder can name")
@@ -317,7 +319,7 @@ def _map(fight: FightDef) -> str:
         legend.append(f"{letter} {cls.capitalize()}")
     for x, y in fight.extra_starts:
         grid[y][x] = "+"
-    legend.append("+ where a fifth hero (or more) starts")
+    legend.append("+ where an extra hero starts (a second Rogue, say)")
     letters: dict[str, str] = {}
     for spawn in fight.spawns:
         if spawn.type not in letters:

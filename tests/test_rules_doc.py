@@ -6,7 +6,10 @@ import pytest
 
 from fastcombat import cli
 from fastcombat.rules_doc import RulesError, load_game, render, render_all
-from tests.helpers import GAME
+from tests.helpers import GAME, REAL_GAME
+
+RULES = Path(__file__).parent.parent / "rules"
+
 
 @pytest.fixture
 def game():
@@ -42,6 +45,11 @@ def test_something_that_rolls_no_dice_has_no_dice_placeholder(game):
 def test_true_and_false_are_written_yes_and_no(game):
     text = "{abilities.eviscerate.loud} {abilities.backstab.loud}"
     assert render(text, game, "core.md") == "yes no"
+
+
+def test_a_loud_ability_is_marked_loud(game):
+    text = "Eviscerate{abilities.eviscerate.loud_tag}. Backstab{abilities.backstab.loud_tag}."
+    assert render(text, game, "core.md") == "Eviscerate · **Loud**. Backstab."
 
 
 def test_how_long_an_ability_takes_is_written_out(game):
@@ -166,3 +174,22 @@ def test_the_rules_command_stops_on_an_unknown_placeholder(tmp_path, monkeypatch
     assert cli.main(["rules"]) == 2
     assert "{rules.hero_moves}" in capsys.readouterr().err
     assert not (tmp_path / "core.md").exists()
+
+
+def test_the_rules_in_the_repo_are_up_to_date():
+    """The rules in `rules/` must be what the templates make from the real game files.
+
+    If this fails, a number or a template changed and nobody ran the command.
+    """
+    made = render_all(RULES, load_game(REAL_GAME))
+    assert Path("core.md") in made and Path("classes/warden.md") in made
+    for path, text in made.items():
+        written = RULES / path
+        assert written.exists(), f"rules/{path} is missing: run `uv run fastcombat rules`"
+        assert written.read_text() == text, (
+            f"rules/{path} is out of date: run `uv run fastcombat rules`"
+        )
+    for written in RULES.rglob("*.md"):
+        path = written.relative_to(RULES)
+        if path.parts[0] != "templates":
+            assert path in made, f"rules/{path} has no template in rules/templates/"
