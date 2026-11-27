@@ -6,7 +6,7 @@ from fastcombat.numbers import load_numbers, load_fight
 from fastcombat.fight import run_fight
 from fastcombat.report import Summary, summarize, check_targets, format_summary, format_checks
 from fastcombat.cli import main
-from fastcombat.policies import AutoOnly
+from fastcombat.policies import AutoOnly, POLICIES
 
 N = load_numbers(GAME / "numbers.toml"); F = load_fight(GAME / "fights" / "ogre_warlord.toml")
 PARTY = ["warden", "rogue", "druid", "mage"]
@@ -24,11 +24,14 @@ def test_checks_are_the_agreed_list():
     full = summarize([run_fight(N, F, PARTY, seed=i) for i in range(10)])
     without = {h: summarize([run_fight(N, F, [p for p in PARTY if p != h], seed=i) for i in range(10)]) for h in PARTY}
     on_auto = {h: summarize([run_fight(N, F, PARTY, policies={h: AutoOnly()}, seed=i) for i in range(10)]) for h in PARTY}
-    names = [c.name for c in check_targets(full, without, on_auto)]
+    no_boss_taunt = summarize([run_fight(N, F, PARTY, policies={"warden": POLICIES["warden_no_boss_taunt"]()},
+                                         seed=i) for i in range(10)])
+    names = [c.name for c in check_targets(full, without, on_auto, no_boss_taunt)]
     assert names == ["length", "win_rate", "no_timeouts", "danger", "auto_share",
                      "resource:warden", "resource:rogue", "resource:druid", "resource:mage",
                      "needed:warden", "needed:rogue", "needed:druid", "needed:mage",
-                     "kit:warden", "kit:rogue", "kit:druid", "kit:mage"]
+                     "kit:warden", "kit:rogue", "kit:druid", "kit:mage", "taunt:boss"]
+    assert "taunt:boss" not in [c.name for c in check_targets(full, without, on_auto)]
 
 def test_run_prints_a_summary_and_takes_a_changed_number(capsys):
     assert main(["run", "--n", "5", *FILES, "--set", "abilities.meteor.cost=12"]) == 0
@@ -126,8 +129,8 @@ def good(**changes) -> Summary:
                 resource_curve={h: [] for h in heroes})
     return replace(s, **changes)
 
-def passed(full, without=None, on_auto=None):
-    return {c.name: c.passed for c in check_targets(full, without or {}, on_auto or {})}
+def passed(full, without=None, on_auto=None, no_boss_taunt=None):
+    return {c.name: c.passed for c in check_targets(full, without or {}, on_auto or {}, no_boss_taunt)}
 
 def test_a_summary_at_the_edges_of_every_target_passes():
     assert all(passed(good(), {"mage": good(win_rate=0.6)}).values())
@@ -137,6 +140,8 @@ def test_a_summary_at_the_edges_of_every_target_passes():
     assert all(passed(good(win_rate=0.7, auto_share=0.2)).values())
     # the kit check: 0.7 - 0.6 is a hair under 0.1 to a computer; it still counts as 0.1
     assert all(passed(good(win_rate=0.7), on_auto={"mage": good(win_rate=0.6)}).values())
+    # the boss-taunt check: the same hair under 0.1 still counts as 0.1
+    assert all(passed(good(win_rate=0.7), no_boss_taunt=good(win_rate=0.6)).values())
 
 def test_each_target_can_fail():
     assert not passed(good(in_band=0.59))["length"]
@@ -151,6 +156,8 @@ def test_each_target_can_fail():
     assert not passed(good(), {"mage": good(win_rate=0.61)})["needed:mage"]
     assert not passed(good(), on_auto={"mage": good(win_rate=0.71)})["kit:mage"]
     assert not passed(good(), on_auto={"mage": good(win_rate=0.9)})["kit:mage"]   # a kit that hurts
+    assert not passed(good(), no_boss_taunt=good(win_rate=0.71))["taunt:boss"]
+    assert not passed(good(), no_boss_taunt=good(win_rate=0.9))["taunt:boss"]    # taunting the boss hurts
 
 def test_the_printed_checks_say_pass_or_fail():
     text = format_checks(check_targets(good(win_rate=0.95), {}))
@@ -221,4 +228,21 @@ def test_check_plays_each_hero_on_auto_and_writes_it_down(tmp_path, capsys):
                           for i in range(2)])
     assert data["on_auto"]["mage"]["damage_share"] == expected.damage_share
     names = [c["name"] for c in data["checks"]]
-    assert names[-2:] == ["kit:warden", "kit:mage"]
+    assert names[-3:] == ["kit:warden", "kit:mage", "taunt:boss"]
+
+def test_check_plays_the_warden_without_boss_taunts_and_writes_it_down(tmp_path, capsys):
+    out = tmp_path / "c.json"
+    main(["check", "--n", "2", *FILES, "--party", "mage,warden", "--json", str(out)])
+    data = json.loads(out.read_text())
+    no_taunt = {"warden": POLICIES["warden_no_boss_taunt"]()}
+    expected = summarize([run_fight(N, F, ["mage", "warden"], policies=no_taunt, seed=i) for i in range(2)])
+    assert data["no_boss_taunt"]["damage_share"] == expected.damage_share
+    assert "taunt:boss" in capsys.readouterr().out
+
+def test_check_has_no_boss_taunt_check_without_a_warden(tmp_path, capsys):
+    out = tmp_path / "c.json"
+    main(["check", "--n", "2", *FILES, "--party", "rogue,mage", "--json", str(out)])
+    data = json.loads(out.read_text())
+    assert data["no_boss_taunt"] is None
+    assert "taunt:boss" not in [c["name"] for c in data["checks"]]
+    assert "taunt:boss" not in capsys.readouterr().out

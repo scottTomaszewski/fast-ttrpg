@@ -29,6 +29,10 @@ NEEDED_AT_LEAST = 0.20  # wins should drop at least this much without any one he
 # kit makes the party weaker can still pass the check above. This one keeps
 # the hero in the fight and takes away only their kit.
 KIT_AT_LEAST = 0.10
+# Wins should drop at least this much when the Warden never Challenges the
+# boss. A boss with no Taunt cards goes for whoever it likes, so keeping
+# Taunt cards on it should be worth real wins, as for a tank in an MMO.
+TAUNT_BOSS_AT_LEAST = 0.10
 
 # Win rates are counts divided by the number of fights, so one taken from
 # another can come out a hair under what it should be (0.7 - 0.5 is
@@ -119,7 +123,10 @@ def summarize(results: list[FightResult]) -> Summary:
 
 
 def check_targets(
-    full: Summary, without: dict[str, Summary], on_auto: dict[str, Summary] | None = None
+    full: Summary,
+    without: dict[str, Summary],
+    on_auto: dict[str, Summary] | None = None,
+    no_boss_taunt: Summary | None = None,
 ) -> list[Check]:
     """Check the full party's summary against each target, in a fixed order.
 
@@ -127,7 +134,9 @@ def check_targets(
     hero taken out. It gives one `needed:` check each. `on_auto` holds, for
     each hero id, the summary of the same party with only that hero playing
     the `auto` policy (it never uses an ability). It gives one `kit:` check
-    each.
+    each. `no_boss_taunt` is the summary of the same party with the Warden
+    playing `warden_no_boss_taunt` (he never Challenges the boss). It gives
+    the `taunt:boss` check; with no Warden there is none, and no check.
     """
     low, high = WIN_RATE
     auto_low, auto_high = AUTO_SHARE
@@ -187,6 +196,17 @@ def check_targets(
                 drop >= KIT_AT_LEAST - _TINY,
                 f"wins {_pct(full.win_rate)} with the kit, {_pct(other.win_rate)} on auto",
                 f"at least {_pct(KIT_AT_LEAST)} fewer wins when they only auto-attack",
+            )
+        )
+    if no_boss_taunt is not None:
+        drop = full.win_rate - no_boss_taunt.win_rate
+        checks.append(
+            Check(
+                "taunt:boss",
+                drop >= TAUNT_BOSS_AT_LEAST - _TINY,
+                f"wins {_pct(full.win_rate)} with, "
+                f"{_pct(no_boss_taunt.win_rate)} when the Warden never taunts the boss",
+                f"at least {_pct(TAUNT_BOSS_AT_LEAST)} fewer wins without boss taunts",
             )
         )
     return checks

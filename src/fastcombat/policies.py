@@ -150,6 +150,8 @@ class WardenPolicy(_ClassPolicy):
         enemy next to me that is not controlled.
     """
 
+    challenges_boss = True  # rule 6; `WardenNoBossTaunt` switches it off
+
     def where_to(self, state: FightState, warden: Hero) -> Pos:
         goal = _boss(state) or _nearest_enemy(state, warden)
         if goal is None:
@@ -200,7 +202,7 @@ class WardenPolicy(_ClassPolicy):
                 return action
 
         # 6. The boss has no Taunt cards: Challenge it.
-        if boss is not None and "taunt" not in boss.stacks:
+        if self.challenges_boss and boss is not None and "taunt" not in boss.stacks:
             if action := _ability(state, warden, "challenge", boss.id):
                 return action
 
@@ -246,6 +248,16 @@ class WardenPolicy(_ClassPolicy):
         if action := _auto(state, warden, _focus(state, warden)):
             return action
         return _auto(state, warden, _weakest_next_to(state, warden)) or Action("none")
+
+
+class WardenNoBossTaunt(WardenPolicy):
+    """The Warden with rule 6 switched off: he never Challenges the boss.
+
+    Everything else is the same. It is not a way to play: the `taunt:boss`
+    check plays it to see how many wins taunting the boss is worth.
+    """
+
+    challenges_boss = False
 
 
 class RoguePolicy(_ClassPolicy):
@@ -616,6 +628,7 @@ POLICIES: dict[str, type] = {
     "druid": DruidPolicy,
     "mage": MagePolicy,
     "auto": AutoOnly,
+    "warden_no_boss_taunt": WardenNoBossTaunt,
 }
 
 

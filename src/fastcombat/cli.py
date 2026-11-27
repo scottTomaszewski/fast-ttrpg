@@ -1,9 +1,10 @@
 """The `fastcombat` command: play many fights and say how they went.
 
     fastcombat run     plays the fights and prints a summary
-    fastcombat check   also plays them with each hero left out in turn, and
-                       with each hero only auto-attacking in turn, and checks
-                       everything against the design's targets
+    fastcombat check   also plays them with each hero left out in turn, with
+                       each hero only auto-attacking in turn, and with the
+                       Warden never taunting the boss, and checks everything
+                       against the design's targets
 
 Both read the real game files (`game/numbers.toml` and `game/fights/`)
 unless told to read others. `--set` changes one number for one run, so an
@@ -41,20 +42,22 @@ class _Setup:
         self.policies = _policies(args.policy, self.ids)
         self.seeds = range(args.seed, args.seed + args.n)
 
-    def play(self, keep: list[int], auto: int | None = None) -> list[FightResult]:
+    def play(self, keep: list[int], swap: dict[int, str] | None = None) -> list[FightResult]:
         """Play every seed with only the heroes at the places in `keep`.
 
         A hero's id can change when another is left out (with two Rogues,
         leaving out "rogue" makes "rogue2" the new "rogue"), so each picked
-        policy follows its hero by place in the party, not by id. The hero
-        at the place `auto`, if one is given, plays the `auto` policy.
+        policy follows its hero by place in the party, not by id. `swap`
+        gives some places another policy by name for these fights, like
+        {0: "auto"}.
         """
+        swap = swap or {}
         party = [self.party[i] for i in keep]
         ids = _hero_ids(self.numbers, self.fight, party)
         names = {
-            ids[k]: "auto" if i == auto else self.policies[self.ids[i]]
+            ids[k]: swap.get(i) or self.policies[self.ids[i]]
             for k, i in enumerate(keep)
-            if i == auto or self.ids[i] in self.policies
+            if i in swap or self.ids[i] in self.policies
         }
         results = []
         for seed in self.seeds:
@@ -86,8 +89,16 @@ def main(argv: list[str] | None = None) -> int:
         if rest:  # a party of one cannot be played without its only hero
             without[hero] = summarize(setup.play(rest))
     for i, hero in enumerate(setup.ids):
-        on_auto[hero] = summarize(setup.play(everyone, auto=i))
-    checks = check_targets(full, without, on_auto)
+        on_auto[hero] = summarize(setup.play(everyone, swap={i: "auto"}))
+    # Every Warden who plays the Warden's rules stops taunting the boss. A
+    # Warden made to play another way (like warden=auto) is left as he is.
+    wardens = {
+        i: "warden_no_boss_taunt"
+        for i, hero in enumerate(setup.ids)
+        if setup.party[i] == "warden" and setup.policies.get(hero, "warden") == "warden"
+    }
+    no_boss_taunt = summarize(setup.play(everyone, swap=wardens)) if wardens else None
+    checks = check_targets(full, without, on_auto, no_boss_taunt)
     print()
     print(format_checks(checks))
     _write_json(
@@ -96,6 +107,7 @@ def main(argv: list[str] | None = None) -> int:
             "full": asdict(full),
             "without": {hero: asdict(s) for hero, s in without.items()},
             "on_auto": {hero: asdict(s) for hero, s in on_auto.items()},
+            "no_boss_taunt": asdict(no_boss_taunt) if no_boss_taunt else None,
             "checks": [asdict(c) for c in checks],
         },
     )
@@ -152,9 +164,9 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "check",
         parents=[shared],
-        help="also play with each hero left out, and with each hero only "
-        "auto-attacking, and check the design's targets (exits 0 only if every "
-        "check passes)",
+        help="also play with each hero left out, with each hero only "
+        "auto-attacking, and with the Warden never taunting the boss, and check "
+        "the design's targets (exits 0 only if every check passes)",
     )
     return parser
 

@@ -26,6 +26,10 @@ so a hero whose abilities make the party weaker could still pass
 `needed:`; `kit:` catches that. The same fights (the same seeds) are
 played each time, so the numbers can be compared.
 
+`taunt:boss` plays the fight with the Warden never taunting the boss (the
+`warden_no_boss_taunt` policy) and wants at least 10 points fewer wins; it
+is only there when the party has a Warden.
+
 `uv run fastcombat run --help` lists every option: which fight, which
 party (`--party warden,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.
