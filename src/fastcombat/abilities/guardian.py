@@ -1,4 +1,4 @@
-"""The Guardian's six abilities. The Guardian is the tank: they make the enemies
+"""The Guardian's seven abilities. The Guardian is the tank: they make the enemies
 attack them, and stand between the enemies and everyone else.
 
 Each ability's numbers (what it costs, how far it reaches, how many cards it
@@ -10,7 +10,7 @@ their own way, so their own square counts as free.
 """
 
 from fastcombat.abilities import Action, check, effect, target_enemy
-from fastcombat.combat import add_stack
+from fastcombat.combat import add_stack, damage_enemy
 from fastcombat.grid import Pos, behind, free_next_to, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.units import Enemy, FightState, Hero
@@ -122,6 +122,28 @@ def last_stand(
 ) -> None:
     """While the card lasts, nothing can take the Guardian below 1 HP."""
     add_stack(guardian, "last_stand", spec.cards)
+
+
+@check("shield_slam")
+def _shield_slam_needs_an_enemy(
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
+) -> bool:
+    return target_enemy(state, action) is not None
+
+
+@effect("shield_slam")
+def shield_slam(
+    state: FightState, guardian: Hero, spec: AbilitySpec, action: Action
+) -> None:
+    """Hit one enemy with the Shield Slam dice, and get `alt` grit (never past his pool).
+
+    It is a hit, not an auto-attack: it never misses or crits, and its
+    damage does not count as auto-attack damage. It has a cooldown.
+    """
+    amount = state.dice.roll_many(*spec.dice, spec.bonus)
+    damage_enemy(state, guardian.id, state.enemies[action.target], amount, loud=spec.loud)
+    pool = state.numbers.heroes[guardian.cls].pool
+    guardian.resource = min(pool, guardian.resource + spec.alt)
 
 
 def _taunt(enemy: Enemy, cards: int) -> None:

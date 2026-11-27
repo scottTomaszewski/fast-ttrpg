@@ -150,3 +150,78 @@ def test_any_hero_can_disrupt_next_to_them_and_a_boss_cast_breaks_too():
     o = enemy(s, "ogre", (9, 5))
     o.announced = Announced("skull_crusher", "heavy", 2, "guardian", frozenset(), (6, 6))
     assert use(s, "mage", "disrupt", "ogre1") and o.announced is None
+
+
+# --- Ice Block -----------------------------------------------------------------
+
+from fastcombat.abilities import Action, can_use
+from fastcombat.combat import damage_hero, stun_hero, end_of_party_turn_cards
+from fastcombat.targeting import choose_target, seen_heroes, puller_of
+from fastcombat.units import Cast
+
+def test_ice_block_clears_her_bad_cards_and_ends_her_cast():
+    s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (8, 5))
+    add_stack(m, "poison", 3, 2); add_stack(m, "rooted", 1); add_stack(m, "cd:disrupt", 2)
+    add_stack(m, "rejuvenation", 4, 4, source="druid")
+    m.cast = Cast("firebolt", "wolf1", None, 0, 0, False)
+    assert use(s, "mage", "ice_block")
+    assert m.cast is None and "poison" not in m.stacks and "rooted" not in m.stacks
+    assert "cd:disrupt" in m.stacks and "rejuvenation" in m.stacks  # good cards and cooldowns stay
+    assert m.stacks["ice_block"].cards == 1 and m.stacks["cd:ice_block"].cards == 8 and m.resource == 30
+
+def test_in_the_ice_she_cannot_be_hurt_picked_or_pull():
+    s = state(); m = s.heroes["mage"]; w = enemy(s, "wolf", (2, 4))
+    assert choose_target(s, w) is m                                 # wolves go for the back line
+    w.pulled_by = "mage"; use(s, "mage", "ice_block")
+    assert m not in seen_heroes(s) and puller_of(s, w) is None and choose_target(s, w).id != "mage"
+    assert damage_hero(s, m, 50, attacker=w) == 0 and m.hp == 28
+    assert damage_hero(s, m, 50, attacker=None, blast=True) == 0 and m.up
+    stun_hero(s, m, 1); assert "stun" not in m.stacks             # nothing gets through the ice
+
+def test_ice_block_covers_the_gm_turn_and_is_gone_at_the_top_of_her_next_turn():
+    from fastcombat.fight import party_turn
+    from tests.test_fight import Plays, idle
+    s = state(); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5))
+    party_turn(s, idle(s, mage=Plays(Action("ability", "ice_block"))))
+    assert m.iced                                                   # on through the GM turn
+    assert not can_use(s, m, "blink", Action("ability", "blink", pos=(1, 1)))   # no acting in the ice
+    party_turn(s, idle(s, mage=Plays(Action("auto", target="wolf1"), dest=(2, 4))))
+    assert not m.iced and m.pos == (2, 4) and w.hp < 16            # free again: she moved and hit
+
+def test_a_stunned_mage_may_ice_block_and_nothing_else():
+    s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (8, 5))
+    stun_hero(s, m, 1)
+    assert not can_use(s, m, "blink", Action("ability", "blink", pos=(1, 1)))
+    assert not can_use(s, m, "disrupt", Action("ability", "disrupt", "wolf1"))
+    assert use(s, "mage", "ice_block") and "stun" not in m.stacks
+
+
+# --- Evocation -----------------------------------------------------------------
+
+def test_evocation_gives_mana_for_two_rounds_and_starts_its_cooldown_once():
+    from fastcombat.combat import top_of_party_turn_cards
+    s = state(); m = s.heroes["mage"]; m.resource = 10
+    assert use(s, "mage", "evocation")
+    assert m.resource == 16 and m.cast.is_channel and m.stacks["cd:evocation"].cards == 8
+    top_of_party_turn_cards(s)                                      # the next turn (no regen here)
+    continue_cast(s, m)
+    assert m.resource == 22 and m.cast is None                      # the second round, and it is over
+    assert m.stacks["cd:evocation"].cards == 7                      # not started again by the second round
+
+def test_evocation_never_fills_past_her_pool():
+    s = state(); m = s.heroes["mage"]; m.resource = 27
+    use(s, "mage", "evocation"); assert m.resource == 30
+
+def test_moving_ends_evocation_but_damage_does_not():
+    from fastcombat.fight import party_turn
+    from tests.test_fight import Plays, idle
+    s = state(); m = s.heroes["mage"]; m.resource = 10; w = enemy(s, "wolf", (8, 5))
+    use(s, "mage", "evocation"); damage_hero(s, m, 5, attacker=w)
+    assert m.cast is not None                                       # still channelling
+    party_turn(s, idle(s, mage=Plays(Action("continue"), dest=(2, 4))))
+    assert m.cast is None and m.resource == 16 + 1                  # moving ended it; only the regen came
+
+def test_a_stun_ends_a_cast_or_channel():
+    s = state(); m = s.heroes["mage"]; m.resource = 10
+    use(s, "mage", "evocation"); stun_hero(s, m, 1)
+    assert m.cast is None and m.stacks["stun"].cards == 1

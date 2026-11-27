@@ -363,3 +363,42 @@ def test_a_benched_ability_is_not_a_button_and_does_not_count_for_starving():
     m = {"abilities.quicken.cost": 1}
     assert _cheapest_cost(load_numbers(GAME / "numbers.toml", m), "mage") == 1
     assert _cheapest_cost(load_numbers(GAME / "numbers.toml", m | {"abilities.quicken.benched": True}), "mage") == 2
+
+
+# A stunned hero
+
+from fastcombat.combat import stun_hero
+
+def test_a_one_card_stun_from_the_gm_turn_costs_the_hero_exactly_one_party_turn():
+    s = state(rolls=[4]); r = s.heroes["rogue"]; w = enemy(s, "wolf", (3, 4))   # next to her at (2, 5)
+    stun_hero(s, r, 1)                                              # as the ogre's Stomp does in the GM turn
+    plays = idle(s, rogue=Plays(Action("auto", target="wolf1"), dest=(2, 4)))
+    party_turn(s, plays)
+    assert r.pos == (2, 5) and w.hp == 16                           # no move, no act
+    assert "stun" not in r.stacks                                   # the card came off at the end of the turn
+    party_turn(s, plays)
+    assert r.pos == (2, 4) and w.hp == 12                           # the next turn is hers again
+
+def test_a_longer_stun_loses_one_card_a_party_turn():
+    s = state(); r = s.heroes["rogue"]; stun_hero(s, r, 2)
+    party_turn(s, idle(s)); assert r.stacks["stun"].cards == 1
+    stun_hero(s, r, 1); assert r.stacks["stun"].cards == 1          # a new stun never shortens one
+    party_turn(s, idle(s)); assert "stun" not in r.stacks
+
+def test_nobody_down_or_in_the_ice_gets_stunned():
+    s = state(); m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
+    stun_hero(s, m, 1); assert "stun" not in m.stacks
+
+def test_a_stunned_hero_cannot_haul_up_or_continue_a_cast():
+    s = state(); r = s.heroes["rogue"]; m = s.heroes["mage"]; damage_hero(s, m, 99, attacker=None)
+    stun_hero(s, r, 1)
+    party_turn(s, idle(s, rogue=Plays(Action("haul_up", target="mage"))))
+    assert m.down and s.tally.uses["rogue"] == {}
+
+def test_the_druid_acts_first_so_her_cleanse_gives_a_stunned_guardian_his_act_step():
+    s = state(rolls=[5]); g = s.heroes["guardian"]; w = enemy(s, "wolf", (4, 6))   # next to him
+    stun_hero(s, g, 1)
+    party_turn(s, idle(s, druid=Plays(Action("ability", "cleanse", "guardian", card="stun")),
+                       guardian=Plays(Action("auto", target="wolf1"), dest=(3, 7))))
+    assert g.pos == (3, 6)                                          # the move step had gone by
+    assert w.hp == 11                                               # but he acted

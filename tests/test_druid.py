@@ -136,3 +136,35 @@ def test_nourish_rolls_its_dice_count_and_adds_its_bonus():
     s.numbers.abilities["nourish"] = replace(s.numbers.abilities["nourish"], dice=(2, 6), bonus=1)
     use(s, "druid", "nourish", "guardian"); assert w.hp == 30 + 3 + 4 + 1 and d.resource == 4
     use(s, "druid", "nourish", "guardian"); assert w.hp == 38 + 2 + 6 + 1 and d.resource == 6   # any die on its top face
+
+
+# --- Cleanse takes off any one bad card -----------------------------------------
+
+from fastcombat.combat import stun_hero
+from fastcombat.abilities import Action, can_use, use_ability
+
+def test_cleanse_takes_off_the_bad_card_named_and_leaves_the_rest():
+    s = state(); g = s.heroes["guardian"]
+    stun_hero(s, g, 1); add_stack(g, "poison", 3, 2)
+    assert use_ability(s, s.heroes["druid"], Action("ability", "cleanse", "guardian", card="poison"))
+    assert "poison" not in g.stacks and "stun" in g.stacks
+    assert use_ability(s, s.heroes["druid"], Action("ability", "cleanse", "guardian", card="stun"))
+    assert "stun" not in g.stacks
+
+def test_cleanse_with_no_card_named_takes_a_stun_first():
+    s = state(); g = s.heroes["guardian"]
+    add_stack(g, "poison", 3, 2); stun_hero(s, g, 1)
+    assert use(s, "druid", "cleanse", "guardian") and "stun" not in g.stacks and "poison" in g.stacks
+
+def test_cleanse_never_takes_bleeding_cooldowns_or_good_cards():
+    s = state(); m = s.heroes["mage"]; d = s.heroes["druid"]
+    add_stack(m, "cd:disrupt", 2); add_stack(m, "guarded", 1, 4)
+    for card in (None, "cd:disrupt", "guarded", "bleeding", "poison"):
+        assert not can_use(s, d, "cleanse", Action("ability", "cleanse", "mage", card=card))
+    from fastcombat.combat import damage_hero
+    damage_hero(s, m, 99, attacker=None)                            # down, with Bleeding cards
+    assert not can_use(s, d, "cleanse", Action("ability", "cleanse", "mage", card="bleeding"))
+
+def test_a_stunned_druid_cannot_cleanse_herself():
+    s = state(); d = s.heroes["druid"]; stun_hero(s, d, 1)
+    assert not use(s, "druid", "cleanse", "druid") and "stun" in d.stacks

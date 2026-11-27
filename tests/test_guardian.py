@@ -107,3 +107,29 @@ def test_challenging_shout_leaves_a_longer_taunt_as_it_is():
 def test_the_taunt_ability_makes_a_shorter_taunt_as_long_as_its_own():
     s = state(); w = enemy(s, "wolf", (8, 6)); add_stack(w, "taunt", 1)
     assert use(s, "guardian", "taunt", "wolf1") and w.stacks["taunt"].cards == 3
+
+
+# --- Shield Slam ---------------------------------------------------------------
+
+def test_shield_slam_is_a_free_hit_that_gives_grit():
+    s = state(rolls=[5, 7]); g = s.heroes["guardian"]; w = enemy(s, "wolf", (4, 6))   # next to him
+    assert use(s, "guardian", "shield_slam", "wolf1")
+    assert w.hp == 16 - 12 and g.resource == 2 + 1                  # 2d8, no grit spent, 1 grit back
+    assert s.tally.damage["guardian"] == 12 and s.tally.auto_damage["guardian"] == 0   # not an auto-attack
+    assert "taunt" not in w.stacks and w.pulled_by is None          # not Loud
+
+def test_shield_slam_grit_stops_at_his_pool_and_it_needs_an_enemy_next_to_him():
+    s = state(rolls=[1, 1]); g = s.heroes["guardian"]; g.resource = 10; enemy(s, "wolf", (4, 6))
+    assert use(s, "guardian", "shield_slam", "wolf1") and g.resource == 10
+    s = state(); enemy(s, "wolf", (5, 6))                            # two squares away
+    assert not use(s, "guardian", "shield_slam", "wolf1")
+    assert not use(s, "guardian", "shield_slam", "mage")             # not on a hero
+
+def test_shield_slam_has_a_two_card_cooldown():
+    from fastcombat.combat import top_of_party_turn_cards
+    s = state(); w = enemy(s, "ogre", (4, 6))
+    assert use(s, "guardian", "shield_slam", "ogre1")
+    assert s.heroes["guardian"].stacks["cd:shield_slam"].cards == 2
+    assert not use(s, "guardian", "shield_slam", "ogre1")
+    top_of_party_turn_cards(s); assert not use(s, "guardian", "shield_slam", "ogre1")   # the next turn
+    top_of_party_turn_cards(s); assert use(s, "guardian", "shield_slam", "ogre1")       # the turn after

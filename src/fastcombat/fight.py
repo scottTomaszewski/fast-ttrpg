@@ -9,8 +9,8 @@ round allowed (`rules.max_rounds`) is stopped and counts as a loss.
 
 from dataclasses import dataclass
 
-from fastcombat.abilities import Action, use_ability
-from fastcombat.casting import continue_cast, drop_cast, land_casts
+from fastcombat.abilities import WHILE_STUNNED, Action, use_ability
+from fastcombat.casting import continue_cast, drop_cast, land_casts, moving_ends
 from fastcombat.combat import (
     damage_enemy,
     end_of_party_turn_cards,
@@ -166,12 +166,14 @@ def _crit_bonus(state: FightState, hero: Hero, spec: HeroSpec) -> None:
 def _move(state: FightState, hero: Hero, dest: Pos) -> None:
     """The move step for one hero.
 
-    Wanting to move ends a cast (a channel is fine). The hero then moves
-    only if `dest` is on the map, close enough, and nobody stands there.
+    A stunned hero, or one in an Ice Block, does not move. Wanting to move
+    ends a cast, or a channel the hero must stand still for (any other
+    channel is fine). The hero then moves only if `dest` is on the map,
+    close enough, and nobody stands there.
     """
-    if dest == hero.pos:
+    if dest == hero.pos or hero.stunned or hero.iced:
         return
-    if hero.cast is not None and not hero.cast.is_channel:
+    if moving_ends(state, hero):
         drop_cast(state, hero)
     on_the_map = on_map(dest, state.fight.width, state.fight.height)
     close_enough = distance(hero.pos, dest) <= state.numbers.rules["hero_move"]
@@ -184,8 +186,14 @@ def _act(state: FightState, hero: Hero, action: Action) -> None:
 
     "continue" spends the step on the cast or channel going (nothing, if
     there is none). Anything else ends that cast or channel first. An auto
-    or an ability that cannot happen is the same as doing nothing.
+    or an ability that cannot happen is the same as doing nothing. A
+    stunned hero may only use an ability in WHILE_STUNNED (Ice Block); a
+    hero in an Ice Block does nothing.
     """
+    if hero.iced:
+        return
+    if hero.stunned and not (action.kind == "ability" and action.ability in WHILE_STUNNED):
+        return
     if action.kind == "continue":
         continue_cast(state, hero)
         return

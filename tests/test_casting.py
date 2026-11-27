@@ -3,7 +3,7 @@ from dataclasses import replace
 from tests.helpers import state, enemy
 from fastcombat import abilities as ab
 from fastcombat.abilities import Action, use_ability, can_use, effect, check, cost, keeps_hiding
-from fastcombat.casting import land_casts, continue_cast, drop_cast, may_move
+from fastcombat.casting import land_casts, continue_cast, drop_cast, moving_ends
 from fastcombat.combat import top_of_party_turn_cards
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def s():
 def test_a_two_round_cast_takes_two_actions_and_lands_the_turn_after(s):
     m = s.heroes["mage"]; w = enemy(s, "wolf", (6, 5))
     assert use_ability(s, m, Action("ability", "t_bolt", "wolf1"))
-    assert m.resource == 30 and not may_move(m)
+    assert m.resource == 30 and moving_ends(s, m)
     land_casts(s); assert s.hits == []          # top of turn T+1: not yet
     continue_cast(s, m)                         # act step T+1
     land_casts(s)                               # top of turn T+2
@@ -33,7 +33,7 @@ def test_a_two_round_cast_takes_two_actions_and_lands_the_turn_after(s):
 def test_a_cancelled_cast_costs_nothing(s):
     m = s.heroes["mage"]; enemy(s, "wolf", (6, 5))
     use_ability(s, m, Action("ability", "t_bolt", "wolf1")); drop_cast(s, m)
-    land_casts(s); assert s.hits == [] and m.resource == 30 and may_move(m)
+    land_casts(s); assert s.hits == [] and m.resource == 30 and not moving_ends(s, m)
 
 def test_a_cast_fizzles_free_if_the_target_died(s):
     m = s.heroes["mage"]; w = enemy(s, "wolf", (6, 5))
@@ -44,7 +44,7 @@ def test_a_cast_fizzles_free_if_the_target_died(s):
 def test_a_channel_hits_now_pays_per_hit_and_allows_moving(s):
     m = s.heroes["mage"]; enemy(s, "wolf", (6, 5))
     use_ability(s, m, Action("ability", "t_beam", "wolf1"))
-    assert s.hits == ["wolf1"] and m.resource == 28 and may_move(m)
+    assert s.hits == ["wolf1"] and m.resource == 28 and not moving_ends(s, m)
     continue_cast(s, m); continue_cast(s, m)
     assert len(s.hits) == 3 and m.resource == 24 and m.cast is None
 

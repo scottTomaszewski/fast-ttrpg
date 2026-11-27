@@ -35,6 +35,10 @@ max = 3
 min = 0.2
 max = 2
 
+[shield_slam]    # filler, only when everything is going very well (copied from game/ on 2026-11-27)
+min = 2
+max = 3
+
 # --- Rogue ---
 
 [backstab]       # main builder
@@ -119,6 +123,14 @@ max = 2
 [polymorph]      # take an add out
 min = 0.5
 max = 3
+
+[ice_block]      # last-moment save from a hit she cannot escape (copied from game/ on 2026-11-27)
+min = 0.2
+max = 1.5
+
+[evocation]      # get mana back when nothing needs her (copied from game/ on 2026-11-27)
+min = 0.3
+max = 2
 
 # --- Anyone ---
 

@@ -1,6 +1,8 @@
-"""The Mage's seven abilities. The Mage stands far back and does the big
-damage, to one enemy or to a whole area. It can also hold enemies in place,
-turn one into a sheep, hop away, and make the whole party attack faster.
+"""The Mage's abilities. The Mage stands far back and does the big
+damage, to one enemy or to a whole area. She can also hold enemies in place,
+turn one into a sheep, hop away, freeze herself in a block of ice, and
+call her mana back. (Quicken, which makes the whole party attack faster,
+is benched for now: it is here, but nobody can use it.)
 
 Each ability's numbers (what it costs, how long it takes, how far it
 reaches, its dice and how many cards it gives) are in the numbers file.
@@ -8,15 +10,16 @@ reaches, its dice and how many cards it gives) are in the numbers file.
 Three words used below. A cast takes a round or more and lands at the top of
 a later party turn; Firebolt, Meteor and Polymorph are casts. A channel
 makes one hit in each act step, and each hit is paid for on its own; Arcane
-Volley is a channel (see `casting.py`). The area of a blast is every square
-within its radius of the square it is aimed at.
+Volley and Evocation are channels (see `casting.py`). The area of a blast
+is every square within its radius of the square it is aimed at.
 """
 
 from fastcombat.abilities import Action, check, effect, target_enemy
+from fastcombat.casting import drop_cast
 from fastcombat.combat import add_stack, control, damage_enemy, damage_hero
 from fastcombat.grid import adjacent, on_map, within
 from fastcombat.numbers import AbilitySpec
-from fastcombat.units import FightState, Hero
+from fastcombat.units import BAD_STACKS, FightState, Hero
 
 
 @check("arcane_volley")
@@ -138,6 +141,35 @@ def polymorph(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) 
         if enemy is not target:
             enemy.stacks.pop("sheep", None)
     control(state, target, "sheep", spec.cards)
+
+
+@effect("ice_block")
+def ice_block(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> None:
+    """The Mage freezes herself in a block of ice: Ice Block cards.
+
+    While she holds them she cannot be hurt, no enemy can pick her as its
+    target (see `targeting.py`), and she cannot move or act. The cards come
+    off at the top of the party turn like any other, so one card covers the
+    GM turn after she uses it. Going into the ice takes every bad card off
+    her (stun, poison and the like, never Bleeding or a cooldown) and ends
+    her own cast or channel. She may use it while stunned
+    (`abilities.WHILE_STUNNED`).
+    """
+    for name in BAD_STACKS:
+        mage.stacks.pop(name, None)
+    drop_cast(state, mage)
+    add_stack(mage, "ice_block", spec.cards)
+
+
+@effect("evocation")
+def evocation(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> None:
+    """One round of the channel: `value` mana back, never past her pool.
+
+    It is a channel she must stand still for (`still` in the numbers file):
+    moving ends it. Damage does not.
+    """
+    pool = state.numbers.heroes[mage.cls].pool
+    mage.resource = min(pool, mage.resource + spec.value)
 
 
 def _hit(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> None:

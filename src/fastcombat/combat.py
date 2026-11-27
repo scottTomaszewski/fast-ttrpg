@@ -12,6 +12,8 @@ from fastcombat.units import Enemy, FightState, Hero, Stack
 HEAL_STACKS = ("rejuvenation", "wild_growth")
 # Cards that end the moment the enemy takes any damage.
 BROKEN_BY_DAMAGE = ("sap", "sheep")
+# Cards a hero holds that come off at the end of the party turn, not the top.
+END_OF_TURN_STACKS = ("bleeding", "stun")
 
 
 def add_stack(
@@ -42,6 +44,24 @@ def control(state: FightState, enemy: Enemy, name: str, cards: int) -> None:
     old = enemy.stacks.get(name)
     if old is None or old.cards < cards:
         add_stack(enemy, name, cards)
+
+
+def stun_hero(state: FightState, hero: Hero, cards: int) -> None:
+    """`hero` is stunned for `cards` party turns, if they are up and not in an Ice Block.
+
+    A stunned hero does not move or act in the party turn (Ice Block is the
+    one thing they may still do; see `abilities.can_use`). Stun cards on a
+    hero come off at the end of the party turn, not the top, so a 1-card
+    stun from the GM turn costs the next party turn. A new stun never
+    shortens one already there. Being stunned ends the hero's cast or
+    channel.
+    """
+    if not hero.up or hero.iced:
+        return
+    old = hero.stacks.get("stun")
+    if old is None or old.cards < cards:
+        add_stack(hero, "stun", cards)
+    drop_cast(state, hero)
 
 
 def tick_stacks(unit: Hero | Enemy) -> None:
@@ -101,10 +121,13 @@ def damage_hero(
     `attacker` is the enemy whose attack it is, or None for damage no enemy
     is attacking with right now, like poison. Guarded cards take their value
     off any hit, and Shield Plant takes its value off a blast. With a Last
-    Stand card the hero stops at 1 HP. Damage never breaks a cast.
+    Stand card the hero stops at 1 HP. A hero in an Ice Block takes nothing.
+    Damage never breaks a cast.
     """
     if not hero.up:
         return 0  # nobody hits a downed hero, and a hit must not restart the bleeding
+    if hero.iced:
+        return 0  # nothing hurts her in the ice
     taken = amount
     if "guarded" in hero.stacks:
         taken -= hero.stacks["guarded"].value
@@ -181,9 +204,9 @@ def top_of_party_turn_cards(state: FightState) -> None:
     Heal cards heal (the hero who put them on gets the credit, or the hero
     holding them if nobody did) and poison hurts. Then each stack the hero
     held when this began loses one card. A stack that went away in between,
-    because the hero went down or got up, does not. Bleeding cards are the
-    one exception: they come off at the end of the party turn instead, in
-    `end_of_party_turn_cards`.
+    because the hero went down or got up, does not. Bleeding and stun cards
+    are the exceptions: they come off at the end of the party turn instead,
+    in `end_of_party_turn_cards`.
     """
     for hero in state.heroes.values():
         if hero.out:
@@ -196,20 +219,24 @@ def top_of_party_turn_cards(state: FightState) -> None:
         if "poison" in hero.stacks:
             damage_hero(state, hero, hero.stacks["poison"].value, attacker=None)
         for name, stack in held.items():
-            if name == "bleeding" or hero.stacks.get(name) is not stack:
+            if name in END_OF_TURN_STACKS or hero.stacks.get(name) is not stack:
                 continue
             _take_a_card(hero, name)
 
 
 def end_of_party_turn_cards(state: FightState) -> None:
-    """Every hero who is down loses one Bleeding card, after everyone has acted.
+    """After everyone has acted: every hero who is down loses one Bleeding
+    card, and every hero who is up and stunned loses one stun card.
 
-    This comes at the end of the party turn so that even a hero with one
-    card left gets a whole party turn in which someone can save them. When
-    the last card comes off, the hero is out. A hero who got up this turn
-    has no Bleeding cards and is left alone.
+    Bleeding comes off at the end of the party turn so that even a hero with
+    one card left gets a whole party turn in which someone can save them.
+    When the last card comes off, the hero is out. A hero who got up this
+    turn has no Bleeding cards and is left alone. A stun comes off at the
+    end so that a stun from the GM turn costs the party turn after it.
     """
     for hero in state.heroes.values():
+        if hero.up and "stun" in hero.stacks:
+            _take_a_card(hero, "stun")
         if not hero.down:
             continue
         _take_a_card(hero, "bleeding")

@@ -21,7 +21,7 @@ def test_the_frozen_files_load():
     assert n.heroes["mage"].pool == 30 and n.heroes["rogue"].regen == 3
     assert n.abilities["meteor"].cast == 2 and n.abilities["meteor"].dice == (8, 6)
     assert n.abilities["eviscerate"].loud is True
-    assert len(n.abilities) == 28
+    assert len(n.abilities) == 31
     assert f.enemy_types["brute"].shielded == 5
     assert sum(1 for s in f.spawns if s.round == 6) == 6
     assert f.hero_starts["guardian"] == (3, 6)
@@ -85,8 +85,9 @@ def test_an_enemy_without_hp_move_or_range_names_the_place(tmp_path, name, key):
 def test_an_ability_with_no_range_needs_no_reach():
     n = load_numbers(GAME / "numbers.toml")
     def reach(r): return {name for name, a in n.abilities.items() if a.range == r}
-    assert reach(0) == {"challenging_shout", "shield_plant", "last_stand", "vanish", "shadowmeld", "frost_nova", "quicken"}
-    assert reach(1) == {"backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "disrupt"}
+    assert reach(0) == {"challenging_shout", "shield_plant", "last_stand", "vanish", "shadowmeld", "frost_nova",
+                        "quicken", "ice_block", "evocation"}
+    assert reach(1) == {"backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "disrupt", "shield_slam"}
 
 @pytest.mark.parametrize("load", [load_numbers, load_fight])
 def test_a_file_that_is_not_toml_names_the_file(tmp_path, load):

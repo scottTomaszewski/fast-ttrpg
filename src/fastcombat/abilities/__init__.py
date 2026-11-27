@@ -17,7 +17,12 @@ which fills the tables below using these decorators:
 
 A cooldown is a stack of cards on the hero, called "cd:" and the ability's
 name ("cd:disrupt"). One card comes off at the top of each party turn, like
-any other stack. While the stack is there, the ability cannot be used.
+any other stack. While the stack is there, the ability cannot be used. A
+channel starts its cooldown on its first hit; its later hits do not start
+it again.
+
+A stunned hero may use only the abilities in WHILE_STUNNED (Ice Block). A
+hero in an Ice Block may use none.
 """
 
 from collections.abc import Callable
@@ -38,6 +43,7 @@ class Action:
     ability: str | None = None
     target: str | None = None  # unit id
     pos: Pos | None = None  # centre of an area, or where to land
+    card: str | None = None  # which card to take off, for Cleanse
 
 
 Effect = Callable[[FightState, Hero, AbilitySpec, Action], None]
@@ -48,6 +54,7 @@ EFFECTS: dict[str, Effect] = {}  # what each ability does, by ability id
 CHECKS: dict[str, Check] = {}  # extra rules for when it may be used
 COSTS: dict[str, CostRule] = {}  # costs that are not always the same
 KEEPS_HIDING: set[str] = set()  # abilities that do not give a hidden hero away
+WHILE_STUNNED = ("ice_block",)  # the only abilities a stunned hero may use
 
 
 def effect(ability_id: str) -> Callable[[Effect], Effect]:
@@ -110,7 +117,8 @@ def can_use(state: FightState, hero: Hero, ability_id: str, action: Action) -> b
     """True when `hero` may use `ability_id` right now, the way `action` says.
 
     No, when: the hero is not up; the ability is benched (out of the game
-    for now); nothing says what the ability does; it
+    for now); nothing says what the ability does; the hero is in an Ice
+    Block; the hero is stunned and it is not one of WHILE_STUNNED; it
     belongs to another class (and is not shared); it is cooling down; the
     hero cannot pay for it now (for a channel, one hit); the target is
     missing, dead or out; the target or the square is out of reach; or the
@@ -118,6 +126,8 @@ def can_use(state: FightState, hero: Hero, ability_id: str, action: Action) -> b
     """
     spec = state.numbers.abilities.get(ability_id)
     if spec is None or spec.benched or ability_id not in EFFECTS or not hero.up:
+        return False
+    if hero.iced or (hero.stunned and ability_id not in WHILE_STUNNED):
         return False
     if spec.hero not in (hero.cls, SHARED):
         return False
@@ -182,6 +192,9 @@ def resolve(state: FightState, hero: Hero, spec: AbilitySpec, action: Action) ->
     Once it has happened, the hero is not hidden any more, unless the
     ability is marked with `@keeps_hiding` (Vanish and Shadowstep): after
     one of those, the hero is hidden or not just as its effect left them.
+
+    The cooldown starts only if it is not already running, so a channel's
+    later hits do not start it again.
     """
     price = cost_of(state, hero, spec, action)
     if hero.resource < price:
@@ -192,7 +205,7 @@ def resolve(state: FightState, hero: Hero, spec: AbilitySpec, action: Action) ->
     EFFECTS[spec.id](state, hero, spec, action)
     if spec.id not in KEEPS_HIDING:
         hero.hidden = False
-    if spec.cooldown > 0:
+    if spec.cooldown > 0 and f"cd:{spec.id}" not in hero.stacks:
         add_stack(hero, f"cd:{spec.id}", spec.cooldown)
     return True
 

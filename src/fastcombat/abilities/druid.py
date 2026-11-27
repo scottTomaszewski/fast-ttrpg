@@ -20,7 +20,7 @@ from fastcombat.combat import add_stack, heal_hero
 from fastcombat.grid import walk_away, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.targeting import drop_pulls, loud_heal
-from fastcombat.units import FightState, Hero
+from fastcombat.units import BAD_STACKS, FightState, Hero
 
 
 @check("rejuvenation")
@@ -114,17 +114,31 @@ def wild_growth(
 
 
 @check("cleanse")
-def _cleanse_needs_a_poisoned_ally(
+def _cleanse_needs_a_bad_card_on_the_ally(
     state: FightState, druid: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
+    """The ally holds a bad card (see `units.BAD_STACKS`): the one
+    `action.card` names, or any one if it names none."""
     ally = _ally(state, action)
-    return ally is not None and "poison" in ally.stacks
+    return ally is not None and _bad_card(ally, action.card) is not None
 
 
 @effect("cleanse")
 def cleanse(state: FightState, druid: Hero, spec: AbilitySpec, action: Action) -> None:
-    """Take the poison cards off one ally. Their other cards stay."""
-    state.heroes[action.target].stacks.pop("poison", None)
+    """Take one stack of bad cards off one ally: the one `action.card` names,
+    or else the first they hold in `units.BAD_STACKS` (a stun first).
+
+    Their other cards stay. Never Bleeding, never a cooldown.
+    """
+    ally = state.heroes[action.target]
+    ally.stacks.pop(_bad_card(ally, action.card), None)
+
+
+def _bad_card(ally: Hero, card: str | None) -> str | None:
+    """The bad card Cleanse would take off `ally`, or None if there is none to take."""
+    if card is not None:
+        return card if card in BAD_STACKS and card in ally.stacks else None
+    return next((name for name in BAD_STACKS if name in ally.stacks), None)
 
 
 @effect("shadowmeld")

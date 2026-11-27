@@ -15,6 +15,11 @@ from fastcombat.numbers import EnemySpec, FightDef, Numbers
 
 # The cards that stop an enemy from doing anything on its turn.
 CONTROL_STACKS = ("stun", "sap", "sheep")
+# The bad cards: what Cleanse can take off a hero, and what Ice Block
+# clears off the Mage. Today a hero can only get stun and poison; the rest
+# are here so that any bad card that comes later is covered. Never
+# Bleeding, and never a cooldown ("cd:" cards).
+BAD_STACKS = ("stun", "poison", "rooted", "sap", "sheep")
 
 
 @dataclass
@@ -71,6 +76,16 @@ class Hero:
     @property
     def up(self) -> bool:
         return not self.down and not self.out
+
+    @property
+    def stunned(self) -> bool:
+        """Stun cards: no move and no act this party turn (Ice Block aside)."""
+        return "stun" in self.stacks
+
+    @property
+    def iced(self) -> bool:
+        """In an Ice Block: cannot be hurt, picked, move or act."""
+        return "ice_block" in self.stacks
 
 
 @dataclass

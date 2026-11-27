@@ -15,7 +15,10 @@ wins:
 An enemy never picks a hero who is hidden, by any of these rules. A pull by
 a hero who is hidden counts as no pull. If every hero who is up is hidden,
 the enemy has nobody to go for. (A blast still hits a hidden hero who
-stands in its area: it is aimed at a square, not at a hero.)
+stands in its area: it is aimed at a square, not at a hero.) A Mage in an
+Ice Block is the same as hidden here: no enemy picks her, and her pull
+counts for nothing. (A blast does her no harm either; see
+`combat.damage_hero`.)
 """
 
 from fastcombat.grid import adjacent, distance
@@ -93,14 +96,17 @@ def can_move(state: FightState, enemy: Enemy) -> bool:
 
 
 def seen_heroes(state: FightState) -> list[Hero]:
-    """Every hero an enemy can pick: up, and not hidden."""
-    return [hero for hero in state.up_heroes() if not hero.hidden]
+    """Every hero an enemy can pick: up, not hidden, and not in an Ice Block."""
+    return [hero for hero in state.up_heroes() if not hero.hidden and not hero.iced]
 
 
 def puller_of(state: FightState, enemy: Enemy) -> Hero | None:
-    """The hero who pulled `enemy`, if that hero is up and not hidden. Otherwise None."""
+    """The hero who pulled `enemy`, if that hero is up, not hidden and not in
+    an Ice Block. Otherwise None."""
     hero = state.heroes.get(enemy.pulled_by) if enemy.pulled_by else None
-    return hero if hero is not None and hero.up and not hero.hidden else None
+    if hero is None or not hero.up or hero.hidden or hero.iced:
+        return None
+    return hero
 
 
 def apply_loud(state: FightState, hero_id: str, enemy: Enemy) -> None:

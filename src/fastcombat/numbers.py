@@ -69,6 +69,7 @@ class AbilitySpec:
     alt: int = 0  # a second number, explained per ability
     loud: bool = False
     cooldown: int = 0
+    still: bool = False  # a channel the hero must stand still for: moving ends it
     # Benched: kept in the code and the numbers, but out of the game for
     # now. Nobody can use it, and it is left off the rules and the checks.
     benched: bool = False

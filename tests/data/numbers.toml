@@ -100,6 +100,15 @@ hero = "guardian"
 cost = 5
 cards = 1
 
+[abilities.shield_slam]
+hero = "guardian"
+cost = 0               # free: the Guardian is short of turns, not of grit
+range = 1
+dice = [2, 8]          # two of his d8s
+alt = 1                # grit it gives (never past his pool)
+cooldown = 2
+loud = false
+
 [abilities.backstab]
 hero = "rogue"
 cost = 4
@@ -233,6 +242,20 @@ cost = 4
 cast = 1
 range = 10
 cards = 4
+
+[abilities.ice_block]
+hero = "mage"
+cost = 0
+cards = 1              # one card covers the GM turn after she uses it
+cooldown = 8
+
+[abilities.evocation]
+hero = "mage"
+cost = 0
+hits = 2               # a channel for 2 rounds...
+value = 6              # ...giving this much mana each round (never past her pool)
+still = true           # she must stand still: moving ends it
+cooldown = 8
 
 [abilities.disrupt]
 hero = "shared"

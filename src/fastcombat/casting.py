@@ -8,7 +8,8 @@ it lands, so a cast that is cancelled, broken, or has nobody left to hit
 costs nothing but the time.
 
 A channel makes one hit in each act step, for a set number of hits, and
-the hero may move while channelling. Each hit is paid for when it happens.
+the hero may move while channelling, unless the ability says `still`
+(Evocation): then moving ends it. Each hit is paid for when it happens.
 If the target (or the square) is out of reach by then, the channel ends.
 
 A hero's cast or channel is kept in `hero.cast`. A cast that hits an area
@@ -113,9 +114,13 @@ def drop_cast(state: FightState, hero: Hero) -> None:
     state.marked.pop(hero.id, None)
 
 
-def may_move(hero: Hero) -> bool:
-    """False while the hero is in the middle of a cast. Channelling is fine."""
-    return hero.cast is None or hero.cast.is_channel
+def moving_ends(state: FightState, hero: Hero) -> bool:
+    """True when moving would end what the hero has going: a cast, or a
+    channel they must stand still for. Any other channel is fine."""
+    cast = hero.cast
+    if cast is None:
+        return False
+    return not cast.is_channel or state.numbers.abilities[cast.ability].still
 
 
 def _resolve_cast(state: FightState, hero: Hero, cast: Cast) -> bool:
