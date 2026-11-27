@@ -14,7 +14,7 @@ boss_loud_cards = 1    # Taunt cards a Loud hit takes off a boss
 max_rounds = 60        # the simulator gives up after this many
 
 [heroes.warden]
-hp = 100
+hp = 110
 die = 8
 attack_range = 1
 resource = "grit"

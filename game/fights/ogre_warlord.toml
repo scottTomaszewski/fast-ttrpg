@@ -13,10 +13,10 @@ mage = [1, 5]
 tier = "boss"
 hp = 150
 dice = [2, 6]          # the boss rolls its melee hit
-bonus = 7
+bonus = 4
 move = 4
 range = 1
-prefers = "nearest"
+prefers = "backline"   # with no Taunt cards on it, it goes for the soft heroes
 
 [enemy_types.shaman]   # stands back, poisons, and heals the boss unless stopped
 hp = 24

@@ -346,6 +346,136 @@ below 100000):
 - Intercede 3, Challenge 3 and War Cry 4 together: the Warden was
   starved 23% of rounds, with no gain over Intercede alone.
 
+### Fourth look: a boss that must be taunted, 2026-11-26
+
+The owner wants the Warden to need to taunt the boss, like a tank in an
+MMO. So bosses now ignore the hold: standing next to the Warden does not
+keep a boss on him, only Taunt cards do. And the Warden Challenges the
+boss whenever it has no Taunt cards.
+
+That alone made taunting the boss worse than useless. The ogre went for
+the nearest hero, and the Warden stands next to it, so an untaunted ogre
+hit him anyway. The taunt only cost him grit and turns. A new check,
+`taunt:boss`, plays the same fights with the Warden never taunting the
+boss, and wants at least 10 points fewer wins.
+
+Where we started (`check --n 1000`, seeds 0 to 999, the numbers after
+the third look, with bosses ignoring the hold):
+
+```
+Fights played:          1000
+Wins:                   43%
+Ran out of rounds:      0%
+Rounds:                 median 20, most between 16 and 24
+Lasted 18 to 22 rounds: 59%
+A hero in danger:       100% (down to 25% HP, or went down)
+Auto-attack damage:     28% of all damage
+
+hero        damage  healing  starved  up and full  went down  lowest HP
+warden         19%       0%      26%           2%        92%         1%
+rogue          41%       0%       1%          12%        76%        12%
+druid           0%     100%       0%          19%        62%        12%
+mage           40%       0%      12%           0%        73%         6%
+
+FAIL  length           58.7% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
+FAIL  win_rate         42.8%  (wanted: 70.0% to 90.0%)
+PASS  no_timeouts      0.0%  (wanted: none)
+PASS  danger           99.9% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
+PASS  auto_share       27.9% of damage  (wanted: 20.0% to 50.0%)
+PASS  resource:warden  starved 26.3% of rounds, ended up and full 1.8% of fights  (wanted: both under 50.0%)
+PASS  resource:rogue   starved 1.1% of rounds, ended up and full 11.7% of fights  (wanted: both under 50.0%)
+PASS  resource:druid   starved 0.0% of rounds, ended up and full 18.8% of fights  (wanted: both under 50.0%)
+PASS  resource:mage    starved 12.4% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
+PASS  needed:warden    wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:rogue     wins 42.8% with, 0.2% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:druid     wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:mage      wins 42.8% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+FAIL  kit:warden       wins 42.8% with the kit, 43.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:rogue        wins 42.8% with the kit, 7.9% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:druid        wins 42.8% with the kit, 0.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:mage         wins 42.8% with the kit, 0.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never taunts the boss  (wanted: at least 10.0% fewer wins without boss taunts)
+```
+
+What was wrong:
+
+- Taunting the boss cost wins: 69% without it, 43% with it. The Warden's
+  kit as a whole was worth nothing (`kit:warden`: 44% on auto).
+- The party won less than half its fights. With the boss free to move,
+  the Warden spent his grit on Challenge (about 5 a fight) and had little
+  left for Intercede.
+
+Kept changes (each line: `check --n 1000`, seeds 0 to 999, every check
+listed, `taunt:boss` too; the numbers carry on from change 15):
+
+16. Ogre `prefers` "nearest" to "backline". The controller's ruling: a
+   boss with no Taunt cards should go for the soft heroes, as in an MMO.
+   Now the taunt is what keeps it off the Mage and the Druid.
+   After: FAIL length 53.3%, FAIL wins 43.7%. No timeouts, danger 99.5%,
+   auto 24.2%. Resources (starved / ended full): Warden 44.9% / 2.2%,
+   Rogue 1.2% / 15.5%, Druid 0.0% / 17.2%, Mage 11.5% / 0.0%. Needed
+   (wins without): Warden 0.2%, Rogue 0.0%, Druid 0.0%, Mage 0.0%. Kit
+   (wins on auto): Warden 20.1%, Rogue 6.4%, Druid 0.9%, Mage 0.6%.
+   Taunt:boss (wins without boss taunts): 10.9%. So the taunt now
+   matters a lot, but the fight is far too hard.
+17. Ogre melee hit 2d6+7 to 2d6+4 (the `bonus`, 7 to 4). The +7 was
+   tuned for a boss that only ever hit the Warden (change 12). Now every
+   lapse in the taunt sends it at a hero with 28 to 36 HP, and a 2d6+7
+   hit is a third of that or more.
+   After: every check passes. Length 65.6%, wins 73.6%, no timeouts,
+   danger 94.8%, auto 25.8%. Resources: Warden 39.4% / 8.4%, Rogue 0.6%
+   / 17.6%, Druid 0.1% / 24.0%, Mage 10.6% / 0.0%. Needed: Warden 1.0%,
+   Rogue 0.5%, Druid 0.0%, Mage 0.1%. Kit: Warden 44.5%, Rogue 22.4%,
+   Druid 2.5%, Mage 3.5%. Taunt:boss: 34.8%.
+18. Warden HP 100 to 110. Wins were close to the bottom edge, and the
+   Warden still went down in about half the fights. More Warden HP keeps
+   the taunt going longer.
+   After: every check passes. Length 69.2%, wins 80.4%, no timeouts,
+   danger 91.3%, auto 26.2%. Resources: Warden 37.2% / 10.9%, Rogue
+   0.6% / 17.2%, Druid 0.1% / 27.2%, Mage 10.3% / 0.0%. Needed: Warden
+   1.0%, Rogue 1.3%, Druid 0.0%, Mage 0.2%. Kit: Warden 45.5%, Rogue
+   26.9%, Druid 4.0%, Mage 6.6%. Taunt:boss: 36.7%.
+
+On more seeds: 0 of 24000 fights (seeds 40000 to 63999) ran out of
+rounds, and the party won 79% of them.
+
+`boss_loud_cards` stays at 1: taunting the boss is already worth about
+40 points of wins, so a Loud hit taking two cards off a boss was not
+needed.
+
+**The goblins after the fourth look.** Setting their damage to 0 still
+changes the fight a lot (`check --n 3000 --seed 100000`, the confirm
+seeds):
+
+| | goblins hit for 3 | goblins hit for 0 |
+|---|---|---|
+| wins | 77.9% | 92.9% (fails: too easy) |
+| a hero in danger | 92.4% | 84.6% |
+| Warden went down | 50% | 30% |
+| Rogue went down | 23% | 9% |
+| Druid went down | 27% | 11% |
+| Mage went down | 56% | 41% |
+
+Tried in the fourth look, and not kept (300 fights, seeds 0 to 299,
+with the ogre on "backline", unless it says so):
+
+- Challenge cost 2 to 1: wins fell to 43% and auto share to 18%
+  (fails). With cheap taunts the Warden spends more turns on abilities
+  and fewer on auto-attacks.
+- Each of these alone, with the ogre at +7: Warden HP 120 (wins 56%),
+  ogre HP 130 (wins 57%, length 53%), Intercede cost 3 (wins 43%),
+  goblin damage 2 (wins 55%).
+- Ogre +6: wins 52%. With Warden HP 120: 65%. With Warden HP 130:
+  passes (74% at 500 fights), but more HP on the tank for the same
+  result as a smaller hit.
+- Ogre +5: wins 63%. With ogre HP 140: 67%. With Warden HP 110: 70%,
+  the very edge. With Warden HP 115 or 120: passes (73% and 76% at 1000
+  fights, seeds 2000 to 2999), but lower wins than +4 with HP 110.
+- Ogre +3: wins 85%, and one fight ran out of rounds.
+- Ogre +4 with ogre HP 160: wins 71%, length 63%. With Warden HP 105 or
+  115: wins 77% and 81% (1000 fights, seeds 2000 to 2999); 110 is in the
+  middle.
+
 ## Needs a decision
 
 These are things numbers alone could not fix well. Each needs a change
@@ -361,6 +491,9 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    After the third look (the 3000 confirm fights): still true. The
    Crusher is announced 2.0 times a fight and lands 0.03 times (80
    times in 3000 fights). Unbroken was used 23 times in 3000 fights.
+   After the fourth look (the 3000 confirm fights): still true. The
+   Crusher is announced 2.2 times a fight and lands 0.02 times (56
+   times). Unbroken was used 45 times in 3000 fights.
 2. **Sap never happens.** The Rogue only Saps in round 1, and her rule
    looks 7 squares away (move 6 plus 1). The brute starts 8 squares
    from her. Moving the brute from [10, 7] to [9, 7] makes Sap happen in
@@ -372,6 +505,7 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    around it, or change the Rogue's Sap rule.
    After the third look: still true. Sap was used 0 times in the 3000
    confirm fights.
+   After the fourth look: still true, 0 times in the 3000 confirm fights.
 3. **Stalemates once the Warden is out.** With the first pass's
    numbers, about 1 fight in 1100 was still going after 60 rounds (21 of
    24000; 2 of the 3000 confirm fights). In all 5 we looked at, the
@@ -394,6 +528,11 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    once the Warden is out the others go down too, instead of running
    from it for 40 rounds. The cause is still there, so it could come
    back if the boss gets weaker.
+   After the fourth look: 0 of 24000 fights ran out of rounds, even
+   with the boss hitting for +4 instead of +7. Best guess why: once
+   nobody taunts it, the boss now goes for the back line instead of
+   standing by the Warden, so the fight keeps moving. The cause (only
+   the Warden gives Taunt cards) is still there.
 4. **Meteor only hits enemies that stand still.** Its spot is fixed when
    the 2-round cast starts. With goblins at move 5 it was cast 0.1 times
    a fight; with move 1, about 1.1 times; with move 3 (now), 0.0. The
@@ -405,6 +544,10 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    After the third look: Meteor is cast 0.11 times a fight (344 times
    in 3000 fights). That is more than 0.0, but most fights still have
    no Meteor.
+   After the fourth look: 0.005 times a fight (14 times in 3000
+   fights), so almost never again. Best guess why: with the boss
+   walking to the back line, the enemies end up close to the heroes,
+   and the Mage never drops a Meteor where a hero stands.
 5. **Some buttons are almost never pressed in this fight** (per fight,
    first pass's numbers): War Cry 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
    Unbroken 0.0, Sap 0, Frost Ring 0.1, Bulwark 0.3, Wild Growth 0.4.
@@ -424,6 +567,25 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    Every hero is still needed (without any one hero the party wins 9% or
    less), but "every button feels iconic" is not something the checks
    measure.
+   After the fourth look (per fight, the 3000 confirm fights, with the
+   count in brackets): Challenge on the boss 5.68 (17039), Bulwark
+   0.014 (43), Unbroken 0.015 (45), Sap 0 (0), Meteor 0.005 (14),
+   Arcane Volley 0 (0), Chain Hook 0.20 (603), Cheap Shot 0 (0), Kidney
+   Shot 0.19 (575). Also War Cry 0.18 (529), Frost Ring 0.39 (1178),
+   Wild Growth 0.32 (953). Challenge on the boss went from about 0.01 a
+   fight to 5.7: the Warden now keeps the boss taunted most of the
+   fight, which is what the owner asked for.
+   Why Arcane Volley is never used (and was not before the fourth look
+   either: 0 in 600 fights with the third look's numbers): the Mage only
+   Volleys a focus with 3 Taunt cards on it (`VOLLEY_TAUNT_CARDS`). A
+   Challenge gives 3, but the Warden acts after the Mage (heroes act in
+   id order), and a card comes off at the end of the GM turn. So on the
+   Mage's turn her focus has 2 cards at most. In 200 fights it had 3
+   cards 0 times. With the rule at 2 cards, she Volleys about 1.8 times
+   a fight, but the party won 155 of 200 instead of 170: Volley is Loud,
+   so it takes Taunt cards off and lets the boss loose sooner. Choices:
+   change the Mage's rule (how she plays, not a game number), or leave
+   Volley for fights where it fits better.
 6. **Fight length is touchy about the boss's timings.** Changing when
    the Ground Slam comes moved "in band" anywhere from 47% to 75%,
    because the Warden and Rogue lose a whole turn stepping out of it.
@@ -458,9 +620,9 @@ to change any of them.
 
 ## Final
 
-These are the numbers after the third look, tuned with the fixes from
-the final review in place (the kit check, the Warden's new rules,
-hidden heroes, the Mage and Rogue fixes, the Warden starting on 0 grit).
+These are the numbers after the fourth look: bosses ignore the hold, the
+Warden Challenges the boss whenever it has no Taunt cards, and the ogre
+goes for the back line when nobody taunts it. `boss_loud_cards` is 1.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
 used while tuning; every tuning run used seeds below 100000). The
@@ -470,64 +632,64 @@ simulator gives up after 60 rounds (`max_rounds = 60`).
 Fights played:          3000
 Wins:                   78%
 Ran out of rounds:      0%
-Rounds:                 median 20, most between 17 and 24
-Lasted 18 to 22 rounds: 73%
-A hero in danger:       98% (down to 25% HP, or went down)
-Auto-attack damage:     31% of all damage
+Rounds:                 median 21, most between 18 and 26
+Lasted 18 to 22 rounds: 67%
+A hero in danger:       92% (down to 25% HP, or went down)
+Auto-attack damage:     26% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-warden         23%       0%      16%          13%        58%         6%
-rogue          39%       0%       3%          11%        54%        10%
-druid           0%     100%       0%          29%        26%        27%
-mage           38%       0%      13%           0%        40%        17%
+warden         19%       0%      39%           9%        50%        10%
+rogue          48%       0%       1%          18%        23%        44%
+druid           1%     100%       0%          25%        27%        26%
+mage           32%       0%      11%           0%        56%        11%
 
-PASS  length           73.4% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
-PASS  win_rate         78.4%  (wanted: 70.0% to 90.0%)
+PASS  length           67.2% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
+PASS  win_rate         77.9%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts      0.0%  (wanted: none)
-PASS  danger           97.9% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
-PASS  auto_share       30.6% of damage  (wanted: 20.0% to 50.0%)
-PASS  resource:warden  starved 16.3% of rounds, ended up and full 13.1% of fights  (wanted: both under 50.0%)
-PASS  resource:rogue   starved 3.2% of rounds, ended up and full 11.4% of fights  (wanted: both under 50.0%)
-PASS  resource:druid   starved 0.1% of rounds, ended up and full 28.8% of fights  (wanted: both under 50.0%)
-PASS  resource:mage    starved 12.7% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
-PASS  needed:warden    wins 78.4% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:rogue     wins 78.4% with, 0.8% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:druid     wins 78.4% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:mage      wins 78.4% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  kit:warden       wins 78.4% with the kit, 54.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:rogue        wins 78.4% with the kit, 10.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:druid        wins 78.4% with the kit, 0.9% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:mage         wins 78.4% with the kit, 0.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  danger           92.4% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
+PASS  auto_share       26.2% of damage  (wanted: 20.0% to 50.0%)
+PASS  resource:warden  starved 39.0% of rounds, ended up and full 8.8% of fights  (wanted: both under 50.0%)
+PASS  resource:rogue   starved 0.6% of rounds, ended up and full 17.7% of fights  (wanted: both under 50.0%)
+PASS  resource:druid   starved 0.2% of rounds, ended up and full 24.9% of fights  (wanted: both under 50.0%)
+PASS  resource:mage    starved 10.5% of rounds, ended up and full 0.0% of fights  (wanted: both under 50.0%)
+PASS  needed:warden    wins 77.9% with, 0.7% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:rogue     wins 77.9% with, 1.8% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:druid     wins 77.9% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:mage      wins 77.9% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
+PASS  kit:warden       wins 77.9% with the kit, 44.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:rogue        wins 77.9% with the kit, 25.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:druid        wins 77.9% with the kit, 3.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:mage         wins 77.9% with the kit, 6.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never taunts the boss  (wanted: at least 10.0% fewer wins without boss taunts)
 ```
 
-Every check passes with the round cap at 60. The pinned test seeds
-(`check --n 600 --seed 500000`) pass too.
+Every check passes with the round cap at 60, `taunt:boss` too. The
+pinned test seeds (`check --n 600 --seed 500000`) pass too.
 
 Things to keep an eye on:
 
-- The fight is now won or lost on the tank. The Warden goes down in
-  58% of fights and gets down to 6% of his HP on average; the Rogue
-  goes down in 54%. Wins are still about 4 in 5 because the Druid
-  brings them back up. At the table this may feel like a lot of close
-  calls.
-- A hero is in danger in 98% of fights. The target is "at least 50%",
-  so this passes easily, but nearly every fight is a scare.
-- The Warden still ends 13% of fights full of grit (it was 76%). Most
-  of his spending is Intercede (about 2.5 a fight). See "Needs a
-  decision", item 5, for the buttons he almost never presses.
-- With goblin damage 0 wins go up to about 90%, the top of the target.
-  So the goblins matter, and the fight depends on them being there.
+- Taunting the boss now matters: without it the party wins 35% instead
+  of 78%. The Warden Challenges the boss about 5.7 times a fight.
+- The Warden is starved 39% of rounds (the line is 50%). Keeping the
+  boss taunted costs him 2 grit about every three rounds, and he only
+  gets grit by auto-attacking. A more costly Challenge, or one more
+  grit-hungry button, would push him over.
+- The Warden goes down in 50% of fights and the Mage in 56%. The Rogue
+  went down in 54% after the third look and in 23% now. Best guess why:
+  the boss used to hit whoever stood nearest, often her, and now it is
+  either on the Warden or going for the back line.
+- A hero is in danger in 92% of fights, so nearly every fight is still
+  a scare.
+- With goblin damage 0 wins go up from 78% to 93%, over the top of the
+  target. So the goblins matter.
 - No fight ran out of rounds, here or in 24000 tuning fights. See
   "Needs a decision", item 3.
-- Without any one hero the party almost never wins (1% or less). The
-  design asks for "clearly harder", and this is much more than that: a
-  party of three cannot beat this fight.
-- `kit:rogue` passes with a lot of room (a Rogue on auto: 10% wins),
-  and so does every other `kit:` check. The Warden's kit is worth
-  about 24 points of wins.
+- Without any one hero the party almost never wins (2% or less).
+- Meteor and Arcane Volley are almost never or never cast. See "Needs a
+  decision", items 4 and 5.
 
 ## Not met
 
-Nothing: every check passed on the confirm run, with the round cap at
-60. The items under "Needs a decision" are design goals the checks do
-not measure.
+Nothing: every check passed on the confirm run after the fourth look,
+`taunt:boss` included, with the round cap at 60. The items under "Needs
+a decision" are design goals the checks do not measure.
