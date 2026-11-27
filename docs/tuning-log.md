@@ -453,6 +453,8 @@ to change any of them.
   Mage in that order gets one quickened turn fewer than one who acts
   after her: Quicken lands after they have already attacked that turn.
 - The Warden starts a fight with 0 grit.
+- Bosses ignore the hold: only Taunt cards make a boss attack the Warden
+  (owner's decision).
 
 ## Final
 

@@ -2,8 +2,9 @@
 
 Date: 2026-11-24. Status: approved by the owner on 2026-11-24 (after a skim).
 Changed during the build: Bleeding timing, Shadowstep keeps hiding, hidden
-heroes cannot be targeted. See docs/tuning-log.md, "Rules the simulator had
-to decide".
+heroes cannot be targeted, bosses ignore the weak hold so the tank has to
+taunt them (the owner's decision, 2026-11-26). See docs/tuning-log.md,
+"Rules the simulator had to decide".
 
 Things marked **(call)** were proposed by the assistant and not yet argued
 over. Everything else was decided by the owner in conversation.
@@ -152,6 +153,7 @@ No one tracks aggro.
 
 - **Weak hold:** an enemy that starts the GM turn next to the Warden (any of
   the 8 squares around them) cannot move away and must attack the Warden.
+  Bosses ignore it.
 - **Strong hold:** an enemy with Taunt cards on it must target the Warden,
   wherever it is.
 - **Loud abilities (call):** some big abilities are marked Loud. Hitting an
@@ -160,7 +162,8 @@ No one tracks aggro.
   Auto-attacks are never Loud. A Loud heal
   pulls every enemy that has no hold on it.
 - An enemy with no hold and no pull is the GM's to direct.
-- Bosses obey taunts. Their answer is big announced casts aimed elsewhere and
+- Bosses obey taunts, and only Taunt cards hold a boss: standing next to the
+  Warden does not. Their answer is big announced casts aimed elsewhere and
   heavy hits on the tank.
 
 ### Going down
