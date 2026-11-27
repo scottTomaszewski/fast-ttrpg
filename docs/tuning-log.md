@@ -515,7 +515,8 @@ So this step changed how heroes play (`policies.py`):
 - The Rogue does not Sap, and the Mage does not sheep, an enemy a
   Firebolt or a Volley is aimed at or a Meteor is coming down on (it
   would wake at once). The Mage ends a Volley whose enemy was sapped
-  after it began.
+  after it began, unless nothing else is left to hit (then she keeps
+  channelling).
 - Meteor still never covers a sapped or sheeped enemy. I looked for an
   exception ("unless the fight is nearly won, or it is the only way to hit
   three or more"): in 500 fights a sleeper stopped a Meteor 9 times, and
@@ -566,8 +567,15 @@ rounds, the closest any setting has come to the 60% target in this round
 of work), with wins well inside 70% to 90%. 20 cards wins more but pushes
 wins near the top of the band and makes fights less even in length. It
 also leaves Sap as the longer of the two, which is how it is in the game
-the kit comes from. Why 8 is worse than 4 is not clear; a sheep that wakes
-at about round 9, just before the goblins, is a guess.
+the kit comes from.
+
+Why 8 is worse than 4 (measured in the review of this step): the Mage
+sheeps a wolf in round 4 or 5. At 8 cards it wakes in round 12, in the
+middle of the goblin wave (which comes in round 10), and runs at the back
+line with the goblins. At 4 cards it wakes in round 8, alone, and dies
+first; at 12 it wakes in round 16, after the wave is dealt with. So the
+Polymorph pick is tied to this fight's goblin timing: if the wave moves,
+check the Polymorph length again.
 
 ### The opening
 
@@ -597,11 +605,13 @@ today's numbers it is the same as always Shadowstepping in, so the two
 rows are the same fights.
 
 **Kept: the judgement rule (so, today, always Shadowstep in).** Always
-Sneak wins one point more, but only through the half of the fights where
-the stealth check fails and there is no round-1 Sap: it Saps 0.61 times a
-fight, under the owner's `use:sap` band (0.7 to 2), and the owner wants a
-Sap in almost every fight with an elite. The point lost is the Guardian
-grit problem below, which is for the retune, not for the opening.
+Sneak won 82.8% against 81.8%; at 500 fights that one point is noise. It
+comes through the half of the fights where the stealth check fails and
+there is no round-1 Sap: always Sneak Saps 0.61 times a fight, under the
+owner's `use:sap` band (0.7 to 2). Shadowstep in was kept for that band,
+so the owner can see this is a call about the band, not about wins. The
+cost of the round-1 Sap is the Guardian grit problem below, which is for
+the retune, not for the opening.
 
 **The choice is not a real choice yet.** Shadowstep in always works and
 costs nothing in the end: the Rogue starts with 10 energy, pays 2, and
@@ -629,9 +639,19 @@ long Sap makes this stronger, and the Guardian's checks now fail:
 With the brute out of the fight the Guardian has little to do: he is
 starved 61% of rounds, Taunts the boss 3.2 times a fight (5.6 with no
 opening), and a Guardian who only auto-attacks wins nearly as often.
-`kit:guardian` and `taunt:boss` fail (see "Not met"). This is the retune's
-(D4) to fix, with grit (the tuner may change grit regen or grit per
-attack) or with the elite. Not tuned around here.
+`kit:guardian`, `taunt:boss` and `length` fail (see "Not met").
+
+**Correction (review of D3b).** These notes first blamed the long Sap
+("it takes the brute out all fight"). The review measured that the
+round-1 opening Sap is the bigger cause: the brute is asleep before it
+ever hits the Guardian, so he has almost no grit early. At the top of
+round 2 he has 0.39 grit on the mean with the opening, against 1.45
+without it. With Sap 20 and Polymorph 12 and no opening, all three checks
+pass: wins 86.4%, length 63.4%, the Guardian on auto 75.2% (a drop of 11.2
+points), never Taunting the boss 69.2% (a drop of 17.2). So the long Sap
+alone is fine; it is the Sap before the brute's first swing that starves
+him. This is the retune's (D4) to fix, with grit (the tuner may change
+grit regen or grit per attack) or with the elite. Not tuned around here.
 
 ## Needs a decision
 
@@ -758,10 +778,12 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    energy, but the Rogue gets 3 back at the top of round 1, so it is free
    and always works; a Sneak can only lose. See "The opening" in D3b for
    numbers that would make it a choice.
-9. **A long Sap makes the Guardian matter less.** With the brute sapped
-   all fight, `kit:guardian` and `taunt:boss` fail (see D3b). Grit only
-   comes from being hit, and the brute was what hit him. For the retune,
-   or a rule change (grit from something else).
+9. **The round-1 Sap makes the Guardian matter less.** With the brute
+   sapped in round 1, before it ever hits him, `kit:guardian`,
+   `taunt:boss` and `length` fail (see D3b, and its correction: it is the
+   opening Sap, more than the long one). Grit only comes from being hit,
+   and the brute was what hit him early. For the retune, or a rule change
+   (grit from something else).
 
 ## Rules the simulator had to decide
 
@@ -827,7 +849,8 @@ How the heroes play (the priority lists in `src/fastcombat/policies.py`,
 - (D3b) Nobody hits a sapped or sheeped enemy while anything else is left,
   and once nothing else is, they hit it (a stunned one first). Nobody Saps
   or sheeps an enemy a Firebolt, a Volley or a Meteor is on its way to,
-  and the Mage ends a Volley whose enemy was sapped after it began.
+  and the Mage ends a Volley whose enemy was sapped after it began, unless
+  nothing else is left to hit.
 - (D3b) The Rogue's opening: the elite that hits hardest and that nobody
   stands next to yet. Shadowstep in, unless she could not then pay for the
   Sap in round 1 (then Sneak). With no elite, no opening.

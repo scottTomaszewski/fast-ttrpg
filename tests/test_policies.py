@@ -109,7 +109,8 @@ def test_the_full_kit_wins_more_of_a_smaller_fight():
 
 from fastcombat.abilities import can_use
 from fastcombat.policies import AutoOnly, GuardianNoBossTaunt, RoguePolicy, DruidPolicy, MagePolicy
-from fastcombat.units import Announced, Cast
+from fastcombat.units import Announced, Cast, new_state
+from fastcombat.opening import NONE, can_open
 
 def test_the_registry_and_the_default_for_a_class_with_no_policy():
     assert POLICIES == {"guardian": GuardianPolicy, "rogue": RoguePolicy, "druid": DruidPolicy,
@@ -122,6 +123,10 @@ def test_no_policy_ever_asks_for_an_ability_it_cannot_use():
     n = load_numbers(GAME / "numbers.toml"); f = load_fight(GAME / "fights" / "ogre_warlord.toml")
     refused = []
 
+    openings = []
+    # The frozen copy has no elites; with the brute made one, the Rogues open on it.
+    f = replace(f, enemy_types={**f.enemy_types, "brute": replace(f.enemy_types["brute"], tier="elite")})
+
     class Checked:
         def __init__(self, cls): self.policy = default_policy(cls)
         def move(self, s, hero): return self.policy.move(s, hero)
@@ -130,12 +135,22 @@ def test_no_policy_ever_asks_for_an_ability_it_cannot_use():
             if a.kind == "ability" and not can_use(s, hero, a.ability, a):
                 refused.append((s.round, hero.id, a))
             return a
+        def opening(self, s, hero):
+            pick = getattr(self.policy, "opening", None)
+            o = pick(s, hero) if pick else NONE
+            openings.append(o.kind)
+            if not can_open(s, hero, o):
+                refused.append((0, hero.id, o))
+            return o
 
-    party = ["guardian", "rogue", "druid", "mage", "mage"]
-    for seed in range(10):
-        policies = {h: Checked(h.rstrip("2")) for h in ("guardian", "rogue", "druid", "mage", "mage2")}
-        run_fight(n, f, party, policies=policies, seed=seed)
+    for party in (["guardian", "rogue", "druid", "mage", "mage"],
+                  ["guardian", "rogue", "rogue", "druid", "mage"]):
+        ids = list(new_state(n, f, party, seed=0).heroes)
+        for seed in range(10):
+            policies = {h: Checked(cls) for h, cls in zip(ids, party)}
+            run_fight(n, f, party, policies=policies, seed=seed)
     assert refused == []
+    assert "shadowstep" in openings and openings.count("none") < len(openings)   # openings were really made
 
 def heavy_on_guardian(s, dice=(6, 6)):
     o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
@@ -695,6 +710,14 @@ def test_mage_ends_a_volley_whose_enemy_was_sapped_after_it_began():
     assert act(s, "mage") == Action("continue")
     add_stack(w, "sap", 20)                                         # the Rogue sapped it
     a = act(s, "mage"); assert a.kind != "continue" and a.target != "wolf1"
+
+def test_mage_keeps_channelling_on_a_sapped_enemy_when_it_is_the_only_one_left():
+    s = state(); quiet_volley(s); m = s.heroes["mage"]
+    w = enemy(s, "wolf", (8, 5)); add_stack(w, "sap", 20)
+    m.cast = Cast("arcane_volley", "wolf1", None, 0, 2, True)       # nothing else to hit
+    assert act(s, "mage") == Action("continue")
+    w2 = enemy(s, "wolf", (9, 8)); add_stack(w2, "sheep", 12)       # every enemy left is asleep
+    assert act(s, "mage") == Action("continue")
 
 def test_rogue_does_not_sap_an_elite_a_hit_is_on_its_way_to():
     s = state(); r = s.heroes["rogue"]; b = elite(s, "brute", (3, 4))   # next to her at (2, 5), hidden

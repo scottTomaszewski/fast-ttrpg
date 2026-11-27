@@ -17,7 +17,10 @@ Delete or rewrite this file when the work below is done.
 - D3b: the Rogue's opening before round 1 (`opening.py`: Sneak with `sneak_die`/`sneak_target`,
   or Shadowstep in), Sap 20 cards, Polymorph 12, picked by the numbers (tuning log, "D3b").
   The Rogue Shadowsteps in next to the brute and Saps it in round 1. Nobody hits a sapped or
-  sheeped enemy while anything else is left. Summary has a "Rogue opening" block.
+  sheeped enemy while anything else is left. Summary has a "Rogue opening" block. Always
+  Sneak won 82.8% against 81.8% for Shadowstep in (noise at 500 fights); Shadowstep in was
+  kept for the `use:sap` band, a call the owner can see. The Polymorph pick (12) is tied to
+  this fight's goblin timing (a sheep that wakes during the wave is bad).
 
 ## Owner decisions, 2026-11-27 (not built yet)
 - (Built in D3b: the long Sap, the Rogue's opening, the longer Polymorph.)
@@ -36,9 +39,11 @@ Delete or rewrite this file when the work below is done.
 2. **D4: retune** `game/` so every check passes on `check --n 3000 --seed 100000`, including all
    `use:` checks. The tuner may also change grit regen / grit per attack and the Mage's
    `auto_gain`. Frozen: class dice, mana and energy pools and regen, cast times, card counts
-   (except Sap's and Polymorph's), `max_rounds`. Watch: since D3b the long Sap takes the brute
-   out all fight, so the Guardian gets little grit and `kit:guardian` and `taunt:boss` fail
-   (tuning log, D3b).
+   (except Sap's and Polymorph's), `max_rounds`. Watch: since D3b the round-1 opening Sap puts the
+   brute to sleep before it ever hits the Guardian, so he has almost no grit early (0.39 at
+   the top of round 2, against 1.45 without the opening), and `kit:guardian`, `taunt:boss` and
+   `length` fail. With no opening, Sap 20 and Polymorph 12 pass all three (tuning log, D3b,
+   "Correction").
 3. **D5:** update rule text and class tips, re-render `rules/`, review, push, refresh the copies in
    the owner's Obsidian vault (`~/Documents/obsidian/main/fast-ttrpg/`).
 

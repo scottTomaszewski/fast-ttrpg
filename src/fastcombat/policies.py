@@ -716,8 +716,9 @@ class MagePolicy(_ClassPolicy):
        not controlled: Disrupt, even in the middle of a channel. A mend
        first (it undoes our damage), then by id.
     5. In the middle of a channel: continue, unless its enemy is sapped or
-       sheeped now (the next hit would wake it): then the channel ends, and
-       I read on.
+       sheeped now (the next hit would wake it) and some other enemy is
+       left to hit: then the channel ends, and I read on. When every enemy
+       left is asleep, I keep channelling.
     6. No enemy is a sheep, no hero is in the middle of casting Polymorph
        (another Mage's sheep is on its way), and at least two enemies are
        alive that are not controlled, not a boss and not fodder: Polymorph
@@ -803,10 +804,11 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 5. In the middle of a channel: continue, unless its enemy is asleep now.
+        # 5. In the middle of a channel: continue, unless its enemy is asleep now
+        # and there is something else to hit.
         if mage.cast is not None:
             target = state.enemies.get(mage.cast.target) if mage.cast.target else None
-            if target is None or not _asleep(target):
+            if target is None or not _asleep(target) or target in _to_hit(state):
                 return Action("continue")
 
         # 6. No sheep yet, none on its way, and two or more enemies worth one:
