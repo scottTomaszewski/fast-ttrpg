@@ -155,6 +155,11 @@ def load_numbers(path: Path, overrides: dict[str, object] | None = None) -> Numb
         name: _check(value, int, f"rules.{name}")
         for name, value in _check(raw["rules"], dict, "rules").items()
     }
+    # Any name is allowed for a rule, but the boss rule is read during a
+    # fight, so it has to be there, and a Loud hit has to take a card off.
+    if "boss_loud_cards" not in rules:
+        raise NumbersError("rules.boss_loud_cards: missing, and it has to be there")
+    _check_at_least(rules["boss_loud_cards"], 1, "rules.boss_loud_cards")
 
     heroes = {}
     for name, table in _check(raw["heroes"], dict, "heroes").items():

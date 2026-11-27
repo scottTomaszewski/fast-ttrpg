@@ -356,8 +356,9 @@ boss whenever it has no Taunt cards.
 That alone made taunting the boss worse than useless. The ogre went for
 the nearest hero, and the Warden stands next to it, so an untaunted ogre
 hit him anyway. The taunt only cost him grit and turns. A new check,
-`taunt:boss`, plays the same fights with the Warden never taunting the
-boss, and wants at least 10 points fewer wins.
+`taunt:boss`, plays the same fights with the Warden never Challenging
+the boss (War Cry can still taunt it), and wants at least 10 points fewer
+wins.
 
 Where we started (`check --n 1000`, seeds 0 to 999, the numbers after
 the third look, with bosses ignoring the hold):
@@ -394,7 +395,7 @@ FAIL  kit:warden       wins 42.8% with the kit, 43.6% on auto  (wanted: at least
 PASS  kit:rogue        wins 42.8% with the kit, 7.9% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 42.8% with the kit, 0.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 42.8% with the kit, 0.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never taunts the boss  (wanted: at least 10.0% fewer wins without boss taunts)
+FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never Challenges the boss  (wanted: at least 10.0% fewer wins without Challenging the boss)
 ```
 
 What was wrong:
@@ -416,7 +417,7 @@ listed, `taunt:boss` too; the numbers carry on from change 15):
    Rogue 1.2% / 15.5%, Druid 0.0% / 17.2%, Mage 11.5% / 0.0%. Needed
    (wins without): Warden 0.2%, Rogue 0.0%, Druid 0.0%, Mage 0.0%. Kit
    (wins on auto): Warden 20.1%, Rogue 6.4%, Druid 0.9%, Mage 0.6%.
-   Taunt:boss (wins without boss taunts): 10.9%. So the taunt now
+   Taunt:boss (wins without Challenging the boss): 10.9%. So the taunt now
    matters a lot, but the fight is far too hard.
 17. Ogre melee hit 2d6+7 to 2d6+4 (the `bonus`, 7 to 4). The +7 was
    tuned for a boss that only ever hit the Warden (change 12). Now every
@@ -660,7 +661,7 @@ PASS  kit:warden       wins 77.9% with the kit, 44.4% on auto  (wanted: at least
 PASS  kit:rogue        wins 77.9% with the kit, 25.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 77.9% with the kit, 3.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 77.9% with the kit, 6.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never taunts the boss  (wanted: at least 10.0% fewer wins without boss taunts)
+PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never Challenges the boss  (wanted: at least 10.0% fewer wins without Challenging the boss)
 ```
 
 Every check passes with the round cap at 60, `taunt:boss` too. The

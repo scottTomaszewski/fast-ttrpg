@@ -205,8 +205,8 @@ def check_targets(
                 "taunt:boss",
                 drop >= TAUNT_BOSS_AT_LEAST - _TINY,
                 f"wins {_pct(full.win_rate)} with, "
-                f"{_pct(no_boss_taunt.win_rate)} when the Warden never taunts the boss",
-                f"at least {_pct(TAUNT_BOSS_AT_LEAST)} fewer wins without boss taunts",
+                f"{_pct(no_boss_taunt.win_rate)} when the Warden never Challenges the boss",
+                f"at least {_pct(TAUNT_BOSS_AT_LEAST)} fewer wins without Challenging the boss",
             )
         )
     return checks

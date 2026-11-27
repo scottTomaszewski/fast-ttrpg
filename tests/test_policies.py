@@ -1,7 +1,7 @@
 from dataclasses import replace
 
 from tests.helpers import state, enemy, GAME
-from fastcombat.policies import default_policy, POLICIES
+from fastcombat.policies import default_policy, POLICIES, WardenPolicy
 from fastcombat.abilities import Action
 from fastcombat.combat import damage_hero, add_stack
 from fastcombat.enemy_ai import announce
@@ -22,7 +22,7 @@ def test_warden_challenges_the_boss_whenever_it_has_no_taunt_cards():
     o.pos = (4, 6); add_stack(o, "taunt", 1)                          # it has a Taunt card already
     assert act(s, "warden") == Action("auto", target="ogre1")
 
-def test_a_warden_who_never_taunts_the_boss_is_the_same_warden_otherwise():
+def test_a_warden_who_never_challenges_the_boss_is_the_same_warden_otherwise():
     # Rule 6 switched off, for the taunt:boss check. Nothing else changes.
     def act_as(name, s): return POLICIES[name]().act(s, s.heroes["warden"])
     s = state(); o = enemy(s, "ogre", (4, 6))                         # an untaunted boss next to him
@@ -103,7 +103,7 @@ def test_the_full_kit_wins_more_of_a_smaller_fight():
 # --- More tests: the shared rules and the edges of the lists -----------------
 
 from fastcombat.abilities import can_use
-from fastcombat.policies import AutoOnly, WardenPolicy, WardenNoBossTaunt, RoguePolicy, DruidPolicy, MagePolicy
+from fastcombat.policies import AutoOnly, WardenNoBossTaunt, RoguePolicy, DruidPolicy, MagePolicy
 from fastcombat.units import Announced, Cast
 
 def test_the_registry_and_the_default_for_a_class_with_no_policy():

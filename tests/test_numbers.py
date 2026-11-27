@@ -116,6 +116,17 @@ def test_an_override_can_set_dice_and_they_become_a_pair():
     n = load_numbers(GAME / "numbers.toml", {"abilities.meteor.dice": [9, 6]})
     assert n.abilities["meteor"].dice == (9, 6)
 
+def test_boss_loud_cards_has_to_be_there(tmp_path):
+    text = without((GAME / "numbers.toml").read_text(), "rules", "boss_loud_cards")
+    p = tmp_path / "n.toml"; p.write_text(text)
+    with pytest.raises(NumbersError, match=r"rules\.boss_loud_cards: missing"):
+        load_numbers(p)
+
+@pytest.mark.parametrize("value", [0, -1])
+def test_boss_loud_cards_has_to_be_at_least_one(value):
+    with pytest.raises(NumbersError, match=r"rules\.boss_loud_cards: should be 1 or more"):
+        load_numbers(GAME / "numbers.toml", {"rules.boss_loud_cards": value})
+
 def test_an_override_for_a_rule_that_is_not_there_fails():
     with pytest.raises(NumbersError, match=r"rules\.max_round\b"):
         load_numbers(GAME / "numbers.toml", {"rules.max_round": 80})
