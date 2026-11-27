@@ -121,7 +121,10 @@ her opening (see the Rogue).
 - **Mana:** pool of 30, +1 per round. (Mage.)
 - **Energy:** pool of 10, +3 per round. (Rogue, Druid.)
 - **Grit (call):** the Guardian starts at 0 and gains 1 each time an enemy
-  attacks them, up to 10. If the owner prefers only two resource types, the
+  attacks them, up to 10. **Changed (owner, 2026-11-27):** he starts with 4
+  grit, enough for two Taunts, so he can hold the boss from round 1. With
+  none, nothing hit him early and he could never pay to Taunt (tuning log,
+  "D4"). The grit for each attack is now a game number too (2 since D4). If the owner prefers only two resource types, the
   Guardian becomes an energy class.
 - **(call)** Cooldowns are kept rare, because the owner is wary of the
   tracking. Cost is the normal limit on an ability. Where a cooldown is
@@ -239,7 +242,8 @@ Numbers are deliberately missing here. See "Numbers".
 
 ### Rogue. d6. Energy and combo points.
 
-Auto-attack hit: 1 combo point. Crit: 2. Maximum 5. **(call)**
+Auto-attack hit: 1 combo point. Crit: 2. Maximum 3 (was 5; accepted by the
+owner on 2026-11-27, see the tuning log, "D4").
 
 1. **Backstab:** cheap instant. Bonus damage and a combo point. Only on an
    enemy that is attacking someone else.
@@ -291,7 +295,16 @@ flash bang and so on) to keep the class simple.
 ### Mage. d4. Mana.
 
 1. **Arcane Volley:** channel. Three hits over three turns, moving freely.
-   Each hit is Loud. **(call on Loud)**
+   Not Loud (it was, until D3: tuning log, "Rules the simulator had to
+   decide"). **Why pick it over Firebolt (owner, 2026-11-27):** "The
+   advantage of Arcane Volley is channelling ... and it can be partially
+   used. A mage can let the spell hit twice and then cancel the cast to skip
+   the third hit to kick off another, more urgent spell or interrupt.
+   Firebolt is more all-or-nothing. If the mage needs to interrupt in the
+   middle of a Firebolt cast, they lose the entire cast with no damage
+   dealt." So a whole Volley does about as much damage for its mana as a
+   Firebolt does, and its edge is that she can move, and can stop part-way
+   and keep the hits that already landed.
 2. **Firebolt:** 1-round cast, big single-target hit.
 3. **Meteor:** 2-round cast. The area is marked when you start. Biggest
    damage in the game. Hits allies still standing there.
