@@ -269,7 +269,7 @@ def format_summary(s: Summary) -> str:
     owners = list(dict.fromkeys(s.kit.values()))
     # Each class's own buttons under its name, then the ones anyone has.
     for owner in sorted(owners, key=lambda o: o == SHARED):
-        lines.append(f"{'anyone' if owner == SHARED else owner}")
+        lines.append("anyone" if owner == SHARED else owner)
         lines += [f"  {a:<{width}}  {s.uses[a]:5.1f}" for a in s.uses if s.kit[a] == owner]
     return "\n".join(lines)
 
