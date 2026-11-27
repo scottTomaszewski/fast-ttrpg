@@ -35,10 +35,15 @@ Some rules use a word that means the same for every class:
   file marks as one (like the brute).
 - Haul up: a hero next to a downed ally hauls them up, unless a Druid is
   up and has a Seed (then the Druid will heal them).
-- Moving: never end on a square where a blast is going to land (danger)
-  if a free square out of it is in reach. A hero who is in the middle of
-  a cast, and safe, stays put. So does a hero next to a downed ally they
-  will haul up: that comes before where a class likes to stand.
+- Stunned: a hero with stun cards cannot move or act this party turn, so
+  they stay put and do nothing, before rule 1 of their list. The one
+  exception is the Mage's Ice Block (her rule 1), which a stunned hero
+  may still use. A hero in an Ice Block also stays put and does nothing.
+- Moving: never end on a square where a blast or a stomp is going to land
+  (danger) if a free square out of it is in reach. A hero who is in the
+  middle of a cast, or of a channel they must stand still for
+  (Evocation), and is safe, stays put. So does a hero next to a downed
+  ally they will haul up: that comes before where a class likes to stand.
 - The shield plan: the boss has announced a blast that lands this round,
   the Guardian stands in its area, the boss has Taunt cards, he is not
   about to haul anyone up, and he can pay for Shield Plant. Then he will
@@ -48,9 +53,11 @@ Some rules use a word that means the same for every class:
   them, against the boss's square) are not danger from that blast: an
   ally hitting an enemy there, or one who cannot move, stays behind the
   shield instead of running.
-- An answered cast is a boss cast that a Guardian has already dealt
-  with this turn: a blast he planted his shield against, or a heavy hit
-  on a hero who holds a Last Stand card. Nobody spends an interrupt on it.
+- An answered cast is a boss cast that is already dealt with this turn: a
+  blast a Guardian planted his shield against, a heavy hit on a hero who
+  holds a Last Stand card, or a stomp with nobody in its area but a
+  Guardian taking it while a Druid is up to Cleanse him (or nobody at
+  all). Nobody spends an interrupt on it.
 - An enemy is about to be hit when a hero's cast or channel that does
   damage (Firebolt, Arcane Volley) is aimed at it, or it stands in the
   marked area of a hero's blast (Meteor). Nobody saps or sheeps it: the
@@ -65,18 +72,21 @@ from dataclasses import replace
 from typing import Protocol
 
 from fastcombat.abilities import Action, can_use
+from fastcombat.casting import moving_ends
 from fastcombat.combat import BROKEN_BY_DAMAGE
 from fastcombat.grid import Pos, adjacent, approach, behind, distance, within
 from fastcombat.numbers import AbilitySpec
 from fastcombat.opening import NONE, Opening, can_open
 from fastcombat.targeting import held
-from fastcombat.units import Enemy, FightState, Hero
+from fastcombat.units import BAD_STACKS, Enemy, FightState, Hero
 
 # How the policies play. These are not game rules: they are how careful or
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
 INTERCEDE_AT = 0.6  # Guardian: guard an ally at 60% HP or less
 SHOUT_ENEMIES = 2  # Guardian: Challenging Shout when this many loose adds near him go for allies
+SLAM_TAUNT_CARDS = 2  # Guardian: Shield Slam only while the boss has this many Taunt cards or more...
+SLAM_ALLIES_ABOVE = 0.75  # ...and every ally is above 75% HP
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
 WILD_GROWTH_ALLIES = 2  # Druid: Wild Growth when it covers this many of them
@@ -93,6 +103,8 @@ QUICKEN_ROUND = 5  # Mage: the first Quicken from this round on...
 QUICKEN_BURN = 0.35  # ...and a second one when the boss is down to 35% HP or less
 QUICKEN_MOST = 2  # Mage: never more Quickens than this in one fight
 VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with this many Taunt cards
+ICE_BLOCK_AT = 0.35  # Mage: Ice Block when stunned or rooted at 35% HP or less with an enemy next to her
+EVOCATION_BELOW = 6  # Mage: Evocation with less mana than this (a whole Arcane Volley)
 
 
 class Policy(Protocol):
@@ -146,15 +158,19 @@ class _ClassPolicy:
     """What the four class policies share: the moving rules.
 
     A class says where it likes to stand in `where_to`. Before that is
-    asked: a hero in the middle of a cast stays put, and so does a hero
-    next to a downed ally they will haul up. Either way, only while they
-    are safe: someone standing in danger still gets out of it.
+    asked: a stunned hero, or one in an Ice Block, cannot move and stays
+    put. A hero in the middle of a cast (or of a channel they must stand
+    still for) stays put, and so does a hero next to a downed ally they
+    will haul up; those two only while they are safe: someone standing in
+    danger still gets out of it.
     """
 
     hauls_up = True
 
     def move(self, state: FightState, hero: Hero) -> Pos:
-        if _mid_cast(hero) or (self.hauls_up and _haul_up(state, hero)):
+        if hero.stunned or hero.iced:
+            return hero.pos
+        if moving_ends(state, hero) or (self.hauls_up and _haul_up(state, hero)):
             return _stay(state, hero)
         return self.where_to(state, hero)
 
@@ -165,7 +181,11 @@ class _ClassPolicy:
 class GuardianPolicy(_ClassPolicy):
     """The Guardian. Move: to a square next to the boss (or to the nearest
     enemy if there is no boss), out of danger if possible. When the shield
-    plan is on, he stays where he is instead.
+    plan is on, he stays where he is instead. When the boss's Stomp lands
+    this round on his square, he stays to take it (like a tank in an MMO)
+    if a Druid is up to Cleanse the stun, or if he is holding an add there
+    (an enemy that is not the boss and not controlled, next to him) that
+    would get loose if he stepped out. Everyone else steps out of it.
 
     An enemy next to the Guardian is already held: it must attack him. So the
     Guardian spends a turn on a Taunt or a pull only for an enemy that would
@@ -206,7 +226,13 @@ class GuardianPolicy(_ClassPolicy):
     9. A loose add that is not fodder, and is not already going for me, is
        in Taunt's range: Taunt the one closest to any ally who is not a
        Guardian. (Fodder dies to any hit, so it is not worth the grit.)
-    10. Auto-attack the focus if it is next to me, or else the lowest-HP
+    10. Nothing needs me: the boss has 2 or more Taunt cards (or there is
+        no boss), every ally (not a Guardian) is above 75% HP, and no add
+        is loose. Then Shield Slam instead of an auto-attack: the boss if
+        it is next to me, else the lowest-HP enemy next to me that is not
+        fodder and not controlled. It is free, gives grit and has a
+        cooldown, so it is the filler for when things go very well.
+    11. Auto-attack the focus if it is next to me, or else the lowest-HP
         enemy next to me that is not controlled.
     """
 
@@ -215,6 +241,8 @@ class GuardianPolicy(_ClassPolicy):
     def where_to(self, state: FightState, guardian: Hero) -> Pos:
         plan = _shield_plan(state)
         if plan is not None and plan[0] is guardian:
+            return guardian.pos
+        if _takes_the_stomp(state, guardian):
             return guardian.pos
         goal = _boss(state) or _nearest_enemy(state, guardian)
         if goal is None:
@@ -226,6 +254,10 @@ class GuardianPolicy(_ClassPolicy):
         allies = [h for h in _up_heroes(state) if h.cls != "guardian"]
         spots = [a.pos for a in allies]
         abilities = state.numbers.abilities
+
+        # Stunned: nothing (see the top of this file).
+        if guardian.stunned:
+            return Action("none")
 
         # 1. Haul up.
         if action := _haul_up(state, guardian):
@@ -309,7 +341,19 @@ class GuardianPolicy(_ClassPolicy):
             if action := _ability(state, guardian, "taunt", add.id):
                 return action
 
-        # 10. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
+        # 10. Nothing needs me: Shield Slam the boss, or the weakest add on me.
+        taunt = boss.stacks.get("taunt") if boss else None
+        boss_held = boss is None or (taunt is not None and taunt.cards >= SLAM_TAUNT_CARDS)
+        all_well = all(_share(a) > SLAM_ALLIES_ABOVE for a in allies)
+        if boss_held and all_well and not loose:
+            slam = boss if boss is not None and adjacent(boss.pos, guardian.pos) else None
+            if slam is None:
+                slam = _weakest_next_to(state, guardian, fodder=False)
+            if slam is not None:
+                if action := _ability(state, guardian, "shield_slam", slam.id):
+                    return action
+
+        # 11. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
         if action := _auto(state, guardian, _focus(state, guardian)):
             return action
         return _auto(state, guardian, _weakest_next_to(state, guardian)) or Action("none")
@@ -451,6 +495,10 @@ class RoguePolicy(_ClassPolicy):
         self._memory(state)  # sees every round, so a new fight is never missed
         focus = _ability_focus(state, rogue)  # for the abilities aimed at the focus
         full = _full_combo(state, rogue)
+
+        # Stunned: nothing (see the top of this file).
+        if rogue.stunned:
+            return Action("none")
 
         # 1. Haul up.
         if action := _haul_up(state, rogue):
@@ -598,22 +646,31 @@ class DruidPolicy(_ClassPolicy):
     lowest-HP ally if there is no Guardian), and as far from the nearest enemy
     as that allows. While an ally is down, within reach of them instead.
 
+    A stun is worth a Cleanse when the stunned ally still has an act step
+    to come this turn (they act after me: heroes act in id order), or when
+    it lasts past this turn (more than one card). A one-card stun on an
+    ally who has already acted comes off at the end of the turn anyway.
+
     1. An ally is down: Swiftmend them, else Nourish them.
     2. An enemy that is pulled by me or next to me could reach me this GM
        turn (its distance to me is at most its move plus its range), and
        is neither controlled nor rooted: Shadowmeld.
     3. An ally is at 35% HP or less: Swiftmend.
-    4. In the middle of a cast: continue.
-    5. The Guardian is up without Rejuvenation cards: Rejuvenation.
-    6. Two or more allies at 70% HP or less (after a blast, say) fit in one
+    4. An ally has a stun worth a Cleanse: Cleanse the stun. The Guardian
+       first (the boss is on him), then by id.
+    5. In the middle of a cast: continue.
+    6. The Guardian is up without Rejuvenation cards: Rejuvenation.
+    7. Two or more allies at 70% HP or less (after a blast, say) fit in one
        Wild Growth area: Wild Growth, centred to cover the most.
-    7. An ally is at 60% HP or less: Regrowth on the lowest.
-    8. An ally has poison: Cleanse.
-    9. An ally at 80% HP or less has no Rejuvenation cards and I have 6 or
-       more energy: Rejuvenation.
-    10. An ally is below full HP: Nourish the lowest. It is free, so it is
+    8. An ally is at 60% HP or less: Regrowth on the lowest.
+    9. An ally has some other bad card (poison, say; see
+       `units.BAD_STACKS`): Cleanse it, the first in that list, on the
+       first such ally by id.
+    10. An ally at 80% HP or less has no Rejuvenation cards and I have 6 or
+        more energy: Rejuvenation.
+    11. An ally is below full HP: Nourish the lowest. It is free, so it is
         the filler whenever nothing better is needed.
-    11. Auto-attack the focus if it is in range.
+    12. Auto-attack the focus if it is in range.
     """
 
     hauls_up = False  # the Druid heals a downed ally from afar instead
@@ -634,6 +691,10 @@ class DruidPolicy(_ClassPolicy):
     def act(self, state: FightState, druid: Hero) -> Action:
         allies = _up_heroes(state)
         abilities = state.numbers.abilities
+
+        # Stunned: nothing (see the top of this file).
+        if druid.stunned:
+            return Action("none")
 
         # 1. An ally is down: Swiftmend them, else Nourish them.
         downed = _first(_downed(state))
@@ -661,17 +722,26 @@ class DruidPolicy(_ClassPolicy):
             if action := _ability(state, druid, "swiftmend", dying.id):
                 return action
 
-        # 4. In the middle of a cast: continue.
+        # 4. An ally has a stun worth a Cleanse: Cleanse it, the Guardian first.
+        stunned = sorted(
+            (a for a in allies if _stun_worth_cleansing(druid, a)),
+            key=lambda a: (a.cls != "guardian", a.id),
+        )
+        for ally in stunned:
+            if action := _ability(state, druid, "cleanse", ally.id, card="stun"):
+                return action
+
+        # 5. In the middle of a cast: continue.
         if druid.cast is not None:
             return Action("continue")
 
-        # 5. The Guardian is up without Rejuvenation cards: Rejuvenation.
+        # 6. The Guardian is up without Rejuvenation cards: Rejuvenation.
         guardian = state.guardian()
         if guardian is not None and "rejuvenation" not in guardian.stacks:
             if action := _ability(state, druid, "rejuvenation", guardian.id):
                 return action
 
-        # 6. Two or more hurt allies fit in one Wild Growth area: Wild Growth.
+        # 7. Two or more hurt allies fit in one Wild Growth area: Wild Growth.
         hurt = [a for a in allies if _share(a) <= WILD_GROWTH_AT]
         spec = abilities["wild_growth"]
         centre, count = _best_centre(state, druid.pos, spec.range, spec.radius, hurt)
@@ -679,19 +749,21 @@ class DruidPolicy(_ClassPolicy):
             if action := _ability(state, druid, "wild_growth", pos=centre):
                 return action
 
-        # 7. An ally is at 60% HP or less: Regrowth on the lowest.
+        # 8. An ally is at 60% HP or less: Regrowth on the lowest.
         low = _lowest(a for a in allies if _share(a) <= REGROWTH_AT)
         if low is not None:
             if action := _ability(state, druid, "regrowth", low.id):
                 return action
 
-        # 8. An ally has poison: Cleanse.
-        poisoned = _first(a for a in allies if "poison" in a.stacks)
-        if poisoned is not None:
-            if action := _ability(state, druid, "cleanse", poisoned.id):
-                return action
+        # 9. An ally has some other bad card: Cleanse it.
+        for ally in allies:
+            card = _first(n for n in BAD_STACKS if n != "stun" and n in ally.stacks)
+            if card is not None:
+                if action := _ability(state, druid, "cleanse", ally.id, card=card):
+                    return action
+                break
 
-        # 9. An ally at 80% HP or less has no Rejuvenation cards, and I have
+        # 10. An ally at 80% HP or less has no Rejuvenation cards, and I have
         # the energy: Rejuvenation.
         bare = _lowest(
             a
@@ -702,13 +774,13 @@ class DruidPolicy(_ClassPolicy):
             if action := _ability(state, druid, "rejuvenation", bare.id):
                 return action
 
-        # 10. An ally is below full HP: Nourish the lowest.
+        # 11. An ally is below full HP: Nourish the lowest.
         scratched = _lowest(a for a in allies if a.hp < a.max_hp)
         if scratched is not None:
             if action := _ability(state, druid, "nourish", scratched.id):
                 return action
 
-        # 11. Auto-attack the focus if it is in range.
+        # 12. Auto-attack the focus if it is in range.
         return _auto(state, druid, _focus(state, druid)) or Action("none")
 
 
@@ -716,34 +788,43 @@ class MagePolicy(_ClassPolicy):
     """The Mage. Move: in spell range of the focus, and as far from the
     nearest enemy as she can get this move, up to 5 squares: any square 5
     or more from every enemy is just as good as another. While casting (not
-    channelling), stay still unless standing in danger.
+    channelling), or in Evocation, stay still unless standing in danger.
 
     Arcane Volley is her everyday damage spell; Firebolt is for a single
     big hit that is worth a round of casting. "I have the mana" means she
     can pay for all of the spell (every hit of Volley). Without it she is
     saving mana: she auto-attacks, and each hit gives some back.
 
-    1. Haul up.
-    2. In the middle of a cast (not a channel): continue.
-    3. An enemy that is not controlled is next to me:
+    1. Ice Block, when (she may do this even while stunned):
+       a. an enemy's announced cast lands this GM turn and hits me (a heavy
+          hit aimed at me, or a blast or a stomp on my square: I did not or
+          could not walk out of it in the move step), its biggest roll
+          could take me to 0, nobody has answered it, and I cannot Disrupt
+          it now (stunned, cooling down or out of reach); or
+       b. I am stunned or rooted, at 35% HP or less, and an enemy that is
+          not controlled is next to me.
+    2. Haul up.
+    3. In the middle of a cast (not a channel): continue.
+    4. An enemy that is not controlled is next to me:
        a. one of them is an add that is not rooted: Frost Nova (it cannot
           follow me when I walk away);
        b. else Blink to a square that none of them can reach this GM turn
           (Frost Nova would not stop a boss, or they are rooted already);
        c. else Frost Nova.
-    4. An enemy in range has an announced cast that is not answered, and is
+    5. An enemy in range has an announced cast that is not answered, and is
        not controlled: Disrupt, even in the middle of a channel. A mend
        first (it undoes our damage), then by id.
-    5. In the middle of a channel: continue, unless its enemy is sapped or
+    6. In the middle of a channel: continue, unless its enemy is sapped or
        sheeped now (the next hit would wake it) and some other enemy is
        left to hit: then the channel ends, and I read on. When every enemy
-       left is asleep, I keep channelling.
-    6. No enemy is a sheep, no hero is in the middle of casting Polymorph
+       left is asleep, I keep channelling. (Evocation has no enemy: I keep
+       channelling it.)
+    7. No enemy is a sheep, no hero is in the middle of casting Polymorph
        (another Mage's sheep is on its way), and at least two enemies are
        alive that are not controlled, not a boss and not fodder: Polymorph
        the one of them with the most HP that nobody is next to and that is
        not about to be hit.
-    7. Some square in range has three or more enemies that are not
+    8. Some square in range has three or more enemies that are not
        controlled within Meteor's radius, no sapped or sheeped enemy there,
        and no hero there who could not walk out before it lands: Meteor on
        the square that covers the most. A sapped or sheeped enemy wakes up
@@ -755,23 +836,28 @@ class MagePolicy(_ClassPolicy):
        cast), a downed hero, a hero in the middle of a longer cast, or the
        Guardian when an enemy it would hit is next to him (he is holding it
        there).
-    8. Nobody has Quicken cards, every hero is up, I have Quickened fewer
+    9. Nobody has Quicken cards, every hero is up, I have Quickened fewer
        than 2 times this fight, and: it is round 5 or later, I have not
        Quickened yet, and the boss has Taunt cards (or there is no boss);
        or I have Quickened once and the boss is at 35% HP or less (the burn
        at the end): Quicken. (Quicken is benched for now, so `can_use`
        refuses it and this rule never applies in the real game. It is kept
        for when Quicken comes back.)
-    9. The focus is an add whose HP is more than one Volley hit (on average)
-       and no more than one Firebolt (on average), and I have the mana:
-       Firebolt it. One big hit finishes it in one of my turns, where Volley
-       would need two.
-    10. Arcane Volley the focus, if I have the mana. If Volley is Loud, only
+    10. I have less than 6 mana (not a whole Volley), and nothing needs me:
+        no enemy that is not controlled is next to me, no blast or stomp is
+        coming down on my square, no announced cast in my Disrupt range is
+        waiting for an interrupt, and the boss has Taunt cards (or there is
+        no boss): Evocation.
+    11. The focus is an add whose HP is more than one Volley hit (on average)
+        and no more than one Firebolt (on average), and I have the mana:
+        Firebolt it. One big hit finishes it in one of my turns, where Volley
+        would need two.
+    12. Arcane Volley the focus, if I have the mana. If Volley is Loud, only
         on a focus with three or more Taunt cards: on anything else, Loud
         would pull it off the Guardian, or strip his Taunt.
-    11. Volley would be Loud on the focus, and I have the mana: Firebolt the
+    13. Volley would be Loud on the focus, and I have the mana: Firebolt the
         focus instead (Firebolt is not Loud).
-    12. Auto-attack the focus if it is in range.
+    14. Auto-attack the focus if it is in range.
     """
 
     def where_to(self, state: FightState, mage: Hero) -> Pos:
@@ -794,15 +880,25 @@ class MagePolicy(_ClassPolicy):
             spec = abilities[ability]
             return mage.resource >= spec.cost * max(1, spec.hits)
 
-        # 1. Haul up.
+        # 1. A hit coming that could drop me and that I cannot stop, or stuck
+        # and low next to an enemy: Ice Block (even while stunned).
+        if _ice_block_now(state, mage):
+            if action := _ability(state, mage, "ice_block"):
+                return action
+
+        # Stunned: nothing else (see the top of this file).
+        if mage.stunned:
+            return Action("none")
+
+        # 2. Haul up.
         if action := _haul_up(state, mage):
             return action
 
-        # 2. In the middle of a cast (not a channel): continue.
+        # 3. In the middle of a cast (not a channel): continue.
         if _mid_cast(mage):
             return Action("continue")
 
-        # 3. An enemy is next to me: Frost Nova, else Blink, else Frost Nova.
+        # 4. An enemy is next to me: Frost Nova, else Blink, else Frost Nova.
         threats = [e for e in _enemies_next_to(state, mage) if not e.controlled]
         if threats:
             if any(e.spec.tier != "boss" and "rooted" not in e.stacks for e in threats):
@@ -816,7 +912,7 @@ class MagePolicy(_ClassPolicy):
                 if action := _ability(state, mage, "frost_nova"):
                     return action
 
-        # 4. An enemy in range has an announced cast nobody answered: Disrupt,
+        # 5. An enemy in range has an announced cast nobody answered: Disrupt,
         # a mend first.
         def mend_first(enemy: Enemy) -> tuple:
             return (enemy.announced.kind != "mend", enemy.id)
@@ -825,14 +921,14 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 5. In the middle of a channel: continue, unless its enemy is asleep now
+        # 6. In the middle of a channel: continue, unless its enemy is asleep now
         # and there is something else to hit.
         if mage.cast is not None:
             target = state.enemies.get(mage.cast.target) if mage.cast.target else None
             if target is None or not _asleep(target) or target in _to_hit(state):
                 return Action("continue")
 
-        # 6. No sheep yet, none on its way, and two or more enemies worth one:
+        # 7. No sheep yet, none on its way, and two or more enemies worth one:
         # Polymorph.
         worth = [
             e
@@ -856,19 +952,24 @@ class MagePolicy(_ClassPolicy):
                 if action := _ability(state, mage, "polymorph", sheep.id):
                     return action
 
-        # 7. Three or more enemies in one area, and every hero there can walk
+        # 8. Three or more enemies in one area, and every hero there can walk
         # out of it: Meteor.
         centre, count = _meteor_centre(state, mage)
         if count >= METEOR_ENEMIES:
             if action := _ability(state, mage, "meteor", pos=centre):
                 return action
 
-        # 8. A good moment, and not too often: Quicken.
+        # 9. A good moment, and not too often: Quicken (benched for now).
         if _quicken_now(state, mage):
             if action := _ability(state, mage, "quicken"):
                 return action
 
-        # 9. An add one Firebolt would finish, and Volley would need two hits:
+        # 10. Low on mana and nothing needs me: Evocation.
+        if mage.resource < EVOCATION_BELOW and _nothing_needs_the_mage(state, mage):
+            if action := _ability(state, mage, "evocation"):
+                return action
+
+        # 11. An add one Firebolt would finish, and Volley would need two hits:
         # Firebolt.
         volley, firebolt = abilities["arcane_volley"], abilities["firebolt"]
         if (
@@ -880,7 +981,7 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "firebolt", focus.id):
                 return action
 
-        # 10. Arcane Volley the focus, unless Loud would do harm.
+        # 12. Arcane Volley the focus, unless Loud would do harm.
         taunt = focus.stacks.get("taunt") if focus else None
         loud_is_safe = not volley.loud or (
             taunt is not None and taunt.cards >= VOLLEY_TAUNT_CARDS
@@ -890,12 +991,12 @@ class MagePolicy(_ClassPolicy):
                 if action := _ability(state, mage, "arcane_volley", focus.id):
                     return action
 
-        # 11. Volley would be Loud on the focus: Firebolt it instead.
+        # 13. Volley would be Loud on the focus: Firebolt it instead.
         if focus is not None and not loud_is_safe and affords("firebolt"):
             if action := _ability(state, mage, "firebolt", focus.id):
                 return action
 
-        # 12. Auto-attack the focus if it is in range (fodder too).
+        # 14. Auto-attack the focus if it is in range (fodder too).
         return _auto(state, mage, _focus(state, mage)) or Action("none")
 
 
@@ -1003,16 +1104,24 @@ def _shield_plan(state: FightState) -> tuple[Hero, Pos] | None:
 
 
 def _answered(state: FightState, enemy: Enemy) -> bool:
-    """True when a Guardian has already dealt with `enemy`'s announced cast.
+    """True when `enemy`'s announced cast is already dealt with, so nobody
+    spends an interrupt on it.
 
     A blast is answered once a Guardian has planted his shield this turn (the
     card comes off at the top of the next party turn, so a card means it
     was this turn). A heavy hit is answered when the hero it is aimed at
-    holds a Last Stand card.
+    holds a Last Stand card. A stomp is answered when the only heroes left
+    in its area (everyone has moved by the act step) are Guardians taking
+    it, and a Druid is up to Cleanse their stun; or when nobody is in it.
     """
     cast = enemy.announced
     if cast is None:
         return False
+    if cast.kind == "stomp":
+        inside = [h for h in state.up_heroes() if h.pos in cast.area]
+        if not inside:
+            return True
+        return all(h.cls == "guardian" for h in inside) and _druid_to_cleanse(state)
     if cast.kind == "blast":
         return any(
             h.cls == "guardian" and "shield_plant" in h.stacks for h in state.up_heroes()
@@ -1024,6 +1133,29 @@ def _answered(state: FightState, enemy: Enemy) -> bool:
 
 
 # --- The Guardian's grit -------------------------------------------------------
+
+
+def _takes_the_stomp(state: FightState, guardian: Hero) -> bool:
+    """True when the boss's Stomp lands this round on the Guardian's square
+    and he stays to take it (see his move): a Druid is up to Cleanse him,
+    or he is holding an add there (an enemy that is not the boss and not
+    controlled, next to him) that would get loose if he stepped out."""
+    boss = _boss(state)
+    cast = boss.announced if boss else None
+    if cast is None or cast.kind != "stomp" or cast.lands_round != state.round:
+        return False
+    if guardian.pos not in cast.area:
+        return False
+    if _druid_to_cleanse(state):
+        return True
+    return any(
+        e.spec.tier != "boss" and not e.controlled for e in _enemies_next_to(state, guardian)
+    )
+
+
+def _druid_to_cleanse(state: FightState) -> bool:
+    """True when a Druid is up and not stunned: she can Cleanse a stun next turn."""
+    return any(h.cls == "druid" and not h.stunned for h in state.up_heroes())
 
 
 def _grit_to_keep(state: FightState) -> int:
@@ -1055,6 +1187,17 @@ def _heavy_could_drop(state: FightState, guardian: Hero, dice: tuple[int, int]) 
     if boss is not None and "taunt" in boss.stacks:
         most += max(0, _hit_size(boss, biggest=True) - less)
     return most >= guardian.hp
+
+
+# --- The Druid's Cleanse -------------------------------------------------------
+
+
+def _stun_worth_cleansing(druid: Hero, ally: Hero) -> bool:
+    """Druid rule 4: `ally` is stunned, and a Cleanse would give them back
+    something: an act step still to come this turn (they act after me, in
+    id order), or the stun lasts past this turn."""
+    stun = ally.stacks.get("stun")
+    return stun is not None and (ally.id > druid.id or stun.cards > 1)
 
 
 # --- The Rogue's targets -------------------------------------------------------
@@ -1132,7 +1275,7 @@ def _hit_size(enemy: Enemy, biggest: bool = False) -> float:
 
 
 def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
-    """Mage rule 7: the best square for Meteor and how many enemies it would hit.
+    """Mage rule 8: the best square for Meteor and how many enemies it would hit.
 
     Only enemies that are not controlled are counted. A square is left out
     if a hero who could not walk out stands within Meteor's radius of it,
@@ -1164,8 +1307,45 @@ def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
     return _best_centre(state, mage.pos, spec.range, spec.radius, enemies, allowed=allowed)
 
 
+def _ice_block_now(state: FightState, mage: Hero) -> bool:
+    """Mage rule 1: is this the moment for Ice Block?"""
+    for enemy in state.living_enemies():
+        cast = enemy.announced
+        if cast is None or cast.lands_round != state.round or enemy.controlled:
+            continue
+        on_me = (cast.kind == "heavy" and cast.target == mage.id) or (
+            cast.kind in ("blast", "stomp") and mage.pos in cast.area
+        )
+        if not on_me or _answered(state, enemy):
+            continue
+        most = cast.dice[0] * cast.dice[1]
+        for name, kinds in (("guarded", ("heavy", "blast", "stomp")), ("shield_plant", ("blast", "stomp"))):
+            if name in mage.stacks and cast.kind in kinds:
+                most -= mage.stacks[name].value
+        if most < mage.hp:
+            continue
+        if _ability(state, mage, "disrupt", enemy.id) is None:
+            return True
+    stuck = mage.stunned or "rooted" in mage.stacks
+    near = any(not e.controlled for e in _enemies_next_to(state, mage))
+    return stuck and near and _share(mage) <= ICE_BLOCK_AT
+
+
+def _nothing_needs_the_mage(state: FightState, mage: Hero) -> bool:
+    """Mage rule 10: nothing needs her this turn, so she can stand still for Evocation."""
+    if any(not e.controlled for e in _enemies_next_to(state, mage)):
+        return False
+    if mage.pos in _danger(state):
+        return False
+    reach = state.numbers.abilities["disrupt"].alt
+    if any(distance(mage.pos, e.pos) <= reach for e in _casting(state, state.living_enemies())):
+        return False
+    boss = _boss(state)
+    return boss is None or "taunt" in boss.stacks
+
+
 def _quicken_now(state: FightState, mage: Hero) -> bool:
-    """Mage rule 8: is this a good moment for Quicken?"""
+    """Mage rule 9: is this a good moment for Quicken?"""
     heroes = list(state.heroes.values())
     if not all(h.up for h in heroes) or any("quicken" in h.stacks for h in heroes):
         return False
@@ -1340,9 +1520,10 @@ def _ability(
     ability: str,
     target: str | None = None,
     pos: Pos | None = None,
+    card: str | None = None,
 ) -> Action | None:
     """The action that uses `ability`, if it can be used right now. Otherwise None."""
-    action = Action("ability", ability, target, pos)
+    action = Action("ability", ability, target, pos, card)
     return action if can_use(state, hero, ability, action) else None
 
 
@@ -1409,9 +1590,16 @@ def _enemies_next_to(state: FightState, hero: Hero) -> list[Enemy]:
     return sorted(near, key=lambda e: e.id)
 
 
-def _weakest_next_to(state: FightState, hero: Hero) -> Enemy | None:
-    """The enemy next to `hero` with the least HP that is not controlled (ties: by id)."""
-    free = [e for e in _enemies_next_to(state, hero) if not e.controlled]
+def _weakest_next_to(state: FightState, hero: Hero, fodder: bool = True) -> Enemy | None:
+    """The enemy next to `hero` with the least HP that is not controlled (ties: by id).
+
+    With `fodder=False` fodder is left out (for an ability aimed at it).
+    """
+    free = [
+        e
+        for e in _enemies_next_to(state, hero)
+        if not e.controlled and (fodder or e.spec.tier != "fodder")
+    ]
     return min(free, key=lambda e: (e.hp, e.id), default=None)
 
 

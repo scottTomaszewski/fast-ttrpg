@@ -56,7 +56,7 @@ def stun_hero(state: FightState, hero: Hero, cards: int) -> None:
     shortens one already there. Being stunned ends the hero's cast or
     channel.
     """
-    if not hero.up or hero.iced:
+    if cards <= 0 or not hero.up or hero.iced:
         return
     old = hero.stacks.get("stun")
     if old is None or old.cards < cards:

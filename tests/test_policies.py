@@ -126,6 +126,9 @@ def test_no_policy_ever_asks_for_an_ability_it_cannot_use():
     openings = []
     # The frozen copy has no elites; with the brute made one, the Rogues open on it.
     f = replace(f, enemy_types={**f.enemy_types, "brute": replace(f.enemy_types["brute"], tier="elite")})
+    # And no Stomp: with one, heroes get stunned, and a stunned hero must ask for nothing refused.
+    from tests.test_boss import STOMP
+    f = replace(f, boss_script=[*f.boss_script, replace(STOMP, first=3, every=3)])
 
     class Checked:
         def __init__(self, cls): self.policy = default_policy(cls)
@@ -754,3 +757,125 @@ def test_mage_does_not_sheep_an_enemy_a_meteor_is_coming_down_on():
     a = act(s, "mage"); assert (a.ability, a.target) == ("polymorph", "shaman1")
     s.marked["mage2"] = frozenset(within((9, 3), 2, 16, 12))        # another Mage's Meteor
     a = act(s, "mage"); assert (a.ability, a.target) == ("polymorph", "wolf1")
+
+
+# --- D3c: Shield Slam, the Stomp, stuns, Ice Block, Evocation, the wider Cleanse ---
+
+from fastcombat.combat import stun_hero
+from fastcombat.policies import SLAM_TAUNT_CARDS, SLAM_ALLIES_ABOVE, EVOCATION_BELOW, ICE_BLOCK_AT
+
+def quiet_fight(s):
+    """A taunted ogre next to the Guardian at (3, 6), and nothing else: all is well."""
+    o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", SLAM_TAUNT_CARDS); return o
+
+def test_guardian_shield_slams_the_boss_only_when_nothing_needs_him():
+    s = state(); o = quiet_fight(s)
+    assert act(s, "guardian") == Action("ability", "shield_slam", "ogre1")
+    o.stacks["taunt"].cards = SLAM_TAUNT_CARDS - 1                    # the boss is nearly loose
+    assert act(s, "guardian") == Action("auto", target="ogre1")
+    o.stacks["taunt"].cards = SLAM_TAUNT_CARDS
+    m = s.heroes["mage"]; m.hp = int(m.max_hp * SLAM_ALLIES_ABOVE)    # an ally is hurt
+    assert act(s, "guardian") == Action("auto", target="ogre1")
+    m.hp = m.max_hp; add_stack(s.heroes["guardian"], "cd:shield_slam", 1)   # cooling down
+    assert act(s, "guardian") == Action("auto", target="ogre1")
+
+def test_guardian_does_not_shield_slam_while_an_add_is_loose():
+    s = state(); quiet_fight(s); w = enemy(s, "wolf", (12, 2)); w.target = "guardian"   # coming for him
+    assert act(s, "guardian").ability != "shield_slam"
+    w.dead = True; assert act(s, "guardian").ability == "shield_slam"
+
+def test_guardian_shield_slams_the_add_on_him_when_the_boss_is_not_next_to_him():
+    s = state(); o = enemy(s, "ogre", (8, 6)); add_stack(o, "taunt", 3)
+    b = enemy(s, "brute", (4, 7)); g = enemy(s, "goblin", (4, 5))   # both next to him, so held
+    assert act(s, "guardian") == Action("ability", "shield_slam", "brute1")
+    add_stack(b, "sap", 20)                                         # never wake a sapped one
+    assert act(s, "guardian") == Action("auto", target="goblin1")   # fodder only gets an auto-attack
+
+def test_a_stunned_hero_stays_put_and_does_nothing():
+    s = state(); quiet_fight(s); enemy(s, "wolf", (3, 4))
+    for name in ("guardian", "rogue", "druid", "mage"):
+        h = s.heroes[name]; stun_hero(s, h, 1)
+        assert default_policy(h.cls).move(s, h) == h.pos and act(s, name) == Action("none")
+        del h.stacks["stun"]
+
+def stomp_coming(s, o):
+    o.announced = Announced("stomp", "stomp", s.round, None,
+                            frozenset(within(o.pos, 1, 16, 12)), (1, 6), stun=1)
+
+def test_guardian_stays_to_take_the_stomp_when_a_druid_can_cleanse_him():
+    s = state(); o = quiet_fight(s); stomp_coming(s, o); g = s.heroes["guardian"]
+    assert default_policy("guardian").move(s, g) == g.pos           # he stays in it
+    r = s.heroes["rogue"]; r.pos = (5, 7)                           # next to the ogre too
+    assert default_policy("rogue").move(s, r) not in o.announced.area   # she steps out
+    damage_hero(s, s.heroes["druid"], 99, attacker=None)            # no Druid to Cleanse him
+    assert default_policy("guardian").move(s, g) not in o.announced.area
+    enemy(s, "wolf", (2, 7))                                        # but he is holding a wolf
+    assert default_policy("guardian").move(s, g) == g.pos
+
+def test_nobody_disrupts_a_stomp_only_the_guardian_is_taking():
+    s = state(); o = quiet_fight(s); stomp_coming(s, o)
+    assert act(s, "mage").ability != "disrupt"                      # answered: the Druid will Cleanse him
+    assert act(s, "guardian").ability != "disrupt"
+    s.heroes["rogue"].pos = (5, 7)                                  # someone else is in it
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")
+    s.heroes["rogue"].pos = (9, 9); s.heroes["guardian"].pos = (2, 6)   # nobody in it
+    assert act(s, "mage").ability != "disrupt"
+
+def test_druid_cleanses_a_stun_the_guardian_first_before_poison():
+    s = state(); g, r, m = (s.heroes[h] for h in ("guardian", "rogue", "mage"))
+    add_stack(m, "poison", 3, 2); stun_hero(s, r, 1)
+    assert act(s, "druid") == Action("ability", "cleanse", "rogue", card="stun")
+    stun_hero(s, g, 1)
+    assert act(s, "druid") == Action("ability", "cleanse", "guardian", card="stun")
+    del g.stacks["stun"]; del r.stacks["stun"]; add_stack(g, "rejuvenation", 4, 4)   # so rule 6 does not come first
+    assert act(s, "druid") == Action("ability", "cleanse", "mage", card="poison")
+
+def test_druid_does_not_cleanse_a_stun_that_is_about_to_come_off_anyway():
+    s = state(("druid", "druid", "guardian")); first = s.heroes["druid"]
+    stun_hero(s, first, 1)                                          # she acts before druid2: already missed it
+    assert act(s, "druid2").ability != "cleanse"
+    first.stacks["stun"].cards = 2                                  # it lasts past this turn
+    assert act(s, "druid2") == Action("ability", "cleanse", "druid", card="stun")
+
+def heavy_on_mage(s):
+    o = enemy(s, "ogre", (11, 6))
+    o.announced = Announced("skull_crusher", "heavy", s.round, "mage", frozenset(), (6, 6))
+    return o
+
+def test_mage_disrupts_a_heavy_hit_on_her_and_ice_blocks_only_if_she_cannot():
+    s = state(); heavy_on_mage(s); m = s.heroes["mage"]
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "ogre1")
+    add_stack(m, "cd:disrupt", 2)
+    assert act(s, "mage") == Action("ability", "ice_block")
+    del m.stacks["cd:disrupt"]; stun_hero(s, m, 1)                  # stunned: Ice Block is all she may do
+    assert act(s, "mage") == Action("ability", "ice_block")
+    add_stack(m, "cd:ice_block", 3)
+    assert act(s, "mage") == Action("none")
+
+def test_mage_ice_blocks_a_blast_she_is_still_in_only_if_it_could_drop_her():
+    s = state(); m = s.heroes["mage"]; o = enemy(s, "ogre", (2, 6)); add_stack(m, "cd:disrupt", 2)
+    o.announced = Announced("ground_slam", "blast", s.round, None, frozenset(within(o.pos, 2, 16, 12)), (3, 6))
+    m.hp = 19; assert act(s, "mage").ability != "ice_block"         # 3d6 is 18 at most
+    m.hp = 18; assert act(s, "mage") == Action("ability", "ice_block")
+
+def test_a_stunned_mage_low_with_an_enemy_next_to_her_ice_blocks():
+    s = state(); m = s.heroes["mage"]; w = enemy(s, "wolf", (2, 4)); stun_hero(s, m, 1)
+    m.hp = int(m.max_hp * ICE_BLOCK_AT) + 1; assert act(s, "mage") == Action("none")
+    m.hp = int(m.max_hp * ICE_BLOCK_AT); assert act(s, "mage") == Action("ability", "ice_block")
+    add_stack(w, "stun", 1); assert act(s, "mage") == Action("none")   # a stunned wolf is no danger
+
+def test_mage_evokes_when_low_on_mana_and_nothing_needs_her():
+    s = state(); quiet_volley(s); m = s.heroes["mage"]; o = enemy(s, "ogre", (11, 6)); add_stack(o, "taunt", 2)
+    m.resource = EVOCATION_BELOW; assert act(s, "mage").ability != "evocation"
+    m.resource = EVOCATION_BELOW - 1; assert act(s, "mage") == Action("ability", "evocation")
+    del o.stacks["taunt"]; assert act(s, "mage").ability != "evocation"      # the boss is loose
+    add_stack(o, "taunt", 2); s.marked["druid"] = frozenset({m.pos})         # something coming down on her
+    assert act(s, "mage").ability != "evocation"
+    del s.marked["druid"]; mending_shaman(s, (9, 2))                         # a mend to Disrupt
+    add_stack(m, "cd:disrupt", 1); assert act(s, "mage").ability != "evocation"
+
+def test_mage_keeps_still_through_evocation_and_keeps_channelling_it():
+    s = state(); m = s.heroes["mage"]; o = enemy(s, "ogre", (11, 6)); add_stack(o, "taunt", 2)
+    m.resource = 2; use_ability(s, m, Action("ability", "evocation"))
+    assert default_policy("mage").move(s, m) == m.pos
+    assert act(s, "mage") == Action("continue")
