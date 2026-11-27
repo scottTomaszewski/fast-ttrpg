@@ -115,7 +115,7 @@ QUICKEN_ROUND = 5  # Mage: the first Quicken from this round on...
 QUICKEN_BURN = 0.35  # ...and a second one when the boss is down to 35% HP or less
 QUICKEN_MOST = 2  # Mage: never more Quickens than this in one fight
 VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with this many Taunt cards
-ICE_BLOCK_AT = 0.35  # Mage: Ice Block at 35% HP or less, the boss or an elite on her, and no way out
+ICE_BLOCK_AT = 0.5  # Mage: Ice Block at half HP or less, the boss or an elite on her, and no way out
 EVOCATION_BELOW = 6  # Mage: Evocation with less mana than this (a whole Arcane Volley)
 
 
@@ -298,7 +298,7 @@ class GuardianPolicy(_ClassPolicy):
                 return action
 
         # 4. An enemy next to me has an announced cast nobody answered: Disrupt.
-        casting = _first(_casting(state, _enemies_next_to(state, guardian)))
+        casting = _disrupt_pick(state, guardian)
         if casting is not None:
             if action := _ability(state, guardian, "disrupt", casting.id):
                 return action
@@ -528,7 +528,7 @@ class RoguePolicy(_ClassPolicy):
 
         # 2. An enemy next to me has an announced cast nobody answered:
         # Disrupt, else Kidney Shot with full combo points, else Cheap Shot.
-        casting = _first(_casting(state, _enemies_next_to(state, rogue)))
+        casting = _disrupt_pick(state, rogue)
         if casting is not None:
             if action := _ability(state, rogue, "disrupt", casting.id):
                 return action
@@ -823,7 +823,7 @@ class MagePolicy(_ClassPolicy):
           could not walk out of it in the move step), its biggest roll
           could take me to 0, nobody has answered it, and I cannot Disrupt
           it now (stunned, cooling down or out of reach); or
-       b. I am at 35% HP or less, the boss or an elite is next to me and on
+       b. I am at half HP or less, the boss or an elite is next to me and on
           me (it went for me on its last turn and has no Taunt cards, and
           is not controlled), and rule 4 will not take me out of its reach:
           I cannot Blink to a square it cannot reach this GM turn (stunned,
@@ -942,10 +942,8 @@ class MagePolicy(_ClassPolicy):
 
         # 5. An enemy in range has an announced cast nobody answered: Disrupt,
         # a mend first.
-        def mend_first(enemy: Enemy) -> tuple:
-            return (enemy.announced.kind != "mend", enemy.id)
-
-        for casting in sorted(_casting(state, enemies), key=mend_first):
+        casting = _disrupt_pick(state, mage)
+        if casting is not None:
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
@@ -1228,10 +1226,33 @@ def _stomp_disrupter(state: FightState) -> Hero | None:
         if hero.cls == "mage":
             if _mid_cast(hero) or any(not e.controlled for e in _enemies_next_to(state, hero)):
                 continue
-            if any(e is not boss for e in _casting(state, state.living_enemies())):
-                continue
+        # Their Disrupt rule goes for one cast: it has to be this one.
+        if _disrupt_pick(state, hero) is not boss:
+            continue
         if _ability(state, hero, "disrupt", boss.id) is not None:
             return hero
+    return None
+
+
+def _disrupt_pick(state: FightState, hero: Hero) -> Enemy | None:
+    """The enemy whose cast `hero`'s Disrupt rule goes for this turn, or None.
+
+    The Guardian (rule 4) and the Rogue (rule 2): the first enemy next to
+    them, by id, with an announced cast worth an interrupt. The Mage (rule
+    5): of every such enemy, a mend first, then by id, the first she can
+    Disrupt now. `_stomp_disrupter` asks this too, so it never counts on a
+    hero whose Disrupt goes to another enemy.
+    """
+    if hero.cls in ("guardian", "rogue"):
+        return _first(_casting(state, _enemies_next_to(state, hero)))
+    if hero.cls == "mage":
+
+        def mend_first(enemy: Enemy) -> tuple:
+            return (enemy.announced.kind != "mend", enemy.id)
+
+        for casting in sorted(_casting(state, state.living_enemies()), key=mend_first):
+            if _ability(state, hero, "disrupt", casting.id) is not None:
+                return casting
     return None
 
 

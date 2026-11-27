@@ -855,6 +855,17 @@ def test_the_mage_does_not_count_as_disrupting_the_stomp_when_her_list_will_not_
     w.dead = True; mending_shaman(s, (6, 2))                        # a mend for her to Disrupt first
     assert _stomp_disrupter(s) is None
 
+def test_the_guardian_does_not_count_as_disrupting_the_stomp_when_his_disrupt_goes_to_another_caster():
+    # His rule 4 Disrupts the first caster next to him by id. A brute ("brute1")
+    # comes before the ogre ("ogre1"), so with a cast of its own it gets his Disrupt.
+    s = state(); o = quiet_fight(s); stomp_coming(s, o); g = s.heroes["guardian"]
+    add_stack(s.heroes["rogue"], "cd:disrupt", 2); add_stack(s.heroes["mage"], "cd:disrupt", 2)
+    assert _stomp_disrupter(s) is g
+    b = enemy(s, "brute", (2, 6))
+    b.announced = Announced("mend", "mend", s.round + 1, None, frozenset(), (0, 0), 25)
+    a = act(s, "guardian"); assert (a.ability, a.target) == ("disrupt", "brute1")
+    assert _stomp_disrupter(s) is None                              # so nobody will Disrupt the Stomp
+
 def test_guardian_walks_next_to_the_boss_to_take_the_stomp():
     # The ogre is 5 squares away when its Stomp is about to land. Before, he
     # stopped outside its squares and could not hit the boss.
