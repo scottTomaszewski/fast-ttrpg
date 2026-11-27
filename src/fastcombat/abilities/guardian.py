@@ -31,8 +31,8 @@ def taunt(
     _taunt(state.enemies[action.target], spec.cards)
 
 
-@effect("aoe_taunt")
-def aoe_taunt(state: FightState, guardian: Hero, spec: AbilitySpec, action: Action) -> None:
+@effect("challenging_shout")
+def challenging_shout(state: FightState, guardian: Hero, spec: AbilitySpec, action: Action) -> None:
     """Taunt cards on every living enemy near the Guardian."""
     near = within(guardian.pos, spec.radius, state.fight.width, state.fight.height)
     for enemy in state.living_enemies():

@@ -12,7 +12,7 @@
 min = 3
 max = 10
 
-[aoe_taunt]      # when adds get loose
+[challenging_shout]  # when adds get loose
 min = 0.5
 max = 3
 
@@ -101,7 +101,7 @@ max = 4
 min = 0.5
 max = 3
 
-[frost_ring]     # get enemies off the Mage
+[frost_nova]     # get enemies off the Mage
 min = 0.2
 max = 3
 

@@ -7,8 +7,9 @@ Delete or rewrite this file when the work below is done.
   numbers), all pushed to GitHub.
 - Bosses ignore the "next to the tank" hold; only Taunt cards keep a boss on the tank. The ogre
   goes for the back line when untaunted. A `taunt:boss` check proves taunting matters.
-- The Warden was renamed the Guardian, with the owner's original ability names (Taunt, AoE Taunt,
-  Intercede, Grip, Shield Plant, Last Stand). He now acts second, which moved the results.
+- The Warden was renamed the Guardian, with the owner's original ability names (Taunt,
+  Challenging Shout, Intercede, Grip, Shield Plant, Last Stand). He now acts second, which moved
+  the results.
 - Per-ability use counts and `use:` checks against the owner's targets in
   `game/usage_targets.toml`. Resource check tightened: every hero starved in under 20% of rounds.
   The Mage's auto-attack gives 1 mana on a hit (`auto_gain`). The brute is an elite.

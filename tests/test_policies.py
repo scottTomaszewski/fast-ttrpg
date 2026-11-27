@@ -437,14 +437,14 @@ def test_guardian_intercedes_for_an_ally_at_sixty_percent():
     d.hp = 22; assert act(s, "guardian").ability != "intercede"     # 22 of 36 is more than 60%
     d.hp = 21; a = act(s, "guardian"); assert (a.ability, a.target) == ("intercede", "druid")
 
-def test_guardian_aoe_taunts_two_loose_adds_going_for_his_allies():
+def test_guardian_shouts_at_two_loose_adds_going_for_his_allies():
     s = state(); o = enemy(s, "ogre", (8, 8)); add_stack(o, "taunt", 3)
     s.heroes["guardian"].resource = 3                               # at (3, 6)
     g1 = enemy(s, "goblin", (5, 4)); g1.target = "mage"
     g2 = enemy(s, "goblin", (6, 6)); g2.target = "druid"            # both within 3 of him, neither next to him
-    assert act(s, "guardian").ability == "aoe_taunt"
+    assert act(s, "guardian").ability == "challenging_shout"
     g2.target = "guardian"                                          # one is coming for him anyway
-    assert act(s, "guardian").ability != "aoe_taunt"
+    assert act(s, "guardian").ability != "challenging_shout"
 
 def test_guardian_grips_a_wolf_that_ran_past_him_onto_a_squishy_hero():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
@@ -529,13 +529,13 @@ def test_mage_firebolts_an_add_one_big_hit_would_finish():
     w.hp = 15; assert act(s, "mage").ability == "arcane_volley"
     w.hp = 7; assert act(s, "mage").ability == "arcane_volley"
 
-def test_mage_frost_rings_an_add_and_blinks_away_from_a_boss_or_a_rooted_add():
+def test_mage_uses_frost_nova_on_an_add_and_blinks_away_from_a_boss_or_a_rooted_add():
     s = state(party=("mage",)); m = s.heroes["mage"]; m.pos = (5, 5)
     w = enemy(s, "wolf", (6, 5))
-    assert act(s, "mage").ability == "frost_ring"
+    assert act(s, "mage").ability == "frost_nova"
     add_stack(w, "rooted", 1)                                       # it cannot follow her, but it can still bite
     a = act(s, "mage"); assert a.ability == "blink" and distance(a.pos, w.pos) > 1
-    w.dead = True; o = enemy(s, "ogre", (6, 6))                     # Frost Ring would not stop a boss's hits
+    w.dead = True; o = enemy(s, "ogre", (6, 6))                     # Frost Nova would not stop a boss's hits
     a = act(s, "mage"); assert a.ability == "blink"
     assert distance(a.pos, o.pos) > o.spec.move + o.spec.range      # out of its reach this GM turn
 

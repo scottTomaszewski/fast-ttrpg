@@ -24,11 +24,11 @@ enemies fight him, and stands between them and everyone else.
   has them it must attack you, wherever you are. It never makes a longer
   Taunt stack shorter.
 
-### AoE Taunt
+### Challenging Shout
 
-- {abilities.aoe_taunt.cost} grit · {abilities.aoe_taunt.timing} · around you{abilities.aoe_taunt.loud_tag}
-- Every enemy within {abilities.aoe_taunt.radius} squares of you gets
-  **{abilities.aoe_taunt.cards} Taunt card**.
+- {abilities.challenging_shout.cost} grit · {abilities.challenging_shout.timing} · around you{abilities.challenging_shout.loud_tag}
+- Every enemy within {abilities.challenging_shout.radius} squares of you gets
+  **{abilities.challenging_shout.cards} Taunt card**.
 
 ### Intercede
 

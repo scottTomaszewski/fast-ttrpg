@@ -12,10 +12,10 @@ def test_taunt_puts_three_taunt_cards_on_and_costs_grit():
     assert use(s, "guardian", "taunt", "wolf1")
     assert w.stacks["taunt"].cards == 3 and s.heroes["guardian"].resource == 1
 
-def test_aoe_taunt_taunts_everything_near_for_one_turn():
+def test_challenging_shout_taunts_everything_near_for_one_turn():
     s = state(); s.heroes["guardian"].resource = 10
     a = enemy(s, "wolf", (5, 6)); b = enemy(s, "wolf", (6, 8)); far = enemy(s, "wolf", (12, 6))
-    use(s, "guardian", "aoe_taunt")
+    use(s, "guardian", "challenging_shout")
     assert a.stacks["taunt"].cards == 1 and b.stacks["taunt"].cards == 1 and "taunt" not in far.stacks
 
 def test_grip_drags_a_loose_enemy_into_the_ring():
@@ -99,10 +99,10 @@ def test_shield_plant_covers_the_guardian_but_not_an_ally_in_front():
 
 # --- A new taunt never shortens an old one ------------------------------------
 
-def test_aoe_taunt_leaves_a_longer_taunt_as_it_is():
+def test_challenging_shout_leaves_a_longer_taunt_as_it_is():
     s = state(); s.heroes["guardian"].resource = 10; w = enemy(s, "wolf", (5, 6))
     add_stack(w, "taunt", 3)
-    assert use(s, "guardian", "aoe_taunt") and w.stacks["taunt"].cards == 3
+    assert use(s, "guardian", "challenging_shout") and w.stacks["taunt"].cards == 3
 
 def test_the_taunt_ability_makes_a_shorter_taunt_as_long_as_its_own():
     s = state(); w = enemy(s, "wolf", (8, 6)); add_stack(w, "taunt", 1)

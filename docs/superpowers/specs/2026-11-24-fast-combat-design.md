@@ -7,8 +7,11 @@ taunt them (the owner's decision, 2026-11-26). See docs/tuning-log.md,
 "Rules the simulator had to decide".
 
 The Warden was renamed the Guardian on 2026-11-27, and his abilities took back
-their original names (Taunt, AoE Taunt, Intercede, Grip, Shield Plant, Last
-Stand).
+their original names (Taunt, Challenging Shout, Intercede, Grip, Shield
+Plant, Last Stand).
+
+On 2026-11-27 Frost Ring was renamed Frost Nova and AoE Taunt was
+renamed Challenging Shout.
 
 Things marked **(call)** were proposed by the assistant and not yet argued
 over. Everything else was decided by the owner in conversation.
@@ -211,7 +214,7 @@ Numbers are deliberately missing here. See "Numbers".
 ### Guardian (tank). d8. Grit.
 
 1. **Taunt:** put 3 Taunt cards on one enemy.
-2. **AoE Taunt:** one Taunt card on every enemy near you (1 GM turn).
+2. **Challenging Shout:** one Taunt card on every enemy near you (1 GM turn).
 3. **Intercede:** leap to an ally and give them a Guarded card (they take
    less damage this round). **(call)** Any enemy with no Taunt card that was
    going to attack that ally attacks the Guardian instead.
@@ -265,7 +268,7 @@ flash bang and so on) to keep the class simple.
 2. **Firebolt:** 1-round cast, big single-target hit.
 3. **Meteor:** 2-round cast. The area is marked when you start. Biggest
    damage in the game. Hits allies still standing there.
-4. **Frost Ring:** instant. Enemies next to you cannot move for 2 rounds.
+4. **Frost Nova:** instant. Enemies next to you cannot move for 2 rounds.
 5. **Blink:** short teleport.
 6. **Quicken:** the whole party rolls two auto-attack dice for 2 rounds.
 7. **Polymorph:** 1-round cast. Target is a sheep for up to 4 rounds; breaks

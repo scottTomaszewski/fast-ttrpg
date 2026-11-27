@@ -42,11 +42,11 @@ and make the whole party fight faster.
   once: every enemy in the area, and **every hero who is up in the area,
   you too**, takes all of it.
 
-### Frost Ring
+### Frost Nova
 
-- {abilities.frost_ring.cost} mana · {abilities.frost_ring.timing} ·
-  around you{abilities.frost_ring.loud_tag}
-- Every enemy next to you gets **{abilities.frost_ring.cards} rooted
+- {abilities.frost_nova.cost} mana · {abilities.frost_nova.timing} ·
+  around you{abilities.frost_nova.loud_tag}
+- Every enemy next to you gets **{abilities.frost_nova.cards} rooted
   cards**: it cannot move, but it can still attack if someone is in reach.
   It works on a boss too.
 
@@ -91,7 +91,7 @@ and make the whole party fight faster.
 
 - **Stand back.** Stay within {abilities.firebolt.range} squares of your
   target, but well back from every enemy. Stand still while you cast.
-- **Something reached you? Frost Ring,** then step away next turn.
+- **Something reached you? Frost Nova,** then step away next turn.
 - **You are the best at Disrupt:** yours reaches
   {abilities.disrupt.alt} squares. Break the shaman's mend and the boss's
   big moves.

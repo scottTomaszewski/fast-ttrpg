@@ -26,7 +26,7 @@ enemies fight him, and stands between them and everyone else.
   has them it must attack you, wherever you are. It never makes a longer
   Taunt stack shorter.
 
-### AoE Taunt
+### Challenging Shout
 
 - 3 grit · Instant · around you
 - Every enemy within 3 squares of you gets

@@ -76,8 +76,8 @@ def meteor(state: FightState, mage: Hero, spec: AbilitySpec, action: Action) -> 
             damage_hero(state, hero, amount, attacker=None, blast=True)
 
 
-@effect("frost_ring")
-def frost_ring(
+@effect("frost_nova")
+def frost_nova(
     state: FightState, mage: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Rooted cards on every living enemy next to the Mage.

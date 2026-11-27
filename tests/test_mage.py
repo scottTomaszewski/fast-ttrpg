@@ -20,9 +20,9 @@ def test_meteor_marks_its_area_and_hits_friend_and_foe():
     continue_cast(s, m); land_casts(s)
     assert w.hp == 8 and g.dead and s.heroes["rogue"].hp == 28 and m.resource == 20 and "mage" not in s.marked
 
-def test_frost_ring_roots_adjacent_enemies():
+def test_frost_nova_roots_adjacent_enemies():
     s = state(); w = enemy(s, "wolf", (2, 4)); w.pulled_by = "mage"
-    use(s, "mage", "frost_ring"); assert w.stacks["rooted"].cards == 2 and not can_move(s, w)
+    use(s, "mage", "frost_nova"); assert w.stacks["rooted"].cards == 2 and not can_move(s, w)
 
 def test_polymorph_is_one_sheep_at_a_time_and_never_the_boss():
     s = state(); a = enemy(s, "wolf", (8, 5)); b = enemy(s, "wolf", (8, 7)); enemy(s, "ogre", (9, 6))
@@ -113,10 +113,10 @@ def test_meteor_on_the_mages_own_square_hits_the_mage_too():
     use(s, "mage", "meteor", pos=m.pos); continue_cast(s, m); land_casts(s)
     assert m.hp == 28 - 8
 
-def test_frost_ring_roots_a_boss_too_but_nothing_two_squares_off_or_dead():
+def test_frost_nova_roots_a_boss_too_but_nothing_two_squares_off_or_dead():
     s = state(); o = enemy(s, "ogre", (2, 6)); far = enemy(s, "wolf", (3, 5))
     dead = enemy(s, "wolf", (0, 4)); dead.dead = True
-    assert use(s, "mage", "frost_ring")
+    assert use(s, "mage", "frost_nova")
     assert o.stacks["rooted"].cards == 2 and "rooted" not in far.stacks and "rooted" not in dead.stacks
 
 def test_blink_stays_on_the_map_free_of_enemies_and_within_reach():

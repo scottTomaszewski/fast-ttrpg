@@ -68,7 +68,7 @@ cost = 1
 range = 6
 cards = 3
 
-[abilities.aoe_taunt]
+[abilities.challenging_shout]
 hero = "guardian"
 cost = 3
 radius = 3
@@ -209,7 +209,7 @@ range = 10
 radius = 2
 dice = [8, 6]
 
-[abilities.frost_ring]
+[abilities.frost_nova]
 hero = "mage"
 cost = 3
 cards = 2

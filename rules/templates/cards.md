@@ -35,11 +35,11 @@ holds.
 
 | Card | Written on it | Who holds it | Where it comes from |
 |---|---|---|---|
-| **Taunt** | "Attack the Guardian." | The enemy | Guardian's Taunt: {abilities.taunt.cards} cards. AoE Taunt: {abilities.aoe_taunt.cards} card. A Loud hit takes Taunt cards off: a boss loses {rules.boss_loud_cards}, any other enemy 1. |
+| **Taunt** | "Attack the Guardian." | The enemy | Guardian's Taunt: {abilities.taunt.cards} cards. Challenging Shout: {abilities.challenging_shout.cards} card. A Loud hit takes Taunt cards off: a boss loses {rules.boss_loud_cards}, any other enemy 1. |
 | **Stun** | "Do nothing this turn. Any cast you announced is broken." | The enemy (not a boss) | Rogue's Kidney Shot: {abilities.kidney_shot.cards} card, or {abilities.kidney_shot.alt} at full combo points. Cheap Shot: {abilities.cheap_shot.cards} card. |
 | **Sap** | "Do nothing. Wake up the moment you are hurt." | The enemy (not a boss) | Rogue's Sap: {abilities.sap.cards} cards |
 | **Sheep** | "You are a sheep: do nothing. Turn back the moment you are hurt." | The enemy (not a boss). Only one sheep at a time. | Mage's Polymorph: {abilities.polymorph.cards} cards |
-| **Rooted** | "You cannot move. You can still attack." | Every enemy next to the Mage, a boss too | Mage's Frost Ring: {abilities.frost_ring.cards} cards |
+| **Rooted** | "You cannot move. You can still attack." | Every enemy next to the Mage, a boss too | Mage's Frost Nova: {abilities.frost_nova.cards} cards |
 
 ## Not cards: markers
 

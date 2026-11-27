@@ -44,7 +44,7 @@ and make the whole party fight faster.
   once: every enemy in the area, and **every hero who is up in the area,
   you too**, takes all of it.
 
-### Frost Ring
+### Frost Nova
 
 - 3 mana · Instant ·
   around you
@@ -93,7 +93,7 @@ and make the whole party fight faster.
 
 - **Stand back.** Stay within 10 squares of your
   target, but well back from every enemy. Stand still while you cast.
-- **Something reached you? Frost Ring,** then step away next turn.
+- **Something reached you? Frost Nova,** then step away next turn.
 - **You are the best at Disrupt:** yours reaches
   10 squares. Break the shaman's mend and the boss's
   big moves.

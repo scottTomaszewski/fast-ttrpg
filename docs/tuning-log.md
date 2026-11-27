@@ -5,10 +5,13 @@ why, and what the simulator said after. The targets are in the design
 (`docs/superpowers/specs/2026-11-24-fast-combat-design.md`, "Numbers").
 
 The Warden was renamed the Guardian on 2026-11-27, and his abilities took back
-their original names (Taunt, AoE Taunt, Intercede, Grip, Shield Plant, Last
-Stand). Because heroes act in name order, the Guardian now acts
+their original names (Taunt, Challenging Shout, Intercede, Grip, Shield
+Plant, Last Stand). Because heroes act in name order, the Guardian now acts
 second (Druid, Guardian, Mage, Rogue), not last. That changed the results;
 the next tuning pass accounts for it.
+
+On 2026-11-27 Frost Ring was renamed Frost Nova and AoE Taunt was
+renamed Challenging Shout.
 
 ## First pass: 2026-11-25
 
@@ -346,10 +349,10 @@ below 100000):
   With a sixth goblin as well, wins were 80% and it looked fine (the
   `needed:` checks were not run), but it is one more change than what
   was kept, for the same result.
-- Taunt cost 2 to 3, or AoE Taunt cost 3 to 5, instead of Intercede:
+- Taunt cost 2 to 3, or Challenging Shout cost 3 to 5, instead of Intercede:
   the Guardian ended full less often (27% of fights) but not as much as
   with Intercede at 4 (18%). Intercede 3: 24%.
-- Intercede 3, Taunt 3 and AoE Taunt 4 together: the Guardian was
+- Intercede 3, Taunt 3 and Challenging Shout 4 together: the Guardian was
   starved 23% of rounds, with no gain over Intercede alone.
 
 ### Fourth look: a boss that must be taunted, 2026-11-26
@@ -363,7 +366,7 @@ That alone made taunting the boss worse than useless. The ogre went for
 the nearest hero, and the Guardian stands next to it, so an untaunted ogre
 hit him anyway. The taunt only cost him grit and turns. A new check,
 `taunt:boss`, plays the same fights with the Guardian never Taunting
-the boss (AoE Taunt can still taunt it), and wants at least 10 points fewer
+the boss (Challenging Shout can still taunt it), and wants at least 10 points fewer
 wins.
 
 Where we started (`check --n 1000`, seeds 0 to 999, the numbers after
@@ -556,15 +559,15 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    walking to the back line, the enemies end up close to the heroes,
    and the Mage never drops a Meteor where a hero stands.
 5. **Some buttons are almost never pressed in this fight** (per fight,
-   first pass's numbers): AoE Taunt 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
-   Last Stand 0.0, Sap 0, Frost Ring 0.1, Shield Plant 0.3, Wild Growth 0.4.
-   After the second look: Meteor 0.0 too, Kidney Shot 0.2, Frost Ring
+   first pass's numbers): Challenging Shout 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
+   Last Stand 0.0, Sap 0, Frost Nova 0.1, Shield Plant 0.3, Wild Growth 0.4.
+   After the second look: Meteor 0.0 too, Kidney Shot 0.2, Frost Nova
    0.3.
    After the third look (per fight, the 3000 confirm fights, with the
    count in brackets): Sap 0 (0), Shield Plant 0.002 (6), Cheap Shot 0.005
-   (14), Last Stand 0.008 (23), Meteor 0.11 (344), Frost Ring 0.15
+   (14), Last Stand 0.008 (23), Meteor 0.11 (344), Frost Nova 0.15
    (437), Grip 0.15 (451), Kidney Shot 0.28 (842), Wild Growth
-   0.33 (1000), AoE Taunt 0.60 (1787).
+   0.33 (1000), Challenging Shout 0.60 (1787).
    Why Grip is rare now: Taunt (2 grit) does its old job of
    turning an add around for half the grit, so the Guardian keeps Grip
    for an enemy that hits from far away (the shaman).
@@ -578,7 +581,7 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    count in brackets): Taunt on the boss 5.68 (17039), Shield Plant
    0.014 (43), Last Stand 0.015 (45), Sap 0 (0), Meteor 0.005 (14),
    Arcane Volley 0 (0), Grip 0.20 (603), Cheap Shot 0 (0), Kidney
-   Shot 0.19 (575). Also AoE Taunt 0.18 (529), Frost Ring 0.39 (1178),
+   Shot 0.19 (575). Also Challenging Shout 0.18 (529), Frost Nova 0.39 (1178),
    Wild Growth 0.32 (953). Taunt on the boss went from about 0.01 a
    fight to 5.7: the Guardian now keeps the boss taunted most of the
    fight, which is what the owner asked for.

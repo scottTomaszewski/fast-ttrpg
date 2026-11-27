@@ -396,7 +396,7 @@ hold do nothing.
 
 ### Taunt cards
 
-The Guardian's Taunt and AoE Taunt put Taunt cards on enemies. Taunt cards
+The Guardian's Taunt and Challenging Shout put Taunt cards on enemies. Taunt cards
 are the only thing that keeps a boss on the Guardian.
 
 ### Loud

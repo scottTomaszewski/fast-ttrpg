@@ -85,7 +85,7 @@ def test_an_enemy_without_hp_move_or_range_names_the_place(tmp_path, name, key):
 def test_an_ability_with_no_range_needs_no_reach():
     n = load_numbers(GAME / "numbers.toml")
     def reach(r): return {name for name, a in n.abilities.items() if a.range == r}
-    assert reach(0) == {"aoe_taunt", "shield_plant", "last_stand", "vanish", "shadowmeld", "frost_ring", "quicken"}
+    assert reach(0) == {"challenging_shout", "shield_plant", "last_stand", "vanish", "shadowmeld", "frost_nova", "quicken"}
     assert reach(1) == {"backstab", "eviscerate", "kidney_shot", "cheap_shot", "sap", "disrupt"}
 
 @pytest.mark.parametrize("load", [load_numbers, load_fight])

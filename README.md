@@ -27,7 +27,7 @@ so a hero whose abilities make the party weaker could still pass
 played each time, so the numbers can be compared.
 
 `taunt:boss` plays the fight with the Guardian never using Taunt on the
-boss (the `guardian_no_boss_taunt` policy; AoE Taunt can still taunt it) and
+boss (the `guardian_no_boss_taunt` policy; Challenging Shout can still taunt it) and
 wants at least 10 points fewer wins; it is only there when the party has a
 Guardian.
 

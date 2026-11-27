@@ -66,7 +66,7 @@ from fastcombat.units import Enemy, FightState, Hero
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
 INTERCEDE_AT = 0.6  # Guardian: guard an ally at 60% HP or less
-AOE_TAUNT_ENEMIES = 2  # Guardian: AoE Taunt when this many loose adds near him go for allies
+SHOUT_ENEMIES = 2  # Guardian: Challenging Shout when this many loose adds near him go for allies
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
 WILD_GROWTH_ALLIES = 2  # Druid: Wild Growth when it covers this many of them
@@ -175,8 +175,8 @@ class GuardianPolicy(_ClassPolicy):
     5. An ally (not a Guardian) at 60% HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
     6. The boss has no Taunt cards: Taunt the boss.
-    7. Two or more loose adds within AoE Taunt's radius are going for
-       someone else (fodder too, like a goblin wave): AoE Taunt.
+    7. Two or more loose adds within Challenging Shout's radius are going for
+       someone else (fodder too, like a goblin wave): Challenging Shout.
     8. A loose add is in Grip's range, and it attacks from farther than one
        square away (like the shaman), or it is next to a squishy hero it is
        going for (like a wolf that ran past me): Grip the one closest to any
@@ -249,13 +249,13 @@ class GuardianPolicy(_ClassPolicy):
             e for e in state.living_enemies() if e.spec.tier != "boss" and _loose(state, e)
         ]
 
-        # 7. Two or more loose adds near me are going for someone else: AoE Taunt.
-        near = within(
-            guardian.pos, abilities["aoe_taunt"].radius, state.fight.width, state.fight.height
-        )
+        # 7. Two or more loose adds near me are going for someone else:
+        # Challenging Shout.
+        shout = abilities["challenging_shout"]
+        near = within(guardian.pos, shout.radius, state.fight.width, state.fight.height)
         wandering = [e for e in loose if e.pos in near and e.target != guardian.id]
-        if len(wandering) >= AOE_TAUNT_ENEMIES:
-            if action := _ability(state, guardian, "aoe_taunt"):
+        if len(wandering) >= SHOUT_ENEMIES:
+            if action := _ability(state, guardian, "challenging_shout"):
                 return action
 
         # 8. A loose add that hits from afar, or one on a squishy hero: Grip the
@@ -655,11 +655,11 @@ class MagePolicy(_ClassPolicy):
     1. Haul up.
     2. In the middle of a cast (not a channel): continue.
     3. An enemy that is not controlled is next to me:
-       a. one of them is an add that is not rooted: Frost Ring (it cannot
+       a. one of them is an add that is not rooted: Frost Nova (it cannot
           follow me when I walk away);
        b. else Blink to a square that none of them can reach this GM turn
-          (Frost Ring would not stop a boss, or they are rooted already);
-       c. else Frost Ring.
+          (Frost Nova would not stop a boss, or they are rooted already);
+       c. else Frost Nova.
     4. An enemy in range has an announced cast that is not answered, and is
        not controlled: Disrupt, even in the middle of a channel. A mend
        first (it undoes our damage), then by id.
@@ -725,18 +725,18 @@ class MagePolicy(_ClassPolicy):
         if _mid_cast(mage):
             return Action("continue")
 
-        # 3. An enemy is next to me: Frost Ring, else Blink, else Frost Ring.
+        # 3. An enemy is next to me: Frost Nova, else Blink, else Frost Nova.
         threats = [e for e in _enemies_next_to(state, mage) if not e.controlled]
         if threats:
             if any(e.spec.tier != "boss" and "rooted" not in e.stacks for e in threats):
-                if action := _ability(state, mage, "frost_ring"):
+                if action := _ability(state, mage, "frost_nova"):
                     return action
             square = _blink_square(state, mage, threats)
             if square is not None:
                 if action := _ability(state, mage, "blink", pos=square):
                     return action
             if any("rooted" not in e.stacks for e in threats):
-                if action := _ability(state, mage, "frost_ring"):
+                if action := _ability(state, mage, "frost_nova"):
                     return action
 
         # 4. An enemy in range has an announced cast nobody answered: Disrupt,

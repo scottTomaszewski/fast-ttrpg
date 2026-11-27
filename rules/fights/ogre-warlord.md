@@ -59,7 +59,7 @@ it likes.
   Taunt cards keep him on the Guardian: standing next to the Guardian does not.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
   sheeped or Gripped, but a stun still breaks the move he announced,
-  and Frost Ring can root him. His big moves are below.
+  and Frost Nova can root him. His big moves are below.
 - **Brute.** Big and slow. Shielded 5: any single hit
   under 5 does nothing to him. He walks to the nearest
   hero, so he often ends up held by the Guardian.
