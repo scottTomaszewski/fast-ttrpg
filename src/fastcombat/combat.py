@@ -100,17 +100,17 @@ def damage_hero(
 
     `attacker` is the enemy whose attack it is, or None for damage no enemy
     is attacking with right now, like poison. Guarded cards take their value
-    off any hit, and Bulwark takes its value off a blast. With an Unbroken
-    card the hero stops at 1 HP. Damage never breaks a cast.
+    off any hit, and Shield Plant takes its value off a blast. With a Last
+    Stand card the hero stops at 1 HP. Damage never breaks a cast.
     """
     if not hero.up:
         return 0  # nobody hits a downed hero, and a hit must not restart the bleeding
     taken = amount
     if "guarded" in hero.stacks:
         taken -= hero.stacks["guarded"].value
-    if blast and "bulwark" in hero.stacks:
-        taken -= hero.stacks["bulwark"].value
-    lowest = 1 if "unbroken" in hero.stacks else 0
+    if blast and "shield_plant" in hero.stacks:
+        taken -= hero.stacks["shield_plant"].value
+    lowest = 1 if "last_stand" in hero.stacks else 0
     taken = max(0, min(taken, hero.hp - lowest))
     hero.hp -= taken
 

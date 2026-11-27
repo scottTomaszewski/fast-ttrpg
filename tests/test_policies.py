@@ -11,41 +11,41 @@ from fastcombat.numbers import load_numbers, load_fight
 def act(s, hero):
     return default_policy(s.heroes[hero].cls).act(s, s.heroes[hero])
 
-def test_warden_challenges_the_boss_whenever_it_has_no_taunt_cards():
+def test_warden_taunts_the_boss_whenever_it_has_no_taunt_cards():
     # A boss is never held by standing next to the Warden: only Taunt cards keep it on him.
     s = state(); o = enemy(s, "ogre", (4, 6))                         # next to the warden at (3, 6)
-    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
+    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "ogre1")
     o.pos = (8, 8)                                                    # 5 away, and nobody pulled it
-    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "ogre1")
-    o.pos = (10, 6)                                                   # 7 away: out of Challenge's range 6
-    assert act(s, "warden").ability != "challenge"
+    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "ogre1")
+    o.pos = (10, 6)                                                   # 7 away: out of Taunt's range 6
+    assert act(s, "warden").ability != "taunt"
     o.pos = (4, 6); add_stack(o, "taunt", 1)                          # it has a Taunt card already
     assert act(s, "warden") == Action("auto", target="ogre1")
 
-def test_a_warden_who_never_challenges_the_boss_is_the_same_warden_otherwise():
+def test_a_warden_who_never_taunts_the_boss_is_the_same_warden_otherwise():
     # Rule 6 switched off, for the taunt:boss check. Nothing else changes.
     def act_as(name, s): return POLICIES[name]().act(s, s.heroes["warden"])
     s = state(); o = enemy(s, "ogre", (4, 6))                         # an untaunted boss next to him
-    assert act_as("warden", s).ability == "challenge"
+    assert act_as("warden", s).ability == "taunt"
     assert act_as("warden_no_boss_taunt", s) == Action("auto", target="ogre1")
     w = enemy(s, "wolf", (5, 3))                                      # a loose add not coming for him
-    a = act_as("warden_no_boss_taunt", s); assert (a.ability, a.target) == ("challenge", "wolf1")
+    a = act_as("warden_no_boss_taunt", s); assert (a.ability, a.target) == ("taunt", "wolf1")
     assert isinstance(POLICIES["warden_no_boss_taunt"](), WardenPolicy)
 
-def test_warden_challenges_an_add_that_is_not_coming_for_him():
+def test_warden_taunts_an_add_that_is_not_coming_for_him():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
     w = enemy(s, "wolf", (5, 3))
-    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "wolf1")
+    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "wolf1")
     w.target = "warden"                                               # it is coming for him anyway
     assert act(s, "warden") == Action("auto", target="ogre1")
-    g = enemy(s, "goblin", (5, 4)); assert act(s, "warden").ability != "challenge"   # fodder: any hit kills it
+    g = enemy(s, "goblin", (5, 4)); assert act(s, "warden").ability != "taunt"   # fodder: any hit kills it
 
-def test_warden_hooks_a_caster_that_shoots_him_from_afar():
+def test_warden_grips_a_caster_that_shoots_him_from_afar():
     s = state(); o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)   # the ogre is taunted
     sh = enemy(s, "shaman", (6, 2)); sh.target = "warden"
-    a = act(s, "warden"); assert (a.ability, a.target) == ("chain_hook", "shaman1")
+    a = act(s, "warden"); assert (a.ability, a.target) == ("grip", "shaman1")
     sh.target = "mage"                                                # after the mage: a Taunt first, it is cheaper
-    a = act(s, "warden"); assert (a.ability, a.target) == ("challenge", "shaman1")
+    a = act(s, "warden"); assert (a.ability, a.target) == ("taunt", "shaman1")
 
 def test_rogue_saps_the_brute_on_round_one():
     s = state(); enemy(s, "brute", (3, 4))
@@ -136,17 +136,17 @@ def heavy_on_warden(s, dice=(6, 6)):
     o = enemy(s, "ogre", (4, 6)); add_stack(o, "taunt", 3)
     o.announced = Announced("skull_crusher", "heavy", s.round + 1, "warden", frozenset(), dice)
 
-def test_warden_braces_with_unbroken_only_when_the_heavy_hit_could_drop_them():
+def test_warden_braces_with_last_stand_only_when_the_heavy_hit_could_drop_them():
     s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.resource = 10
-    w.hp = 36; assert act(s, "warden").ability == "unbroken"         # 6d6 can roll 36
-    w.hp = 37; assert act(s, "warden").ability != "unbroken"
+    w.hp = 36; assert act(s, "warden").ability == "last_stand"         # 6d6 can roll 36
+    w.hp = 37; assert act(s, "warden").ability != "last_stand"
     add_stack(w, "guarded", 1, 4)                                    # each hit 4 smaller: at most 32
-    w.hp = 32; assert act(s, "warden").ability == "unbroken"
-    w.hp = 33; assert act(s, "warden").ability != "unbroken"
+    w.hp = 32; assert act(s, "warden").ability == "last_stand"
+    w.hp = 33; assert act(s, "warden").ability != "last_stand"
 
-def test_warden_without_the_grit_for_unbroken_reads_on():
+def test_warden_without_the_grit_for_last_stand_reads_on():
     s = state(); heavy_on_warden(s); w = s.heroes["warden"]; w.hp = 10; w.resource = 4
-    assert act(s, "warden").ability != "unbroken"
+    assert act(s, "warden").ability != "last_stand"
 
 def test_a_hero_mid_cast_stays_put_unless_standing_in_danger():
     s = state(); m = s.heroes["mage"]; enemy(s, "wolf", (12, 2))

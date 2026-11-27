@@ -133,9 +133,9 @@ in the fight. The Warden still has 2 Rejuvenation heal cards.
   gets {rules.combo_per_hit} combo point.
 - The Warden: the Ogre has no Taunt cards, and standing next to a boss
   does not hold it, so nothing keeps the Ogre on him. He uses
-  **Challenge** on it (it reaches {abilities.challenge.range} squares), so
-  the Ogre gets {abilities.challenge.cards} Taunt cards. He pays
-  {abilities.challenge.cost} grit.
+  **Taunt** on it (it reaches {abilities.taunt.range} squares), so
+  the Ogre gets {abilities.taunt.cards} Taunt cards. He pays
+  {abilities.taunt.cost} grit.
 
 **End of the turn.** Nobody is down, so there are no Bleeding cards to
 take off.
@@ -156,7 +156,7 @@ take off.
    {enemy.wolf.damage}.
 4. Nothing new is announced this round.
 5. One Taunt card comes off the Ogre. It has
-   {abilities.challenge.cards - 1} left.
+   {abilities.taunt.cards - 1} left.
 
 Next round the wolf, with {enemy.wolf.hp - heroes.mage.die - 2 - 5 - 3} HP
 left, will not last long.
@@ -210,7 +210,7 @@ Abilities are your hero's special moves, listed on your sheet.
 Enemies do not roll for their attacks: each kind hits for a set number. A
 boss is the exception: it rolls dice. There is no armour. A tough hero just
 has more HP. A few cards take a set number off a hit (Guarded and
-Bulwark); that is the only taking away in the game.
+Shield Plant); that is the only taking away in the game.
 
 ## 4. Casts and channels
 
@@ -309,9 +309,9 @@ This means a card handed out in the party turn always covers the whole GM
 turn that follows:
 
 - On a hero, it comes off at the top of the next party turn. A 1-card
-  stack, like Guarded or Unbroken, covers exactly one GM turn.
+  stack, like Guarded or Last Stand, covers exactly one GM turn.
 - On an enemy, it comes off at the end of the GM turn. So
-  {abilities.challenge.cards} Taunt cards cover {abilities.challenge.cards}
+  {abilities.taunt.cards} Taunt cards cover {abilities.taunt.cards}
   GM turns.
 - Heal cards handed out in the act step heal for the first time at the top
   of the next party turn.
@@ -355,7 +355,7 @@ turn that follows:
   square 2 or fewer steps from it: a block 5 squares across. "Within 1" is
   the 3 by 3 block around it.
 - Some abilities put someone on a square without walking (Intercede,
-  Shadowstep, Blink, Chain Hook). They happen in the act step, go past
+  Shadowstep, Blink, Grip). They happen in the act step, go past
   anyone, and land on an empty square.
 
 ## 8. Who enemies attack
@@ -392,7 +392,7 @@ hold do nothing.
 
 ### Taunt cards
 
-The Warden's Challenge and War Cry put Taunt cards on enemies. Taunt cards
+The Warden's Taunt and AoE Taunt put Taunt cards on enemies. Taunt cards
 are the only thing that keeps a boss on the Warden.
 
 ### Loud
@@ -513,8 +513,8 @@ With {rules.bleeding_cards} Wounds, going down puts you straight out.
 The boss, and some other enemies, have big moves that they **announce one
 GM turn early**. The GM says what is coming in step 4 of the GM turn, and
 marks any area on the map. It lands in step 1 of the next GM turn. That
-gives the heroes one party turn to get out of the way, get ready (Bulwark,
-Unbroken), or break it (Disrupt, or a stun such as Cheap Shot).
+gives the heroes one party turn to get out of the way, get ready (Shield Plant,
+Last Stand), or break it (Disrupt, or a stun such as Cheap Shot).
 Every hero has Disrupt. It reaches an enemy next to you, and the Mage's
 reaches {abilities.disrupt.alt} squares.
 

@@ -47,7 +47,7 @@ from fastcombat.units import Enemy, FightState, Hero
 # greedy each class is, and can be changed to try another way of playing.
 # Shares of max HP are written as 0.35 for 35%.
 INTERCEDE_AT = 0.5  # Warden: guard an ally at half HP or less
-WAR_CRY_ENEMIES = 3  # Warden: War Cry when this many loose enemies are near
+AOE_TAUNT_ENEMIES = 3  # Warden: AoE Taunt when this many loose enemies are near
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
 WILD_GROWTH_ALLIES = 3  # Druid: Wild Growth when it covers this many of them
@@ -129,28 +129,28 @@ class WardenPolicy(_ClassPolicy):
 
     1. Haul up.
     2. A boss heavy hit is announced on me and it could take me to 0 at its
-       maximum roll: Unbroken.
+       maximum roll: Last Stand.
     3. A boss blast is announced and at least one ally stands in its area:
-       Bulwark, against the blast coming from the boss's square.
+       Shield Plant, against the blast coming from the boss's square.
     4. An enemy next to me has an announced cast and is not controlled (a
        stunned, sapped or sheeped enemy's cast never lands): Disrupt.
     5. An ally (not a Warden) at half HP or less is the target of an enemy
        with no Taunt cards: Intercede on the lowest such ally.
-    6. The boss has no Taunt cards: Challenge the boss.
-    7. Three or more loose enemies are within War Cry's radius: War Cry.
+    6. The boss has no Taunt cards: Taunt the boss.
+    7. Three or more loose enemies are within AoE Taunt's radius: AoE Taunt.
     8. A loose enemy that is not a boss and not fodder, and is not already
-       going for me, is in Challenge's range: Challenge the one closest to
+       going for me, is in Taunt's range: Taunt the one closest to
        any ally who is not a Warden. (Fodder dies to any hit, so it is not
        worth the grit.)
     9. A loose enemy that is not a boss and attacks from farther than one
-       square away (like the shaman) is in Chain Hook's range: Chain Hook
+       square away (like the shaman) is in Grip's range: Grip
        the one closest to any ally who is not a Warden. Next to me it is
        held, and I can Disrupt its casts.
     10. Auto-attack the focus if it is next to me, or else the lowest-HP
         enemy next to me that is not controlled.
     """
 
-    challenges_boss = True  # rule 6; `WardenNoBossTaunt` switches it off
+    taunts_boss = True  # rule 6; `WardenNoBossTaunt` switches it off
 
     def where_to(self, state: FightState, warden: Hero) -> Pos:
         goal = _boss(state) or _nearest_enemy(state, warden)
@@ -168,7 +168,7 @@ class WardenPolicy(_ClassPolicy):
         if action := _haul_up(state, warden):
             return action
 
-        # 2. A boss heavy hit on me that could take me to 0: Unbroken.
+        # 2. A boss heavy hit on me that could take me to 0: Last Stand.
         cast = boss.announced if boss else None
         if cast and cast.kind == "heavy" and cast.target == warden.id:
             most = cast.dice[0] * cast.dice[1]
@@ -176,12 +176,12 @@ class WardenPolicy(_ClassPolicy):
             if guarded is not None:
                 most -= guarded.value
             if most >= warden.hp:
-                if action := _ability(state, warden, "unbroken"):
+                if action := _ability(state, warden, "last_stand"):
                     return action
 
-        # 3. A boss blast with an ally in its area: Bulwark against it.
+        # 3. A boss blast with an ally in its area: Shield Plant against it.
         if cast and cast.kind == "blast" and any(a.pos in cast.area for a in allies):
-            if action := _ability(state, warden, "bulwark", pos=boss.pos):
+            if action := _ability(state, warden, "shield_plant", pos=boss.pos):
                 return action
 
         # 4. An enemy next to me has an announced cast and is not controlled: Disrupt.
@@ -201,23 +201,23 @@ class WardenPolicy(_ClassPolicy):
             if action := _ability(state, warden, "intercede", guard.id):
                 return action
 
-        # 6. The boss has no Taunt cards: Challenge it.
-        if self.challenges_boss and boss is not None and "taunt" not in boss.stacks:
-            if action := _ability(state, warden, "challenge", boss.id):
+        # 6. The boss has no Taunt cards: Taunt it.
+        if self.taunts_boss and boss is not None and "taunt" not in boss.stacks:
+            if action := _ability(state, warden, "taunt", boss.id):
                 return action
 
-        # 7. Three or more loose enemies near me: War Cry.
+        # 7. Three or more loose enemies near me: AoE Taunt.
         near = within(
-            warden.pos, abilities["war_cry"].radius, state.fight.width, state.fight.height
+            warden.pos, abilities["aoe_taunt"].radius, state.fight.width, state.fight.height
         )
         loose = [e for e in state.living_enemies() if _loose(state, e)]
-        if sum(1 for e in loose if e.pos in near) >= WAR_CRY_ENEMIES:
-            if action := _ability(state, warden, "war_cry"):
+        if sum(1 for e in loose if e.pos in near) >= AOE_TAUNT_ENEMIES:
+            if action := _ability(state, warden, "aoe_taunt"):
                 return action
 
-        # 8. A loose add (not fodder) that is not coming for me: Challenge the one
+        # 8. A loose add (not fodder) that is not coming for me: Taunt the one
         # closest to an ally.
-        reach = abilities["challenge"].range
+        reach = abilities["taunt"].range
         hunting = [
             e
             for e in loose
@@ -227,21 +227,21 @@ class WardenPolicy(_ClassPolicy):
         ]
         if hunting:
             add = min(hunting, key=lambda e: (_gap(e.pos, spots), e.id))
-            if action := _ability(state, warden, "challenge", add.id):
+            if action := _ability(state, warden, "taunt", add.id):
                 return action
 
-        # 9. A loose enemy that hits from afar: Chain Hook the one closest to an ally.
-        reach = abilities["chain_hook"].range
-        hookable = [
+        # 9. A loose enemy that hits from afar: Grip the one closest to an ally.
+        reach = abilities["grip"].range
+        grippable = [
             e
             for e in loose
             if e.spec.tier != "boss"
             and e.spec.range > 1
             and distance(warden.pos, e.pos) <= reach
         ]
-        if hookable:
-            hook = min(hookable, key=lambda e: (_gap(e.pos, spots), e.id))
-            if action := _ability(state, warden, "chain_hook", hook.id):
+        if grippable:
+            grip = min(grippable, key=lambda e: (_gap(e.pos, spots), e.id))
+            if action := _ability(state, warden, "grip", grip.id):
                 return action
 
         # 10. Auto-attack the focus if next to me, else the lowest-HP enemy next to me.
@@ -251,13 +251,13 @@ class WardenPolicy(_ClassPolicy):
 
 
 class WardenNoBossTaunt(WardenPolicy):
-    """The Warden with rule 6 switched off: he never Challenges the boss.
+    """The Warden with rule 6 switched off: he never Taunts the boss.
 
     Everything else is the same. It is not a way to play: the `taunt:boss`
     check plays it to see how many wins taunting the boss is worth.
     """
 
-    challenges_boss = False
+    taunts_boss = False
 
 
 class RoguePolicy(_ClassPolicy):

@@ -26,8 +26,8 @@ so a hero whose abilities make the party weaker could still pass
 `needed:`; `kit:` catches that. The same fights (the same seeds) are
 played each time, so the numbers can be compared.
 
-`taunt:boss` plays the fight with the Warden never using Challenge on the
-boss (the `warden_no_boss_taunt` policy; War Cry can still taunt it) and
+`taunt:boss` plays the fight with the Warden never using Taunt on the
+boss (the `warden_no_boss_taunt` policy; AoE Taunt can still taunt it) and
 wants at least 10 points fewer wins; it is only there when the party has a
 Warden.
 

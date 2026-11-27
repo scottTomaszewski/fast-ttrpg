@@ -34,7 +34,7 @@ it likes.
 - **Ogre Warlord.** The boss. He rolls {enemy.ogre.dice} for each hit. Only
   Taunt cards keep him on the Warden: standing next to the Warden does not.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
-  sheeped or Chain Hooked, but a stun still breaks the move he announced,
+  sheeped or Gripped, but a stun still breaks the move he announced,
   and Frost Ring can root him. His big moves are below.
 - **Brute.** Big and slow. Shielded {enemy.brute.shielded}: any single hit
   under {enemy.brute.shielded} does nothing to him. He walks to the nearest

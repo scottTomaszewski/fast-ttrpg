@@ -3,7 +3,7 @@
     fastcombat run     plays the fights and prints a summary
     fastcombat check   also plays them with each hero left out in turn, with
                        each hero only auto-attacking in turn, and with the
-                       Warden never Challenging the boss, and checks everything
+                       Warden never Taunting the boss, and checks everything
                        against the design's targets
     fastcombat rules   makes the player rules in rules/ from their templates,
                        with the numbers from the game files
@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
             without[hero] = summarize(setup.play(rest))
     for i, hero in enumerate(setup.ids):
         on_auto[hero] = summarize(setup.play(everyone, swap={i: "auto"}))
-    # Every Warden who plays the Warden's rules stops Challenging the boss. A
+    # Every Warden who plays the Warden's rules stops Taunting the boss. A
     # Warden made to play another way (like warden=auto) is left as he is.
     wardens = {
         i: "warden_no_boss_taunt"
@@ -172,7 +172,7 @@ def _parser() -> argparse.ArgumentParser:
         "check",
         parents=[shared],
         help="also play with each hero left out, with each hero only "
-        "auto-attacking, and with the Warden never Challenging the boss, and check "
+        "auto-attacking, and with the Warden never Taunting the boss, and check "
         "the design's targets (exits 0 only if every check passes)",
     )
     commands.add_parser(

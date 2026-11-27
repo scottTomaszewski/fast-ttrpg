@@ -24,8 +24,8 @@ def test_guarded_takes_damage_off():
     s = state(); m = s.heroes["mage"]; add_stack(m, "guarded", 1, 4)
     assert damage_hero(s, m, 6, attacker=None) == 2
 
-def test_unbroken_stops_at_one():
-    s = state(); w = s.heroes["warden"]; add_stack(w, "unbroken", 1)
+def test_last_stand_stops_at_one():
+    s = state(); w = s.heroes["warden"]; add_stack(w, "last_stand", 1)
     damage_hero(s, w, 999, attacker=None); assert w.hp == 1 and not w.down
 
 def test_warden_gains_grit_when_attacked():
@@ -128,8 +128,8 @@ def test_enemy_cards_come_off_one_a_turn_and_a_hit_breaks_sheep_but_not_stun():
     damage_enemy(s, "mage", w, 1)
     assert "sheep" not in w.stacks and w.controlled                     # still stunned
 
-def test_bulwark_only_softens_blasts_and_any_attack_gives_grit():
-    s = state(); w = s.heroes["warden"]; o = enemy(s, "ogre", (4, 6)); add_stack(w, "bulwark", 1, 8)
+def test_shield_plant_only_softens_blasts_and_any_attack_gives_grit():
+    s = state(); w = s.heroes["warden"]; o = enemy(s, "ogre", (4, 6)); add_stack(w, "shield_plant", 1, 8)
     assert damage_hero(s, w, 10, attacker=o, blast=True) == 2 and w.resource == 2   # a blast gives none
     assert damage_hero(s, w, 10, attacker=o) == 10 and w.resource == 3
     add_stack(w, "guarded", 1, 4)

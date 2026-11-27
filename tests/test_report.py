@@ -248,7 +248,7 @@ def test_check_has_no_boss_taunt_check_without_a_warden(tmp_path, capsys):
     assert "taunt:boss" not in capsys.readouterr().out
 
 def test_check_has_no_boss_taunt_check_when_the_warden_is_made_to_auto_attack(tmp_path, capsys):
-    # A Warden on `auto` never Challenges anyone, so there is nothing to switch off.
+    # A Warden on `auto` never Taunts anyone, so there is nothing to switch off.
     out = tmp_path / "c.json"
     main(["check", "--n", "2", *FILES, "--party", "warden,mage", "--policy", "warden=auto",
           "--json", str(out)])

@@ -38,8 +38,8 @@ def test_dice_with_a_bonus_are_written_like_2d6_plus_2(game):
 
 
 def test_something_that_rolls_no_dice_has_no_dice_placeholder(game):
-    with pytest.raises(RulesError, match=r"abilities\.challenge\.dice"):
-        render("{abilities.challenge.dice}", game, "core.md")
+    with pytest.raises(RulesError, match=r"abilities\.taunt\.dice"):
+        render("{abilities.taunt.dice}", game, "core.md")
 
 
 def test_true_and_false_are_written_yes_and_no(game):
@@ -53,7 +53,7 @@ def test_a_loud_ability_is_marked_loud(game):
 
 
 def test_how_long_an_ability_takes_is_written_out(game):
-    text = "{abilities.challenge.timing}|{abilities.firebolt.timing}|{abilities.meteor.timing}|{abilities.arcane_volley.timing}"
+    text = "{abilities.taunt.timing}|{abilities.firebolt.timing}|{abilities.meteor.timing}|{abilities.arcane_volley.timing}"
     assert render(text, game, "core.md") == "Instant|Cast, 1 round|Cast, 2 rounds|Channel, 3 hits"
 
 

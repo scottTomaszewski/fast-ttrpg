@@ -90,7 +90,7 @@ while the party lost every fight in about 10 rounds, how long a fight
    lost half its fights to the adds.
    After: wins 69%, median 34, in band 8%, auto 24%. New problem: the
    Warden ended fights full of grit 54% of the time.
-6. Challenge cost 1 to 2, Chain Hook cost 2 to 4. Now the Warden has to
+6. Taunt cost 1 to 2, Grip cost 2 to 4. Now the Warden has to
    save up, so it auto-attacks more, and ends with less grit.
    After: wins 64%, median 33, in band 10%, auto 28%, Warden ends full
    17%.
@@ -170,7 +170,7 @@ other enemies' numbers and hero HP (300 fights each, seeds below
   change in any check: the Crusher almost never lands, and most heroes
   walk out of the Slam. Put back.
 - Intercede cost 2 to 3: no change. Put back.
-- Chain Hook cost 6 (tried early, with Challenge 3): too many adds
+- Grip cost 6 (tried early, with Taunt 3): too many adds
   reached the back line (6% wins against 22% with cost 4).
 - Raising every Warden cost to 3 or more: the Warden was "starved" 71%
   of rounds (it counts against the cheapest ability).
@@ -340,24 +340,24 @@ below 100000):
   With a sixth goblin as well, wins were 80% and it looked fine (the
   `needed:` checks were not run), but it is one more change than what
   was kept, for the same result.
-- Challenge cost 2 to 3, or War Cry cost 3 to 5, instead of Intercede:
+- Taunt cost 2 to 3, or AoE Taunt cost 3 to 5, instead of Intercede:
   the Warden ended full less often (27% of fights) but not as much as
   with Intercede at 4 (18%). Intercede 3: 24%.
-- Intercede 3, Challenge 3 and War Cry 4 together: the Warden was
+- Intercede 3, Taunt 3 and AoE Taunt 4 together: the Warden was
   starved 23% of rounds, with no gain over Intercede alone.
 
 ### Fourth look: a boss that must be taunted, 2026-11-26
 
 The owner wants the Warden to need to taunt the boss, like a tank in an
 MMO. So bosses now ignore the hold: standing next to the Warden does not
-keep a boss on him, only Taunt cards do. And the Warden Challenges the
+keep a boss on him, only Taunt cards do. And the Warden Taunts the
 boss whenever it has no Taunt cards.
 
 That alone made taunting the boss worse than useless. The ogre went for
 the nearest hero, and the Warden stands next to it, so an untaunted ogre
 hit him anyway. The taunt only cost him grit and turns. A new check,
-`taunt:boss`, plays the same fights with the Warden never Challenging
-the boss (War Cry can still taunt it), and wants at least 10 points fewer
+`taunt:boss`, plays the same fights with the Warden never Taunting
+the boss (AoE Taunt can still taunt it), and wants at least 10 points fewer
 wins.
 
 Where we started (`check --n 1000`, seeds 0 to 999, the numbers after
@@ -395,7 +395,7 @@ FAIL  kit:warden       wins 42.8% with the kit, 43.6% on auto  (wanted: at least
 PASS  kit:rogue        wins 42.8% with the kit, 7.9% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 42.8% with the kit, 0.3% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 42.8% with the kit, 0.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never Challenges the boss  (wanted: at least 10.0% fewer wins without Challenging the boss)
+FAIL  taunt:boss       wins 42.8% with, 68.7% when the Warden never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
 ```
 
 What was wrong:
@@ -403,7 +403,7 @@ What was wrong:
 - Taunting the boss cost wins: 69% without it, 43% with it. The Warden's
   kit as a whole was worth nothing (`kit:warden`: 44% on auto).
 - The party won less than half its fights. With the boss free to move,
-  the Warden spent his grit on Challenge (about 5 a fight) and had little
+  the Warden spent his grit on Taunt (about 5 a fight) and had little
   left for Intercede.
 
 Kept changes (each line: `check --n 1000`, seeds 0 to 999, every check
@@ -417,7 +417,7 @@ listed, `taunt:boss` too; the numbers carry on from change 15):
    Rogue 1.2% / 15.5%, Druid 0.0% / 17.2%, Mage 11.5% / 0.0%. Needed
    (wins without): Warden 0.2%, Rogue 0.0%, Druid 0.0%, Mage 0.0%. Kit
    (wins on auto): Warden 20.1%, Rogue 6.4%, Druid 0.9%, Mage 0.6%.
-   Taunt:boss (wins without Challenging the boss): 10.9%. So the taunt now
+   Taunt:boss (wins without Taunting the boss): 10.9%. So the taunt now
    matters a lot, but the fight is far too hard.
 17. Ogre melee hit 2d6+7 to 2d6+4 (the `bonus`, 7 to 4). The +7 was
    tuned for a boss that only ever hit the Warden (change 12). Now every
@@ -460,7 +460,7 @@ seeds):
 Tried in the fourth look, and not kept (300 fights, seeds 0 to 299,
 with the ogre on "backline", unless it says so):
 
-- Challenge cost 2 to 1: wins fell to 43% and auto share to 18%
+- Taunt cost 2 to 1: wins fell to 43% and auto share to 18%
   (fails). With cheap taunts the Warden spends more turns on abilities
   and fewer on auto-attacks.
 - Each of these alone, with the ogre at +7: Warden HP 120 (wins 56%),
@@ -482,19 +482,19 @@ with the ogre on "backline", unless it says so):
 These are things numbers alone could not fix well. Each needs a change
 to a rule or to how a hero plays, so it is for the owner to decide.
 
-1. **Skull Crusher almost never lands, so Unbroken is never used.** The
+1. **Skull Crusher almost never lands, so Last Stand is never used.** The
    boss announces it about 2 times a fight, but it lands only 0.08 times
    a fight: Disrupt breaks it almost every time (the Mage's Disrupt
-   reaches 10 squares, so she can always get it). Unbroken was used 0.0
-   times a fight. The "Unbroken moment" in the design does not happen.
+   reaches 10 squares, so she can always get it). Last Stand was used 0.0
+   times a fight. The "Last Stand moment" in the design does not happen.
    Choices: make the boss's heavy hit something Disrupt cannot break, or
    have the Mage keep Disrupt for the shaman.
    After the third look (the 3000 confirm fights): still true. The
    Crusher is announced 2.0 times a fight and lands 0.03 times (80
-   times in 3000 fights). Unbroken was used 23 times in 3000 fights.
+   times in 3000 fights). Last Stand was used 23 times in 3000 fights.
    After the fourth look (the 3000 confirm fights): still true. The
    Crusher is announced 2.2 times a fight and lands 0.02 times (56
-   times). Unbroken was used 45 times in 3000 fights.
+   times). Last Stand was used 45 times in 3000 fights.
 2. **Sap never happens.** The Rogue only Saps in round 1, and her rule
    looks 7 squares away (move 6 plus 1). The brute starts 8 squares
    from her. Moving the brute from [10, 7] to [9, 7] makes Sap happen in
@@ -550,36 +550,36 @@ to a rule or to how a hero plays, so it is for the owner to decide.
    walking to the back line, the enemies end up close to the heroes,
    and the Mage never drops a Meteor where a hero stands.
 5. **Some buttons are almost never pressed in this fight** (per fight,
-   first pass's numbers): War Cry 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
-   Unbroken 0.0, Sap 0, Frost Ring 0.1, Bulwark 0.3, Wild Growth 0.4.
+   first pass's numbers): AoE Taunt 0.0, Kidney Shot 0.0, Cheap Shot 0.0,
+   Last Stand 0.0, Sap 0, Frost Ring 0.1, Shield Plant 0.3, Wild Growth 0.4.
    After the second look: Meteor 0.0 too, Kidney Shot 0.2, Frost Ring
    0.3.
    After the third look (per fight, the 3000 confirm fights, with the
-   count in brackets): Sap 0 (0), Bulwark 0.002 (6), Cheap Shot 0.005
-   (14), Unbroken 0.008 (23), Meteor 0.11 (344), Frost Ring 0.15
-   (437), Chain Hook 0.15 (451), Kidney Shot 0.28 (842), Wild Growth
-   0.33 (1000), War Cry 0.60 (1787).
-   Why Chain Hook is rare now: Challenge (2 grit) does its old job of
-   turning an add around for half the grit, so the Warden keeps Chain
-   Hook for an enemy that hits from far away (the shaman).
-   Why Bulwark is rare: every hero moves before anyone acts, so by the
+   count in brackets): Sap 0 (0), Shield Plant 0.002 (6), Cheap Shot 0.005
+   (14), Last Stand 0.008 (23), Meteor 0.11 (344), Frost Ring 0.15
+   (437), Grip 0.15 (451), Kidney Shot 0.28 (842), Wild Growth
+   0.33 (1000), AoE Taunt 0.60 (1787).
+   Why Grip is rare now: Taunt (2 grit) does its old job of
+   turning an add around for half the grit, so the Warden keeps Grip
+   for an enemy that hits from far away (the shaman).
+   Why Shield Plant is rare: every hero moves before anyone acts, so by the
    time the Warden could plant his shield, everyone has already
    stepped out of the Ground Slam.
    Every hero is still needed (without any one hero the party wins 9% or
    less), but "every button feels iconic" is not something the checks
    measure.
    After the fourth look (per fight, the 3000 confirm fights, with the
-   count in brackets): Challenge on the boss 5.68 (17039), Bulwark
-   0.014 (43), Unbroken 0.015 (45), Sap 0 (0), Meteor 0.005 (14),
-   Arcane Volley 0 (0), Chain Hook 0.20 (603), Cheap Shot 0 (0), Kidney
-   Shot 0.19 (575). Also War Cry 0.18 (529), Frost Ring 0.39 (1178),
-   Wild Growth 0.32 (953). Challenge on the boss went from about 0.01 a
+   count in brackets): Taunt on the boss 5.68 (17039), Shield Plant
+   0.014 (43), Last Stand 0.015 (45), Sap 0 (0), Meteor 0.005 (14),
+   Arcane Volley 0 (0), Grip 0.20 (603), Cheap Shot 0 (0), Kidney
+   Shot 0.19 (575). Also AoE Taunt 0.18 (529), Frost Ring 0.39 (1178),
+   Wild Growth 0.32 (953). Taunt on the boss went from about 0.01 a
    fight to 5.7: the Warden now keeps the boss taunted most of the
    fight, which is what the owner asked for.
    Why Arcane Volley is never used (and was not before the fourth look
    either: 0 in 600 fights with the third look's numbers): the Mage only
    Volleys a focus with 3 Taunt cards on it (`VOLLEY_TAUNT_CARDS`). A
-   Challenge gives 3, but the Warden acts after the Mage (heroes act in
+   Taunt gives 3, but the Warden acts after the Mage (heroes act in
    id order), and a card comes off at the end of the GM turn. So on the
    Mage's turn her focus has 2 cards at most. In 200 fights it had 3
    cards 0 times. With the rule at 2 cards, she Volleys about 1.8 times
@@ -622,7 +622,7 @@ to change any of them.
 ## Final
 
 These are the numbers after the fourth look: bosses ignore the hold, the
-Warden Challenges the boss whenever it has no Taunt cards, and the ogre
+Warden Taunts the boss whenever it has no Taunt cards, and the ogre
 goes for the back line when nobody taunts it. `boss_loud_cards` is 1.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
@@ -661,7 +661,7 @@ PASS  kit:warden       wins 77.9% with the kit, 44.4% on auto  (wanted: at least
 PASS  kit:rogue        wins 77.9% with the kit, 25.7% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:druid        wins 77.9% with the kit, 3.2% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
 PASS  kit:mage         wins 77.9% with the kit, 6.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never Challenges the boss  (wanted: at least 10.0% fewer wins without Challenging the boss)
+PASS  taunt:boss       wins 77.9% with, 35.2% when the Warden never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
 ```
 
 Every check passes with the round cap at 60, `taunt:boss` too. The
@@ -670,10 +670,10 @@ pinned test seeds (`check --n 600 --seed 500000`) pass too.
 Things to keep an eye on:
 
 - Taunting the boss now matters: without it the party wins 35% instead
-  of 78%. The Warden Challenges the boss about 5.7 times a fight.
+  of 78%. The Warden Taunts the boss about 5.7 times a fight.
 - The Warden is starved 39% of rounds (the line is 50%). Keeping the
   boss taunted costs him 2 grit about every three rounds, and he only
-  gets grit by auto-attacking. A more costly Challenge, or one more
+  gets grit by auto-attacking. A more costly Taunt, or one more
   grit-hungry button, would push him over.
 - The Warden goes down in 50% of fights and the Mage in 56%. The Rogue
   went down in 54% after the third look and in 23% now. Best guess why:

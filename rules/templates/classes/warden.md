@@ -16,19 +16,19 @@ enemies fight him, and stands between them and everyone else.
 
 ## Abilities
 
-### Challenge
+### Taunt
 
-- {abilities.challenge.cost} grit · {abilities.challenge.timing} · range
-  {abilities.challenge.range}{abilities.challenge.loud_tag}
-- Put **{abilities.challenge.cards} Taunt cards** on one enemy. While it
+- {abilities.taunt.cost} grit · {abilities.taunt.timing} · range
+  {abilities.taunt.range}{abilities.taunt.loud_tag}
+- Put **{abilities.taunt.cards} Taunt cards** on one enemy. While it
   has them it must attack you, wherever you are. It never makes a longer
   Taunt stack shorter.
 
-### War Cry
+### AoE Taunt
 
-- {abilities.war_cry.cost} grit · {abilities.war_cry.timing} · around you{abilities.war_cry.loud_tag}
-- Every enemy within {abilities.war_cry.radius} squares of you gets
-  **{abilities.war_cry.cards} Taunt card**.
+- {abilities.aoe_taunt.cost} grit · {abilities.aoe_taunt.timing} · around you{abilities.aoe_taunt.loud_tag}
+- Every enemy within {abilities.aoe_taunt.radius} squares of you gets
+  **{abilities.aoe_taunt.cards} Taunt card**.
 
 ### Intercede
 
@@ -40,28 +40,28 @@ enemies fight him, and stands between them and everyone else.
   {abilities.intercede.value} less each time they are hurt. While they hold it, any
   enemy with no Taunt cards that goes for them attacks you instead.
 
-### Chain Hook
+### Grip
 
-- {abilities.chain_hook.cost} grit · {abilities.chain_hook.timing} · range
-  {abilities.chain_hook.range}{abilities.chain_hook.loud_tag}
+- {abilities.grip.cost} grit · {abilities.grip.timing} · range
+  {abilities.grip.range}{abilities.grip.loud_tag}
 - Pull one enemy to the empty square next to you that is closest to where
   it was. Now it is next to you, so the hold keeps it on you. Not on a
   boss. You need an empty square next to you.
 
-### Bulwark
+### Shield Plant
 
-- {abilities.bulwark.cost} grit · {abilities.bulwark.timing} · around you{abilities.bulwark.loud_tag}
+- {abilities.shield_plant.cost} grit · {abilities.shield_plant.timing} · around you{abilities.shield_plant.loud_tag}
 - Plant your shield against a blast that is coming from one square (the
   boss's square, for a Ground Slam). You, and every ally in the squares
-  behind you, get **{abilities.bulwark.cards} Bulwark card**: take
-  {abilities.bulwark.value} less from a blast. "Behind you" means within
-  {abilities.bulwark.radius} squares of you, and farther from the blast's
+  behind you, get **{abilities.shield_plant.cards} Shield Plant card**: take
+  {abilities.shield_plant.value} less from a blast. "Behind you" means within
+  {abilities.shield_plant.radius} squares of you, and farther from the blast's
   square than you are.
 
-### Unbroken
+### Last Stand
 
-- {abilities.unbroken.cost} grit · {abilities.unbroken.timing} · yourself{abilities.unbroken.loud_tag}
-- Take **{abilities.unbroken.cards} Unbroken card**: while you hold it,
+- {abilities.last_stand.cost} grit · {abilities.last_stand.timing} · yourself{abilities.last_stand.loud_tag}
+- Take **{abilities.last_stand.cards} Last Stand card**: while you hold it,
   nothing can take you below 1 HP. Use it when a heavy hit is coming.
 
 ### Disrupt (every hero has this)
@@ -76,14 +76,14 @@ enemies fight him, and stands between them and everyone else.
 ## How to play the Warden
 
 - **Keep Taunt cards on the boss, always.** The moment it has none,
-  Challenge it. Without them it walks off to hit the Mage or the Druid.
+  Taunt it. Without them it walks off to hit the Mage or the Druid.
 - **Watch the boss's announced moves.** If a heavy hit is coming at you
-  and its biggest roll could take you to 0, use Unbroken. If a blast is
-  coming and allies are standing in it, use Bulwark.
+  and its biggest roll could take you to 0, use Last Stand. If a blast is
+  coming and allies are standing in it, use Shield Plant.
 - **Disrupt** any enemy next to you that has announced a cast.
 - **Intercede** for an ally at half HP or less who is being chased by an
   enemy with no Taunt cards.
 - **Don't spend grit on an enemy that is already next to you:** the hold
-  keeps it on you anyway. Challenge a loose enemy that is going for
-  someone else, Chain Hook one that attacks from far away (like the
+  keeps it on you anyway. Taunt a loose enemy that is going for
+  someone else, Grip one that attacks from far away (like the
   shaman), and otherwise auto-attack. Getting hit is how you earn grit.

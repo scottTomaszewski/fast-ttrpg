@@ -21,11 +21,11 @@ def test_the_slam_misses_anyone_who_walked_out():
     s.heroes["rogue"].pos = (9, 9); land_announced(s)
     assert s.heroes["warden"].hp == 48 and s.heroes["rogue"].hp == 36 and o.announced is None
 
-def test_skull_crusher_hits_the_bosss_target_and_unbroken_survives_it():
+def test_skull_crusher_hits_the_bosss_target_and_last_stand_survives_it():
     s, o = boss_state(5, rolls=[6] * 6); o.target = "warden"; announce(s)
     assert o.announced.kind == "heavy"
     s.heroes["warden"].hp = 20; s.heroes["warden"].resource = 10
-    use(s, "warden", "unbroken"); s.round = 6; land_announced(s)
+    use(s, "warden", "last_stand"); s.round = 6; land_announced(s)
     assert s.heroes["warden"].hp == 1
 
 def test_an_interrupted_mend_heals_nothing():
@@ -41,7 +41,7 @@ def test_the_boulder_ignores_taunts_and_never_picks_someone_next_to_the_boss():
     # The rolls, in the order the GM turn makes them: the ogre's melee hit on
     # the Warden (2d6: 3, 3), then the die that picks who the boulder hits (1 of
     # the 3 heroes not next to the ogre: the druid), then the boulder (2d6: 5, 5).
-    s, o = boss_state(2, rolls=[3, 3, 1, 5, 5]); use(s, "warden", "challenge", "ogre1")
+    s, o = boss_state(2, rolls=[3, 3, 1, 5, 5]); use(s, "warden", "taunt", "ogre1")
     before = {h.id: h.hp for h in s.heroes.values()}; gm_turn(s)
     hurt = [h.id for h in s.heroes.values() if h.hp < before[h.id] and h.id != "warden"]
     assert len(hurt) == 1

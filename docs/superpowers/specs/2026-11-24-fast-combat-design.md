@@ -76,7 +76,7 @@ A round is a party turn, then a GM turn.
 3. The GM announces any new casts and marks their area on the grid.
 4. Discard one card from each stack on each enemy (taunt, stun, sap, sheep).
    **(call: at the end, so a 1-card effect covers one whole GM turn and
-   Challenge's 3 cards cover three.)**
+   Taunt's 3 cards cover three.)**
 
 ### Auto-attack
 
@@ -206,15 +206,15 @@ Numbers are deliberately missing here. See "Numbers".
 
 ### Warden (tank). d8. Grit.
 
-1. **Challenge:** put 3 Taunt cards on one enemy.
-2. **War Cry:** one Taunt card on every enemy near you (1 GM turn).
+1. **Taunt:** put 3 Taunt cards on one enemy.
+2. **AoE Taunt:** one Taunt card on every enemy near you (1 GM turn).
 3. **Intercede:** leap to an ally and give them a Guarded card (they take
    less damage this round). **(call)** Any enemy with no Taunt card that was
    going to attack that ally attacks the Warden instead.
-4. **Chain Hook:** pull one enemy to a square next to you.
-5. **Bulwark:** plant your shield. Allies in the squares behind you take
+4. **Grip:** pull one enemy to a square next to you.
+5. **Shield Plant:** plant your shield. Allies in the squares behind you take
    reduced damage from one blast.
-6. **Unbroken:** you cannot drop below 1 HP this round.
+6. **Last Stand:** you cannot drop below 1 HP this round.
 
 ### Rogue. d6. Energy and combo points.
 
@@ -317,11 +317,11 @@ not written into code, so a talent can later be "change these entries".
 
 One boss with adds, built to exercise the engine. It must include:
 
-- a boss with an announced area blast (dodge it, or stand behind Bulwark);
-- an announced heavy hit on the tank (the Unbroken moment);
+- a boss with an announced area blast (dodge it, or stand behind Shield Plant);
+- an announced heavy hit on the tank (the Last Stand moment);
 - an announced cast worth interrupting (for example an add that heals);
 - an attack on a non-tank hero that taunts cannot stop (work for the healer);
-- loose adds that go for the back line (work for Challenge, Chain Hook,
+- loose adds that go for the back line (work for Taunt, Grip,
   Intercede);
 - a wave of fodder (work for Meteor);
 - one Shielded enemy;
@@ -347,7 +347,7 @@ can say whether the numbers are sound; it cannot say whether the game is fun.
 1. **The simulator.** Python 3.12 with `uv`, tests with `pytest`. **(call)**
    It models the grid, the round, cards, holds and Loud, the four kits and
    the test fight. Heroes follow simple written-down behaviour (for example:
-   the Warden keeps Challenge on the boss and hooks loose adds; the
+   the Warden keeps Taunt on the boss and grips loose adds; the
    Druid keeps Rejuvenation on the Warden and casts Regrowth when someone is
    low).
    It runs a fight many times and reports length, win rate, lowest HP,

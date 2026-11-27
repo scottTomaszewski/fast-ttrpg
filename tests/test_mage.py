@@ -81,7 +81,7 @@ def test_meteor_needs_a_centre_on_the_map():
 
 def test_meteor_is_a_blast_and_spares_a_hero_who_is_down():
     s = state(rolls=[1] * 8); m = s.heroes["mage"]; r = s.heroes["rogue"]; d = s.heroes["druid"]
-    r.pos = (8, 6); add_stack(r, "bulwark", 1, 8)       # Bulwark only softens a blast
+    r.pos = (8, 6); add_stack(r, "shield_plant", 1, 8)       # Shield Plant only softens a blast
     d.pos = (9, 5); d.hp = 0; d.down = True; add_stack(d, "bleeding", 3)
     use(s, "mage", "meteor", pos=(8, 5)); continue_cast(s, m); land_casts(s)
     assert r.hp == 36 and d.down and d.stacks["bleeding"].cards == 3

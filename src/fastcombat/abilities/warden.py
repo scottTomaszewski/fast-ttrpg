@@ -16,23 +16,23 @@ from fastcombat.numbers import AbilitySpec
 from fastcombat.units import Enemy, FightState, Hero
 
 
-@check("challenge")
-def _challenge_needs_an_enemy(
+@check("taunt")
+def _taunt_needs_an_enemy(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     return target_enemy(state, action) is not None
 
 
-@effect("challenge")
-def challenge(
+@effect("taunt")
+def taunt(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Taunt cards on one enemy: while they last, it must attack the Warden."""
     _taunt(state.enemies[action.target], spec.cards)
 
 
-@effect("war_cry")
-def war_cry(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
+@effect("aoe_taunt")
+def aoe_taunt(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
     """Taunt cards on every living enemy near the Warden."""
     near = within(warden.pos, spec.radius, state.fight.width, state.fight.height)
     for enemy in state.living_enemies():
@@ -71,57 +71,57 @@ def intercede(
     add_stack(ally, "interceded", spec.cards)
 
 
-@check("chain_hook")
-def _chain_hook_needs_an_enemy_it_can_pull(
+@check("grip")
+def _grip_needs_an_enemy_it_can_pull(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     """Not the boss, and there has to be a free square next to the Warden."""
     enemy = target_enemy(state, action)
     if enemy is None or enemy.spec.tier == "boss":
         return False
-    return _hook_square(state, warden, enemy) is not None
+    return _grip_square(state, warden, enemy) is not None
 
 
-@effect("chain_hook")
-def chain_hook(
+@effect("grip")
+def grip(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """Pull one enemy to the free square next to the Warden closest to where it was."""
     enemy = state.enemies[action.target]
-    square = _hook_square(state, warden, enemy)
+    square = _grip_square(state, warden, enemy)
     if square is not None:
         enemy.pos = square
 
 
-@check("bulwark")
-def _bulwark_needs_a_blast_square(
+@check("shield_plant")
+def _shield_plant_needs_a_blast_square(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> bool:
     return action.pos is not None
 
 
-@effect("bulwark")
-def bulwark(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
+@effect("shield_plant")
+def shield_plant(state: FightState, warden: Hero, spec: AbilitySpec, action: Action) -> None:
     """Plant the shield against a blast coming from the square `action.pos`.
 
     The Warden, and every ally in the squares behind the Warden (on the far
-    side from the blast), gets a Bulwark card: the blast hits them for less.
+    side from the blast), gets a Shield Plant card: the blast hits them for less.
     """
     shelter = behind(
         warden.pos, action.pos, spec.radius, state.fight.width, state.fight.height
     )
-    add_stack(warden, "bulwark", spec.cards, spec.value)
+    add_stack(warden, "shield_plant", spec.cards, spec.value)
     for ally in state.heroes.values():
         if ally is not warden and not ally.out and ally.pos in shelter:
-            add_stack(ally, "bulwark", spec.cards, spec.value)
+            add_stack(ally, "shield_plant", spec.cards, spec.value)
 
 
-@effect("unbroken")
-def unbroken(
+@effect("last_stand")
+def last_stand(
     state: FightState, warden: Hero, spec: AbilitySpec, action: Action
 ) -> None:
     """While the card lasts, nothing can take the Warden below 1 HP."""
-    add_stack(warden, "unbroken", spec.cards)
+    add_stack(warden, "last_stand", spec.cards)
 
 
 def _taunt(enemy: Enemy, cards: int) -> None:
@@ -135,8 +135,8 @@ def _taunt(enemy: Enemy, cards: int) -> None:
         add_stack(enemy, "taunt", cards)
 
 
-def _hook_square(state: FightState, warden: Hero, enemy: Enemy) -> Pos | None:
-    """Where Chain Hook would put `enemy`.
+def _grip_square(state: FightState, warden: Hero, enemy: Enemy) -> Pos | None:
+    """Where Grip would put `enemy`.
 
     None if no square next to the Warden is free.
     """

@@ -18,7 +18,7 @@ enemies fight him, and stands between them and everyone else.
 
 ## Abilities
 
-### Challenge
+### Taunt
 
 - 2 grit · Instant · range
   6
@@ -26,7 +26,7 @@ enemies fight him, and stands between them and everyone else.
   has them it must attack you, wherever you are. It never makes a longer
   Taunt stack shorter.
 
-### War Cry
+### AoE Taunt
 
 - 3 grit · Instant · around you
 - Every enemy within 3 squares of you gets
@@ -42,7 +42,7 @@ enemies fight him, and stands between them and everyone else.
   4 less each time they are hurt. While they hold it, any
   enemy with no Taunt cards that goes for them attacks you instead.
 
-### Chain Hook
+### Grip
 
 - 4 grit · Instant · range
   6
@@ -50,20 +50,20 @@ enemies fight him, and stands between them and everyone else.
   it was. Now it is next to you, so the hold keeps it on you. Not on a
   boss. You need an empty square next to you.
 
-### Bulwark
+### Shield Plant
 
 - 4 grit · Instant · around you
 - Plant your shield against a blast that is coming from one square (the
   boss's square, for a Ground Slam). You, and every ally in the squares
-  behind you, get **1 Bulwark card**: take
+  behind you, get **1 Shield Plant card**: take
   8 less from a blast. "Behind you" means within
   2 squares of you, and farther from the blast's
   square than you are.
 
-### Unbroken
+### Last Stand
 
 - 5 grit · Instant · yourself
-- Take **1 Unbroken card**: while you hold it,
+- Take **1 Last Stand card**: while you hold it,
   nothing can take you below 1 HP. Use it when a heavy hit is coming.
 
 ### Disrupt (every hero has this)
@@ -78,14 +78,14 @@ enemies fight him, and stands between them and everyone else.
 ## How to play the Warden
 
 - **Keep Taunt cards on the boss, always.** The moment it has none,
-  Challenge it. Without them it walks off to hit the Mage or the Druid.
+  Taunt it. Without them it walks off to hit the Mage or the Druid.
 - **Watch the boss's announced moves.** If a heavy hit is coming at you
-  and its biggest roll could take you to 0, use Unbroken. If a blast is
-  coming and allies are standing in it, use Bulwark.
+  and its biggest roll could take you to 0, use Last Stand. If a blast is
+  coming and allies are standing in it, use Shield Plant.
 - **Disrupt** any enemy next to you that has announced a cast.
 - **Intercede** for an ally at half HP or less who is being chased by an
   enemy with no Taunt cards.
 - **Don't spend grit on an enemy that is already next to you:** the hold
-  keeps it on you anyway. Challenge a loose enemy that is going for
-  someone else, Chain Hook one that attacks from far away (like the
+  keeps it on you anyway. Taunt a loose enemy that is going for
+  someone else, Grip one that attacks from far away (like the
   shaman), and otherwise auto-attack. Getting hit is how you earn grit.

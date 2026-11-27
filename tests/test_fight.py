@@ -192,7 +192,7 @@ def test_a_finished_cast_lands_after_the_resource_comes_back(beam):
 
 def test_a_hero_who_cannot_pay_for_anything_has_a_starved_round():
     s = state(); h = s.heroes
-    h["warden"].resource = 0                                             # Challenge, the cheapest, costs 1
+    h["warden"].resource = 0                                             # Taunt, the cheapest, costs 1
     h["rogue"].resource = 0                                              # gets 3 back; Shadowstep costs 2
     damage_hero(s, h["mage"], 99, attacker=None); h["mage"].resource = 0  # down: not counted
     party_turn(s, idle(s))

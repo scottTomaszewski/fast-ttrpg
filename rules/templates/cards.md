@@ -23,8 +23,8 @@ holds.
 | **Heal** (Rejuvenation) | "Heal {abilities.rejuvenation.value} at the top of your turn." | The hero healed | Druid's Rejuvenation: {abilities.rejuvenation.cards} cards |
 | **Heal** (Wild Growth) | "Heal {abilities.wild_growth.value} at the top of your turn." | Each hero in the area | Druid's Wild Growth: {abilities.wild_growth.cards} cards each. A separate stack from Rejuvenation: both heal. |
 | **Guarded** | "Take {abilities.intercede.value} less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Warden instead." | The ally the Warden leapt to | Warden's Intercede: {abilities.intercede.cards} card |
-| **Bulwark** | "Take {abilities.bulwark.value} less from a blast." | The Warden, and each ally behind him | Warden's Bulwark: {abilities.bulwark.cards} card each |
-| **Unbroken** | "You cannot drop below 1 HP." | The Warden | Warden's Unbroken: {abilities.unbroken.cards} card |
+| **Shield Plant** | "Take {abilities.shield_plant.value} less from a blast." | The Warden, and each ally behind him | Warden's Shield Plant: {abilities.shield_plant.cards} card each |
+| **Last Stand** | "You cannot drop below 1 HP." | The Warden | Warden's Last Stand: {abilities.last_stand.cards} card |
 | **Quicken** | "Roll {abilities.quicken.value} dice for each auto-attack." | Every hero who was up | Mage's Quicken: {abilities.quicken.cards} cards each |
 | **Poison** | "Lose {enemy.shaman.poison_value} HP at the top of your turn." | The hero the shaman hit | The shaman's attack: {enemy.shaman.poison_cards} cards. The Druid's Cleanse takes them all off. |
 | **Bleeding** | "You are down. When the last one goes, you are out." | A downed hero | Going down: {rules.bleeding_cards} cards, one fewer for each Wound. They come off at the end of the party turn. |
@@ -35,7 +35,7 @@ holds.
 
 | Card | Written on it | Who holds it | Where it comes from |
 |---|---|---|---|
-| **Taunt** | "Attack the Warden." | The enemy | Warden's Challenge: {abilities.challenge.cards} cards. War Cry: {abilities.war_cry.cards} card. A Loud hit takes Taunt cards off: a boss loses {rules.boss_loud_cards}, any other enemy 1. |
+| **Taunt** | "Attack the Warden." | The enemy | Warden's Taunt: {abilities.taunt.cards} cards. AoE Taunt: {abilities.aoe_taunt.cards} card. A Loud hit takes Taunt cards off: a boss loses {rules.boss_loud_cards}, any other enemy 1. |
 | **Stun** | "Do nothing this turn. Any cast you announced is broken." | The enemy (not a boss) | Rogue's Kidney Shot: {abilities.kidney_shot.cards} card, or {abilities.kidney_shot.alt} at full combo points. Cheap Shot: {abilities.cheap_shot.cards} card. |
 | **Sap** | "Do nothing. Wake up the moment you are hurt." | The enemy (not a boss) | Rogue's Sap: {abilities.sap.cards} cards |
 | **Sheep** | "You are a sheep: do nothing. Turn back the moment you are hurt." | The enemy (not a boss). Only one sheep at a time. | Mage's Polymorph: {abilities.polymorph.cards} cards |

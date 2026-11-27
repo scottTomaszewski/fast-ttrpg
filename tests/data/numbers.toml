@@ -61,13 +61,13 @@ crit_gain = 2          # mana
 # A field left out is 0 (or false). An ability with no range needs no reach:
 # it is used on yourself, or around you. Range 1 means next to you.
 
-[abilities.challenge]
+[abilities.taunt]
 hero = "warden"
 cost = 1
 range = 6
 cards = 3
 
-[abilities.war_cry]
+[abilities.aoe_taunt]
 hero = "warden"
 cost = 3
 radius = 3
@@ -80,19 +80,19 @@ range = 6
 cards = 1
 value = 4              # damage taken off each hit on the guarded ally
 
-[abilities.chain_hook]
+[abilities.grip]
 hero = "warden"
 cost = 2
 range = 6
 
-[abilities.bulwark]
+[abilities.shield_plant]
 hero = "warden"
 cost = 4
 radius = 2             # how deep "behind you" goes
 cards = 1
 value = 8              # damage taken off the blast
 
-[abilities.unbroken]
+[abilities.last_stand]
 hero = "warden"
 cost = 5
 cards = 1
