@@ -7,7 +7,8 @@ there: the most combo points a Rogue can hold (`combo_max`), how many one
 hit gives (`combo_per_hit`), and how many times bigger a Backstab from
 hiding is (`backstab_hidden_multiplier`).
 
-Three words used below. Hidden: the Rogue starts a fight hidden, and Vanish
+Three words used below. Hidden: the Rogue starts a fight hidden (unless she
+was spotted sneaking in before round 1, see `opening.py`), and Vanish
 hides them again. Shadowstep does not give them away. Using any other
 ability does, once it has happened (see `resolve`), so a rule that asks "is
 the Rogue hidden?" still sees the answer from before. While hidden, no
