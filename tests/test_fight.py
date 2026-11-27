@@ -248,14 +248,14 @@ def test_the_last_bleeding_card_still_leaves_a_whole_party_turn_to_save_you():
     party_turn(s, idle(s))
     assert m.out
 
-def test_auto_only_leaves_controlled_enemies_alone():
+def test_auto_only_leaves_controlled_enemies_alone_while_there_is_anything_else():
     s = state(); h = s.heroes
     add_stack(enemy(s, "wolf", (3, 5)), "stun", 1); enemy(s, "wolf", (4, 7))
     assert AutoOnly().act(s, h["rogue"]) == Action("none")               # wolf2 is 2 away
     assert AutoOnly().act(s, h["guardian"]) == Action("auto", target="wolf2")
     assert AutoOnly().move(s, h["rogue"]) != h["rogue"].pos
-    s.enemies["wolf2"].dead = True
-    assert AutoOnly().move(s, h["rogue"]) == h["rogue"].pos and AutoOnly().act(s, h["rogue"]) == Action("none")
+    s.enemies["wolf2"].dead = True                                       # only the stunned wolf is left
+    assert AutoOnly().move(s, h["rogue"]) == h["rogue"].pos and AutoOnly().act(s, h["rogue"]) == Action("auto", target="wolf1")
 
 
 # A whole fight

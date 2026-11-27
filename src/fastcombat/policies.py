@@ -19,9 +19,14 @@ for the moment they are for.
 Some rules use a word that means the same for every class:
 
 - The focus is the enemy to attack. Never one that is stunned, sapped or
-  sheeped. First an enemy that has announced a mend; then the other
-  enemies that are not a boss, lowest HP first; then the boss. If two are
-  just as good, the nearer one, then the one whose id comes first.
+  sheeped, while any enemy is not. First an enemy that has announced a
+  mend; then the other enemies that are not a boss, lowest HP first; then
+  the boss. If two are just as good, the nearer one, then the one whose id
+  comes first. When every enemy left is stunned, sapped or sheeped, the
+  focus is chosen the same way from the stunned ones, and only when none
+  is stunned, from the sapped or sheeped ones: a hit wakes a sapped or
+  sheeped enemy, so nobody breaks one while there is anything else to
+  hit, but nobody waits for its cards to run out either.
 - When a rule names an ability aimed at the focus, the focus is chosen
   the same way but only from enemies that are not fodder; if there are
   none, the rule is skipped. Auto-attacks use the normal focus, fodder
@@ -46,6 +51,10 @@ Some rules use a word that means the same for every class:
 - An answered cast is a boss cast that a Guardian has already dealt
   with this turn: a blast he planted his shield against, or a heavy hit
   on a hero who holds a Last Stand card. Nobody spends an interrupt on it.
+- An enemy is about to be hit when a hero's cast or channel that does
+  damage (Firebolt, Arcane Volley) is aimed at it, or it stands in the
+  marked area of a hero's blast (Meteor). Nobody saps or sheeps it: the
+  hit would wake it.
 
 An ally is a hero who is up (not down and not out), unless a rule says
 otherwise: "a downed ally" is one who is down. "Lowest" for allies means
@@ -59,6 +68,7 @@ from fastcombat.abilities import Action, can_use
 from fastcombat.combat import BROKEN_BY_DAMAGE
 from fastcombat.grid import Pos, adjacent, approach, behind, distance, within
 from fastcombat.numbers import AbilitySpec
+from fastcombat.opening import NONE, Opening, can_open
 from fastcombat.targeting import held
 from fastcombat.units import Enemy, FightState, Hero
 
@@ -86,6 +96,10 @@ VOLLEY_TAUNT_CARDS = 3  # Mage: if Arcane Volley is Loud, only on a focus with t
 
 
 class Policy(Protocol):
+    """How one hero plays. A policy may also have `opening(state, hero)`,
+    which gives back the Rogue's `Opening` before round 1 (see
+    `opening.py`). A policy without it opens with none."""
+
     def move(self, state: FightState, hero: Hero) -> Pos: ...
     def act(self, state: FightState, hero: Hero) -> Action: ...
 
@@ -95,8 +109,9 @@ class AutoOnly:
 
     It never uses an ability. Nearest is counted in steps; if two enemies
     are just as near, the one whose id comes first. A stunned, sapped or
-    sheeped enemy is left alone. With no enemy to go for, it stays put and
-    does nothing.
+    sheeped enemy is left alone while any other enemy is left (see
+    `_nearest_enemy`). With no enemy to go for, it stays put and does
+    nothing.
     """
 
     def move(self, state: FightState, hero: Hero) -> Pos:
@@ -317,12 +332,21 @@ class RoguePolicy(_ClassPolicy):
     (stepping out of danger if she must) and Shadowsteps in the act step.
 
     The elite to go for from hiding: while I am hidden, an elite that is
-    awake (not stunned, sapped or sheeped). First one with more than half
-    its HP (worth a Sap), then the one that hits hardest, then the one with
-    the most HP, then the nearest. I am hidden at the start of every fight,
-    and again after a Vanish. If I have already waited 2 rounds in a row
-    for it (rule 3) and still cannot get there, I give up on it until I am
-    seen again or it comes in reach, and play the rest of the list.
+    awake (not stunned, sapped or sheeped). First one worth a Sap (more
+    than half its HP, and not about to be hit), then the one that hits
+    hardest, then the one with the most HP, then the nearest. I am hidden
+    at the start of every fight, and again after a Vanish. If I have
+    already waited 2 rounds in a row for it (rule 3) and still cannot get
+    there, I give up on it until I am seen again or it comes in reach, and
+    play the rest of the list.
+
+    Before the fight (the opening, see `opening.py`): if an elite is there
+    that nobody stands next to and that has a free square next to it, I
+    pick the one that hits hardest (then the most HP, the nearest, by id)
+    and get next to it, so round 1 starts with rule 3: a Sap. I Shadowstep
+    in if, after paying for it and getting round 1's energy back, I can
+    still pay for the Sap: it always works, and the Sap is the point. If I
+    could not, I Sneak instead. With no such elite, no opening.
 
     1. Haul up.
     2. An enemy next to me has an announced cast that is not answered, and
@@ -330,10 +354,10 @@ class RoguePolicy(_ClassPolicy):
        caster an add that is not fodder, Kidney Shot (the longer stun);
        else Cheap Shot.
     3. I am hidden and there is an elite to go for: if it is next to me,
-       Sap it if it has more than half its HP, else Backstab it (a Sap on
-       an elite that is nearly dead is wasted); else Shadowstep next to it
-       (that keeps me hidden); else wait (do nothing, so I stay hidden)
-       while I walk to it.
+       Sap it if it is worth a Sap, else Backstab it (a Sap on an elite
+       that is nearly dead, or about to be hit, is wasted); else Shadowstep
+       next to it (that keeps me hidden); else wait (do nothing, so I stay
+       hidden) while I walk to it.
     4. I am not hidden, and: the boss or an elite that is not controlled is
        pulled by me; or the boss went for me on its last turn; or I am at
        40% HP or less and an enemy that is not controlled went for me or is
@@ -364,6 +388,34 @@ class RoguePolicy(_ClassPolicy):
     def __init__(self) -> None:
         # By hero id: the first and the last round of her wait in rule 3.
         self._waiting: dict[str, tuple[int, int]] = {}
+
+    def opening(self, state: FightState, rogue: Hero) -> Opening:
+        """Before round 1: get next to the elite worth opening on, if there is one.
+
+        Shadowstep in if she can, and can still pay for the Sap in round 1
+        after that round's energy comes back; else Sneak.
+        """
+        elites = [
+            e
+            for e in state.living_enemies()
+            if e.spec.tier == "elite"
+            and not any(adjacent(h.pos, e.pos) for h in state.heroes.values())
+            and can_open(state, rogue, Opening("sneak", e.id))
+        ]
+        target = min(
+            elites,
+            key=lambda e: (-_hit_size(e), -e.hp, distance(rogue.pos, e.pos), e.id),
+            default=None,
+        )
+        if target is None:
+            return NONE
+        step = Opening("shadowstep", target.id)
+        spec = state.numbers.heroes[rogue.cls]
+        abilities = state.numbers.abilities
+        first_turn = min(spec.pool, rogue.resource - abilities["shadowstep"].cost + spec.regen)
+        if can_open(state, rogue, step) and first_turn >= abilities["sap"].cost:
+            return step
+        return Opening("sneak", target.id)
 
     def where_to(self, state: FightState, rogue: Hero) -> Pos:
         target = self._elite_to_go_for(state, rogue)
@@ -411,7 +463,7 @@ class RoguePolicy(_ClassPolicy):
         elite = _hidden_elite(state, rogue)
         if elite is not None:
             if adjacent(rogue.pos, elite.pos):
-                ability = "sap" if _enemy_share(elite) > SAP_ABOVE else "backstab"
+                ability = "sap" if _worth_sapping(state, elite) else "backstab"
                 if action := _ability(state, rogue, ability, elite.id):
                     return action
             elif action := _shadowstep(state, rogue, elite):
@@ -663,11 +715,14 @@ class MagePolicy(_ClassPolicy):
     4. An enemy in range has an announced cast that is not answered, and is
        not controlled: Disrupt, even in the middle of a channel. A mend
        first (it undoes our damage), then by id.
-    5. In the middle of a channel: continue.
+    5. In the middle of a channel: continue, unless its enemy is sapped or
+       sheeped now (the next hit would wake it): then the channel ends, and
+       I read on.
     6. No enemy is a sheep, no hero is in the middle of casting Polymorph
        (another Mage's sheep is on its way), and at least two enemies are
        alive that are not controlled, not a boss and not fodder: Polymorph
-       the one of them with the most HP that nobody is next to.
+       the one of them with the most HP that nobody is next to and that is
+       not about to be hit.
     7. Some square in range has three or more enemies that are not
        controlled within Meteor's radius, no sapped or sheeped enemy there,
        and no hero there who could not walk out before it lands: Meteor on
@@ -748,9 +803,11 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 5. In the middle of a channel: continue.
+        # 5. In the middle of a channel: continue, unless its enemy is asleep now.
         if mage.cast is not None:
-            return Action("continue")
+            target = state.enemies.get(mage.cast.target) if mage.cast.target else None
+            if target is None or not _asleep(target):
+                return Action("continue")
 
         # 6. No sheep yet, none on its way, and two or more enemies worth one:
         # Polymorph.
@@ -769,6 +826,7 @@ class MagePolicy(_ClassPolicy):
                 e
                 for e in worth
                 if not any(adjacent(h.pos, e.pos) for h in _up_heroes(state))
+                and not _about_to_be_hit(state, e)
             ]
             sheep = min(alone, key=lambda e: (-e.hp, e.id), default=None)
             if sheep is not None:
@@ -856,8 +914,8 @@ def _focus(state: FightState, hero: Hero, fodder: bool = True) -> Enemy | None:
 
     free = [
         enemy
-        for enemy in state.living_enemies()
-        if not enemy.controlled and (fodder or enemy.spec.tier != "fodder")
+        for enemy in _to_hit(state)
+        if fodder or enemy.spec.tier != "fodder"
     ]
     return min(free, key=order, default=None)
 
@@ -995,7 +1053,7 @@ def _hidden_elite(state: FightState, rogue: Hero) -> Enemy | None:
     return min(
         elites,
         key=lambda e: (
-            _enemy_share(e) <= SAP_ABOVE,
+            not _worth_sapping(state, e),
             -_hit_size(e),
             -e.hp,
             distance(rogue.pos, e.pos),
@@ -1003,6 +1061,11 @@ def _hidden_elite(state: FightState, rogue: Hero) -> Enemy | None:
         ),
         default=None,
     )
+
+
+def _worth_sapping(state: FightState, enemy: Enemy) -> bool:
+    """More than half its HP, and not about to be hit (the hit would wake it)."""
+    return _enemy_share(enemy) > SAP_ABOVE and not _about_to_be_hit(state, enemy)
 
 
 def _eviscerate_target(state: FightState, rogue: Hero) -> Enemy | None:
@@ -1055,11 +1118,7 @@ def _meteor_centre(state: FightState, mage: Hero) -> tuple[Pos | None, int]:
     spec = state.numbers.abilities["meteor"]
     guardians = [h for h in state.up_heroes() if h.cls == "guardian"]
     enemies = [e for e in state.living_enemies() if not e.controlled]
-    sleeping = [
-        e.pos
-        for e in state.living_enemies()
-        if any(name in e.stacks for name in BROKEN_BY_DAMAGE)
-    ]
+    sleeping = [e.pos for e in state.living_enemies() if _asleep(e)]
     stuck = [
         h.pos
         for h in state.heroes.values()
@@ -1279,9 +1338,41 @@ def _boss(state: FightState) -> Enemy | None:
 
 
 def _nearest_enemy(state: FightState, hero: Hero) -> Enemy | None:
-    """The nearest living enemy that is not controlled (ties: by id), or None."""
-    free = [enemy for enemy in state.living_enemies() if not enemy.controlled]
-    return min(free, key=lambda enemy: (distance(hero.pos, enemy.pos), enemy.id), default=None)
+    """The nearest of the enemies to hit (see `_to_hit`; ties: by id), or None."""
+    return min(
+        _to_hit(state), key=lambda enemy: (distance(hero.pos, enemy.pos), enemy.id), default=None
+    )
+
+
+def _to_hit(state: FightState) -> list[Enemy]:
+    """The living enemies a hero may attack (see the focus at the top of this file).
+
+    Those that are not controlled. If every one is, the stunned ones; if
+    none is stunned, the sapped or sheeped ones.
+    """
+    living = state.living_enemies()
+    return (
+        [e for e in living if not e.controlled]
+        or [e for e in living if not _asleep(e)]
+        or living
+    )
+
+
+def _asleep(enemy: Enemy) -> bool:
+    """Sapped or sheeped: it wakes the moment it takes any damage."""
+    return any(name in enemy.stacks for name in BROKEN_BY_DAMAGE)
+
+
+def _about_to_be_hit(state: FightState, enemy: Enemy) -> bool:
+    """True when a hero's cast or channel that does damage is aimed at
+    `enemy`, or it stands in a hero's marked blast area. A Sap or a sheep
+    on it now would only be woken."""
+    abilities = state.numbers.abilities
+    for hero in state.heroes.values():
+        cast = hero.cast
+        if cast is not None and cast.target == enemy.id and abilities[cast.ability].dice[0] > 0:
+            return True
+    return any(enemy.pos in area for area in state.marked.values())
 
 
 def _up_heroes(state: FightState) -> list[Hero]:

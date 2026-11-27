@@ -637,3 +637,77 @@ def test_the_druid_moves_before_the_guardian_and_still_stays_behind_his_shield()
     assert default_policy("druid").move(s, d) == (3, 6)             # the plan covers her: she stays
     g.resource = 3                                                  # no shield coming: she gets out
     assert default_policy("druid").move(s, d) not in s.danger_squares()
+
+
+# --- The Rogue's opening, and not breaking our own Sap or sheep ----------------
+
+from fastcombat.opening import NONE, Opening, can_open
+
+def test_rogue_opens_by_shadowstepping_in_next_to_the_elite_that_hits_hardest():
+    s = state(); r = s.heroes["rogue"]
+    elite(s, "wolf", (10, 3)); elite(s, "brute", (10, 7)); enemy(s, "shaman", (13, 3))
+    o = RoguePolicy().opening(s, r)
+    assert o == Opening("shadowstep", "brute1") and can_open(s, r, o)   # the brute hits for 6, the wolf for 4
+
+def test_rogue_has_no_opening_without_an_elite_or_only_on_a_boss():
+    s = state(); r = s.heroes["rogue"]
+    enemy(s, "ogre", (11, 6)); enemy(s, "wolf", (10, 3))
+    assert RoguePolicy().opening(s, r) == NONE
+
+def test_rogue_sneaks_when_shadowstepping_in_would_leave_her_short_of_the_sap():
+    s = state(); r = s.heroes["rogue"]; elite(s, "brute", (10, 7))
+    r.resource = 2                                                  # 2 - 2 + 3 back in round 1 = 3: a Sap
+    assert RoguePolicy().opening(s, r).kind == "shadowstep"
+    r.resource = 1                                                  # cannot pay for Shadowstep
+    assert RoguePolicy().opening(s, r) == Opening("sneak", "brute1")
+    s.numbers.abilities["sap"] = replace(s.numbers.abilities["sap"], cost=4)
+    r.resource = 2                                                  # 3 in round 1 is not a Sap at 4
+    assert RoguePolicy().opening(s, r).kind == "sneak"
+
+def test_a_second_rogue_leaves_the_elite_the_first_one_is_next_to():
+    s = state(("rogue", "rogue")); b = elite(s, "brute", (10, 7)); w = elite(s, "wolf", (10, 3))
+    s.heroes["rogue"].pos = (9, 7)                                  # the first Rogue opened next to the brute
+    assert RoguePolicy().opening(s, s.heroes["rogue2"]) == Opening("shadowstep", "wolf1")
+    w.pos = (9, 6)                                                  # she is next to both now
+    assert RoguePolicy().opening(s, s.heroes["rogue2"]) == NONE
+
+def test_after_the_opening_round_1_is_a_sap():
+    s = state(); r = s.heroes["rogue"]; b = elite(s, "brute", (10, 7))
+    from fastcombat.opening import open_fight
+    open_fight(s, r, RoguePolicy().opening(s, r))
+    assert default_policy("rogue").move(s, r) == r.pos
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
+
+def test_nobody_hits_a_sapped_or_sheeped_enemy_while_anything_else_is_left():
+    s = state(); quiet_volley(s)
+    b = enemy(s, "brute", (4, 7)); add_stack(b, "sap", 20)          # next to the Guardian at (3, 6)
+    w = enemy(s, "wolf", (10, 9)); add_stack(w, "stun", 1)         # 9 from the Mage at (1, 5)
+    assert act(s, "guardian").kind == "none"                        # nothing awake next to him
+    a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "wolf1")   # the stunned wolf first
+    w.dead = True                                                   # only the sapped brute is left: hit it
+    assert act(s, "guardian") == Action("auto", target="brute1")
+    a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "brute1")
+
+def test_mage_ends_a_volley_whose_enemy_was_sapped_after_it_began():
+    s = state(); quiet_volley(s); m = s.heroes["mage"]
+    w = enemy(s, "wolf", (8, 5)); enemy(s, "wolf", (9, 8))
+    m.cast = Cast("arcane_volley", "wolf1", None, 0, 2, True)       # two hits to come on wolf1
+    assert act(s, "mage") == Action("continue")
+    add_stack(w, "sap", 20)                                         # the Rogue sapped it
+    a = act(s, "mage"); assert a.kind != "continue" and a.target != "wolf1"
+
+def test_rogue_does_not_sap_an_elite_a_hit_is_on_its_way_to():
+    s = state(); r = s.heroes["rogue"]; b = elite(s, "brute", (3, 4))   # next to her at (2, 5), hidden
+    s.heroes["mage"].cast = Cast("firebolt", "brute1", None, 0, 0, False)   # lands at the top of next turn
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("backstab", "brute1")
+    s.heroes["mage"].cast = None
+    s.marked["mage"] = frozenset(within((4, 4), 2, 16, 12))         # a Meteor is coming down on it
+    assert act(s, "rogue").ability == "backstab"
+    del s.marked["mage"]
+    assert act(s, "rogue").ability == "sap"
+
+def test_mage_does_not_sheep_an_enemy_a_meteor_is_coming_down_on():
+    s = state(); enemy(s, "shaman", (9, 3)); enemy(s, "wolf", (9, 8))
+    a = act(s, "mage"); assert (a.ability, a.target) == ("polymorph", "shaman1")
+    s.marked["mage2"] = frozenset(within((9, 3), 2, 16, 12))        # another Mage's Meteor
+    a = act(s, "mage"); assert (a.ability, a.target) == ("polymorph", "wolf1")
