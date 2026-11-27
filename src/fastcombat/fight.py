@@ -40,7 +40,8 @@ class FightResult:
     end_resource: dict[str, int]  # each hero's resource at the end, by hero id
     pool: dict[str, int]  # the most resource each hero can hold, by hero id
     # Every button the party has, and whose it is: a class, or "shared" when
-    # any hero has it. In the numbers file's order, with "haul_up" last.
+    # any hero has it. In the numbers file's order, with "haul_up" last. A
+    # benched ability is not a button.
     kit: dict[str, str]
     # The control cards ("stun", "sap", "sheep") on enemies still alive at
     # the end, one entry for each enemy and kind. Empty after a win.
@@ -230,8 +231,13 @@ def _write_down_resources(state: FightState, heroes: list[Hero]) -> None:
 
 
 def _cheapest_cost(numbers: Numbers, cls: str) -> int | None:
-    """The lowest cost above 0 among the class's own abilities, or None if none costs anything."""
-    costs = [a.cost for a in numbers.abilities.values() if a.hero == cls and a.cost > 0]
+    """The lowest cost above 0 among the class's own abilities (not benched
+    ones), or None if none costs anything."""
+    costs = [
+        a.cost
+        for a in numbers.abilities.values()
+        if a.hero == cls and a.cost > 0 and not a.benched
+    ]
     return min(costs, default=None)
 
 
@@ -271,8 +277,11 @@ def _result(
 
 
 def _kit(numbers: Numbers, party: list[str]) -> dict[str, str]:
-    """Every ability the party has, and whose it is, with hauling up last."""
+    """Every ability the party has, and whose it is, with hauling up last.
+    Benched abilities are left out."""
     owners = set(party) | {SHARED}
-    kit = {a.id: a.hero for a in numbers.abilities.values() if a.hero in owners}
+    kit = {
+        a.id: a.hero for a in numbers.abilities.values() if a.hero in owners and not a.benched
+    }
     kit[HAUL_UP] = SHARED
     return kit

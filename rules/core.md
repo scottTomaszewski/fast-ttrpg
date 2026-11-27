@@ -64,9 +64,9 @@ Heroes move at the same time and act at the same time. When it matters who
 goes first (two heroes want the same square, or one hero's action changes
 what another can do), heroes go in this order: **Druid, Guardian, Mage,
 Rogue**. Two heroes of the same kind go in the order they joined the
-party. For example, the Druid acts before the Mage, so when the Mage uses
-Quicken, the Druid has already rolled her attack for that turn without
-it. Enemies take their turns in alphabetical order of their names
+party. For example, the Druid acts before the Guardian, so when the
+Guardian is stunned, the Druid can Cleanse him before his act step comes.
+Enemies take their turns in alphabetical order of their names
 (brute, goblins, ogre, shaman, wolves), and two of the same kind go by
 their number.
 
@@ -188,9 +188,6 @@ one enemy in reach:
 - The Mage also gets 1 mana back from each auto-attack
   that does not miss, crit or not. Her auto-attack is weak, but it keeps
   her mana coming.
-- When you have Quicken cards you roll 2 dice
-  instead of one. Each die can miss or crit on its own, and they add up
-  into one hit.
 
 ### Abilities
 
@@ -327,7 +324,7 @@ turn that follows:
   has as many of those cards or more, it keeps the ones it has.
 - Different kinds are different stacks. An ally can hold Rejuvenation heal
   cards and Wild Growth heal cards at the same time, and both heal.
-- **Going down wipes every card you hold**: heal cards, Quicken, Guarded,
+- **Going down wipes every card you hold**: heal cards, Guarded,
   poison, cooldowns, all of them. Then you take Bleeding cards (section
   9).
 - **Cooldowns** use cards too. Only Disrupt has one. When you use it, put
@@ -494,8 +491,7 @@ With 3 Wounds, going down puts you straight out.
 - **Normal:** real HP, like heroes. Most enemies are these.
 - **Shielded** is a rare extra, not a kind. A shielded enemy ignores any
   single hit smaller than its shield number; a hit that big or bigger does
-  all its damage. A quickened auto-attack adds its dice up first, then
-  checks the shield.
+  all its damage.
 - **Boss:** a full set of numbers, rolls dice for its attacks, and
   announces its big moves (below).
 

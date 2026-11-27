@@ -58,7 +58,9 @@ auto_gain = 1          # mana back from each auto-attack that does not miss
 
 # Ability fields: cost, cast (rounds), hits (channel), range, radius,
 # dice = [count, sides], bonus, cards (how long it lasts), value (what each
-# card is worth), alt (a second number, explained per ability), loud, cooldown.
+# card is worth), alt (a second number, explained per ability), loud, cooldown,
+# benched (true: kept here and in the code, but out of the game for now:
+# nobody uses it, and it is left off the rules and the checks).
 # A field left out is 0 (or false). An ability with no range needs no reach:
 # it is used on yourself, or around you. Range 1 means next to you.
 
@@ -221,6 +223,7 @@ range = 6
 
 [abilities.quicken]
 hero = "mage"
+benched = true         # benched 2026-11-27 by the owner; may come back
 cost = 8
 cards = 2
 value = 2              # dice for each auto-attack while quickened

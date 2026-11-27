@@ -214,3 +214,13 @@ def test_the_rules_in_the_repo_are_up_to_date():
         path = written.relative_to(RULES)
         if path.parts[0] != "templates":
             assert path in made, f"rules/{path} has no template in rules/templates/"
+
+
+def test_a_benched_ability_is_left_off_the_rules():
+    game = load_game(REAL_GAME)
+    benched = [a for a in game.numbers.abilities.values() if a.benched]
+    assert benched                                                  # Quicken, for now
+    for ability in benched:
+        name = ability.id.replace("_", " ")
+        for path, text in render_all(RULES, game).items():
+            assert name not in text.lower(), f"rules/{path} still talks about {name}"

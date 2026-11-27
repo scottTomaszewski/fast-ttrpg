@@ -109,14 +109,15 @@ def cost_of(state: FightState, hero: Hero, spec: AbilitySpec, action: Action) ->
 def can_use(state: FightState, hero: Hero, ability_id: str, action: Action) -> bool:
     """True when `hero` may use `ability_id` right now, the way `action` says.
 
-    No, when: the hero is not up; nothing says what the ability does; it
+    No, when: the hero is not up; the ability is benched (out of the game
+    for now); nothing says what the ability does; it
     belongs to another class (and is not shared); it is cooling down; the
     hero cannot pay for it now (for a channel, one hit); the target is
     missing, dead or out; the target or the square is out of reach; or the
     ability's own extra rule says no.
     """
     spec = state.numbers.abilities.get(ability_id)
-    if spec is None or ability_id not in EFFECTS or not hero.up:
+    if spec is None or spec.benched or ability_id not in EFFECTS or not hero.up:
         return False
     if spec.hero not in (hero.cls, SHARED):
         return False

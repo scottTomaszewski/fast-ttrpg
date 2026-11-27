@@ -1,7 +1,7 @@
 import json
 from dataclasses import replace
 
-from tests.helpers import GAME, REAL_GAME
+from tests.helpers import GAME
 from fastcombat.numbers import load_numbers, load_fight, load_usage
 from fastcombat.fight import run_fight
 from fastcombat.report import Summary, summarize, check_targets, format_summary, format_checks
@@ -13,6 +13,8 @@ PARTY = ["guardian", "rogue", "druid", "mage"]
 # The command line reads the real game files unless told otherwise. These
 # tests point it at the tests' frozen copy, so tuning cannot break them.
 FILES = ["--numbers", str(GAME / "numbers.toml"), "--fight", str(GAME / "fights" / "ogre_warlord.toml")]
+# `check` also reads usage targets: the frozen copy, to go with the frozen numbers.
+CHECK_FILES = [*FILES, "--usage", str(GAME / "usage_targets.toml")]
 
 def test_summary_adds_up():
     s = summarize([run_fight(N, F, PARTY, seed=i) for i in range(20)])
@@ -155,7 +157,7 @@ def test_a_fight_knows_each_heros_full_pool():
 
 # --- The checks -----------------------------------------------------------
 
-USAGE = load_usage(REAL_GAME / "usage_targets.toml", N)
+USAGE = load_usage(GAME / "usage_targets.toml", N)
 
 def test_a_use_check_for_each_button_when_usage_targets_are_given():
     full = good(uses={"taunt": 3.0, "backstab": 99.0, "haul_up": 0.0},
@@ -280,7 +282,7 @@ def test_an_unknown_fight_is_a_clean_error(capsys):
 
 def test_check_removes_each_hero_in_turn_and_fails_on_a_missed_target(capsys):
     # The frozen numbers are not tuned: the party loses, so some checks fail.
-    code = main(["check", "--n", "2", *FILES, "--party", "guardian,rogue,rogue"])
+    code = main(["check", "--n", "2", *CHECK_FILES, "--party", "guardian,rogue,rogue"])
     out = capsys.readouterr().out
     assert code == 1 and "FAIL" in out
     for name in ("needed:guardian", "needed:rogue", "needed:rogue2", "resource:rogue2",
@@ -289,7 +291,7 @@ def test_check_removes_each_hero_in_turn_and_fails_on_a_missed_target(capsys):
 
 def test_check_plays_each_hero_on_auto_and_writes_it_down(tmp_path, capsys):
     out = tmp_path / "c.json"
-    main(["check", "--n", "2", *FILES, "--party", "guardian,mage", "--json", str(out)])
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "guardian,mage", "--json", str(out)])
     data = json.loads(out.read_text())
     assert set(data["on_auto"]) == {"guardian", "mage"}
     expected = summarize([run_fight(N, F, ["guardian", "mage"], policies={"mage": AutoOnly()}, seed=i)
@@ -300,7 +302,7 @@ def test_check_plays_each_hero_on_auto_and_writes_it_down(tmp_path, capsys):
 
 def test_check_plays_the_guardian_without_boss_taunts_and_writes_it_down(tmp_path, capsys):
     out = tmp_path / "c.json"
-    main(["check", "--n", "2", *FILES, "--party", "mage,guardian", "--json", str(out)])
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "mage,guardian", "--json", str(out)])
     data = json.loads(out.read_text())
     no_taunt = {"guardian": POLICIES["guardian_no_boss_taunt"]()}
     expected = summarize([run_fight(N, F, ["mage", "guardian"], policies=no_taunt, seed=i) for i in range(2)])
@@ -309,7 +311,7 @@ def test_check_plays_the_guardian_without_boss_taunts_and_writes_it_down(tmp_pat
 
 def test_check_has_no_boss_taunt_check_without_a_guardian(tmp_path, capsys):
     out = tmp_path / "c.json"
-    main(["check", "--n", "2", *FILES, "--party", "rogue,mage", "--json", str(out)])
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "rogue,mage", "--json", str(out)])
     data = json.loads(out.read_text())
     assert data["no_boss_taunt"] is None
     assert "taunt:boss" not in [c["name"] for c in data["checks"]]
@@ -318,7 +320,7 @@ def test_check_has_no_boss_taunt_check_without_a_guardian(tmp_path, capsys):
 def test_check_has_no_boss_taunt_check_when_the_guardian_is_made_to_auto_attack(tmp_path, capsys):
     # A Guardian on `auto` never Taunts anyone, so there is nothing to switch off.
     out = tmp_path / "c.json"
-    main(["check", "--n", "2", *FILES, "--party", "guardian,mage", "--policy", "guardian=auto",
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "guardian,mage", "--policy", "guardian=auto",
           "--json", str(out)])
     data = json.loads(out.read_text())
     assert data["no_boss_taunt"] is None
@@ -327,16 +329,16 @@ def test_check_has_no_boss_taunt_check_when_the_guardian_is_made_to_auto_attack(
 
 def test_check_has_use_checks_only_for_a_party_of_one_of_each_class(tmp_path, capsys):
     out = tmp_path / "c.json"
-    main(["check", "--n", "2", *FILES, "--party", "mage,druid,guardian,rogue", "--json", str(out)])
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "mage,druid,guardian,rogue", "--json", str(out)])
     names = [c["name"] for c in json.loads(out.read_text())["checks"]]
     assert [n for n in names if n.startswith("use:")] == [f"use:{a}" for a in N.abilities] + ["use:haul_up"]
     assert "use:meteor" in capsys.readouterr().out
-    main(["check", "--n", "2", *FILES, "--party", "guardian,rogue,druid,mage,mage", "--json", str(out)])
+    main(["check", "--n", "2", *CHECK_FILES, "--party", "guardian,rogue,druid,mage,mage", "--json", str(out)])
     assert not any(c["name"].startswith("use:") for c in json.loads(out.read_text())["checks"])
 
 def test_check_reads_the_usage_targets_given(tmp_path, capsys):
     usage = tmp_path / "u.toml"
-    usage.write_text((REAL_GAME / "usage_targets.toml").read_text() + "\n[fireball]\nmin = 1\n")
+    usage.write_text((GAME / "usage_targets.toml").read_text() + "\n[fireball]\nmin = 1\n")
     assert main(["check", "--n", "1", *FILES, "--usage", str(usage)]) == 2
     assert "fireball" in capsys.readouterr().err
 

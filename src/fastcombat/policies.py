@@ -759,7 +759,9 @@ class MagePolicy(_ClassPolicy):
        than 2 times this fight, and: it is round 5 or later, I have not
        Quickened yet, and the boss has Taunt cards (or there is no boss);
        or I have Quickened once and the boss is at 35% HP or less (the burn
-       at the end): Quicken.
+       at the end): Quicken. (Quicken is benched for now, so `can_use`
+       refuses it and this rule never applies in the real game. It is kept
+       for when Quicken comes back.)
     9. The focus is an add whose HP is more than one Volley hit (on average)
        and no more than one Firebolt (on average), and I have the mana:
        Firebolt it. One big hit finishes it in one of my turns, where Volley

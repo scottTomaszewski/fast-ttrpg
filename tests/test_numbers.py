@@ -183,7 +183,7 @@ def test_a_cast_every_of_zero_means_the_enemy_never_casts(tmp_path):
 # --- The usage targets -------------------------------------------------------
 
 
-USAGE = REAL_GAME / "usage_targets.toml"
+USAGE = GAME / "usage_targets.toml"   # the frozen copy, to go with the frozen numbers
 
 def test_the_usage_targets_load_with_a_band_for_every_button():
     n = load_numbers(GAME / "numbers.toml")
@@ -220,3 +220,32 @@ def test_a_usage_target_must_be_a_number_and_make_sense(tmp_path):
 def test_the_real_test_fight_has_an_elite_for_sap_to_look_for():
     f = load_fight(REAL_GAME / "fights" / "ogre_warlord.toml")
     assert f.enemy_types["brute"].tier == "elite"
+
+
+# --- Benched abilities --------------------------------------------------------
+
+def test_an_ability_is_not_benched_unless_the_file_says_so():
+    n = load_numbers(GAME / "numbers.toml")
+    assert not any(a.benched for a in n.abilities.values())
+    assert load_numbers(GAME / "numbers.toml", {"abilities.quicken.benched": True}).abilities["quicken"].benched
+    with pytest.raises(NumbersError, match=r"abilities\.quicken\.benched"):
+        load_numbers(GAME / "numbers.toml", {"abilities.quicken.benched": 1})
+
+def test_quicken_is_benched_in_the_real_game():
+    n = load_numbers(REAL_GAME / "numbers.toml")
+    assert n.abilities["quicken"].benched
+    assert [a.id for a in n.abilities.values() if a.benched] == ["quicken"]
+
+def test_a_benched_ability_needs_no_usage_target_and_one_it_has_is_left_out(tmp_path):
+    n = load_numbers(GAME / "numbers.toml", {"abilities.quicken.benched": True})
+    u = load_usage(USAGE, n)                                        # the frozen copy still has [quicken]
+    assert "quicken" not in u and "meteor" in u
+    p = tmp_path / "u.toml"; p.write_text(re.sub(r"\[quicken\][^\[]*", "", USAGE.read_text()))
+    assert "quicken" not in load_usage(p, n)                        # and no [quicken] is fine too
+    with pytest.raises(NumbersError, match="quicken"):
+        load_usage(p, load_numbers(GAME / "numbers.toml"))         # not benched: it needs one
+
+def test_the_real_usage_targets_go_with_the_real_numbers():
+    n = load_numbers(REAL_GAME / "numbers.toml")
+    u = load_usage(REAL_GAME / "usage_targets.toml", n)
+    assert set(u) == {a.id for a in n.abilities.values() if not a.benched} | {"haul_up"}

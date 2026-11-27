@@ -340,3 +340,26 @@ def test_how_much_an_auto_attack_gives_comes_from_the_numbers():
     s = state(rolls=[3]); m = s.heroes["mage"]; w = enemy(s, "wolf", (8, 5)); m.resource = 10
     s.numbers.heroes["mage"] = replace(s.numbers.heroes["mage"], auto_gain=3)
     auto_attack(s, m, w); assert m.resource == 13
+
+
+# A benched ability: in the code and the numbers, but out of the game
+
+def bench(s, ability):
+    s.numbers.abilities[ability] = replace(s.numbers.abilities[ability], benched=True)
+
+def test_nobody_can_use_a_benched_ability():
+    s = state(); m = s.heroes["mage"]
+    assert ab.can_use(s, m, "quicken", Action("ability", "quicken"))
+    bench(s, "quicken")
+    assert not ab.can_use(s, m, "quicken", Action("ability", "quicken"))
+    assert not ab.use_ability(s, m, Action("ability", "quicken"))
+    assert "quicken" not in m.stacks and s.tally.uses["mage"] == {}
+
+def test_a_benched_ability_is_not_a_button_and_does_not_count_for_starving():
+    n = load_numbers(GAME / "numbers.toml", {"abilities.quicken.benched": True})
+    r = run_fight(n, WOLF_ONLY, ["mage", "rogue"], seed=1)
+    assert "quicken" not in r.kit and "meteor" in r.kit
+    from fastcombat.fight import _cheapest_cost
+    m = {"abilities.quicken.cost": 1}
+    assert _cheapest_cost(load_numbers(GAME / "numbers.toml", m), "mage") == 1
+    assert _cheapest_cost(load_numbers(GAME / "numbers.toml", m | {"abilities.quicken.benched": True}), "mage") == 2

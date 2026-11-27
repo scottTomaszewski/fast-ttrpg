@@ -69,6 +69,9 @@ class AbilitySpec:
     alt: int = 0  # a second number, explained per ability
     loud: bool = False
     cooldown: int = 0
+    # Benched: kept in the code and the numbers, but out of the game for
+    # now. Nobody can use it, and it is left off the rules and the checks.
+    benched: bool = False
 
 
 @dataclass(frozen=True)
@@ -257,14 +260,17 @@ def load_fight(path: Path) -> FightDef:
 def load_usage(path: Path, numbers: Numbers) -> dict[str, UsageTarget]:
     """Read and check the usage targets: one table for each ability, and haul_up.
 
-    Every ability in `numbers` needs a table, and there may be no others, so
-    a misspelled name cannot quietly go unchecked.
+    Every ability in `numbers` that is not benched needs a table, and there
+    may be no tables for anything that is not an ability, so a misspelled
+    name cannot quietly go unchecked. A table for a benched ability is
+    allowed and left out: a benched ability has no target.
     """
     raw = _read(path)
-    buttons = [*numbers.abilities, HAUL_UP]
+    known = [*numbers.abilities, HAUL_UP]
     for name in raw:
-        if name not in buttons:
+        if name not in known:
             raise NumbersError(f"{name}: there is no such ability (is it spelled right?)")
+    buttons = [*(a.id for a in numbers.abilities.values() if not a.benched), HAUL_UP]
     targets = {}
     for name in buttons:
         if name not in raw:

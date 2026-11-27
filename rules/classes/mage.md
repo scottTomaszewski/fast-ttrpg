@@ -3,8 +3,8 @@
 # The Mage
 
 The Mage stands far back and throws the biggest spells in the game. She can
-also freeze enemies in place, turn one into a sheep, hop out of trouble,
-and make the whole party fight faster.
+also freeze enemies in place, turn one into a sheep, and hop out of
+trouble.
 
 - **HP:** 28
 - **Auto-attack:** d4, on an enemy up to
@@ -14,8 +14,7 @@ and make the whole party fight faster.
   each party turn.
 - **Crit bonus:** 2 mana.
 - **Mana from a hit:** each auto-attack that does not miss gives you
-  1 mana, crit or not. With Quicken cards it is still
-  1 for the whole hit.
+  1 mana, crit or not.
 
 ## Abilities
 
@@ -58,19 +57,6 @@ and make the whole party fight faster.
   6
 - Jump to an empty square, without walking there.
 
-### Quicken
-
-- 8 mana · Instant · the whole
-  party
-- Every hero who is up, you too, gets **2 Quicken
-  cards**. While they hold them, their auto-attacks roll
-  2 dice instead of one.
-- The cards come off at the top of the party turn like any other, so
-  Quicken lasts for the rest of this turn and
-  1 more party turn after it. The Druid and
-  the Guardian act before you, so they miss this turn's extra dice and get
-  one quickened turn fewer than the Rogue.
-
 ### Polymorph
 
 - 4 mana · Cast, 1 round · range
@@ -101,6 +87,6 @@ and make the whole party fight faster.
   that fights alongside the boss), when there are at least two adds. Then
   leave it, and any sapped enemy, alone until nothing else is left: a hit
   wakes it. Never aim a Meteor where it would. **Meteor** a spot with four or more
-  enemies and no heroes. Once the fight is going, **Quicken** when everyone is up.
+  enemies and no heroes.
 - **Otherwise Firebolt.** Hit the enemy casting a mend first, then the add
   with the least HP, and the boss last.

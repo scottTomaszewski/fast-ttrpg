@@ -25,7 +25,6 @@ holds.
 | **Guarded** | "Take {abilities.intercede.value} less each time you are hurt. An enemy with no Taunt cards that goes for you attacks the Guardian instead." | The ally the Guardian leapt to | Guardian's Intercede: {abilities.intercede.cards} card |
 | **Shield Plant** | "Take {abilities.shield_plant.value} less from a blast." | The Guardian, and each ally behind him | Guardian's Shield Plant: {abilities.shield_plant.cards} card each |
 | **Last Stand** | "You cannot drop below 1 HP." | The Guardian | Guardian's Last Stand: {abilities.last_stand.cards} card |
-| **Quicken** | "Roll {abilities.quicken.value} dice for each auto-attack." | Every hero who was up | Mage's Quicken: {abilities.quicken.cards} cards each |
 | **Poison** | "Lose {enemy.shaman.poison_value} HP at the top of your turn." | The hero the shaman hit | The shaman's attack: {enemy.shaman.poison_cards} cards. The Druid's Cleanse takes them all off. |
 | **Bleeding** | "You are down. When the last one goes, you are out." | A downed hero | Going down: {rules.bleeding_cards} cards, one fewer for each Wound. They come off at the end of the party turn. |
 | **Wound** | "Each Wound: one Bleeding card fewer next time you go down." | A hero who got up | Getting up: 1 card, kept for the whole fight |
