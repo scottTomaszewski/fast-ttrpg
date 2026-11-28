@@ -131,12 +131,21 @@ the one whose name comes first picks first.
   while there is anything else to hit. Once it is the last one left, hit
   it.
 - **Stop casts next to you.** If an enemy next to you has announced a
-  cast, Disrupt it, or Cheap Shot it if Disrupt is cooling down.
-- **If something is coming for you because of your Loud hit, Vanish.**
-- **At 3 combo points, Eviscerate.** On the boss, only while
-  it has Taunt cards: Eviscerate is Loud, so then the boss loses
-  1 of its Taunt cards instead of being pulled onto
-  you. If an add (an extra enemy that fights alongside the boss) next to you is chasing the Druid or the Mage, Kidney Shot it instead.
+  cast, Disrupt it. If Disrupt is cooling down, Kidney Shot it (at full
+  combo points, not on a boss) or Cheap Shot it.
+- **Vanish** when the boss or an elite is pulled onto you, when the boss
+  went for you, or when you are at 40% HP or less and something is on
+  you. A goblin is not worth it.
+- **At 3 combo points,** Kidney Shot an add (an extra
+  enemy that fights alongside the boss) next to you that is attacking
+  someone: it hits nobody for two turns. Otherwise Eviscerate an elite, or
+  the boss while it has Taunt cards. Eviscerate is Loud, so the boss then
+  loses 1 of its Taunt cards instead of being pulled
+  onto you.
+- **An add next to you is on the Druid or the Mage, and they are at half
+  HP or less?** Cheap Shot it.
 - **Otherwise Backstab** whatever is busy with someone else. If your target
   is too far to walk to, Shadowstep to it. Hit the enemy casting a mend
   first, then the add with the least HP, and the boss last.
+- **A Stomp is coming?** If someone will Disrupt it, stay next to the boss
+  and keep hitting. If nobody will, step away.

@@ -33,6 +33,12 @@ freeze herself in a block of ice, and call her mana back.
 - 9 mana · Cast, 2 rounds · range
   10
 - When it lands, hit one enemy for **6d6**.
+- It is **all or nothing.** You start it in your act step and keep casting
+  in your next one, and it lands at the top of the turn after that. Stand
+  still. If you do anything else in the middle (Disrupt, Blink, Ice
+  Block...), or you move, are stunned or go down, it is gone and does
+  nothing. If its target dies first, it does nothing too. Either way you
+  pay nothing.
 
 ### Meteor
 
@@ -107,28 +113,36 @@ freeze herself in a block of ice, and call her mana back.
 
 - **Stand back.** Stay within 10 squares of your
   target, but well back from every enemy. Stand still while you cast.
-- **Something reached you? Frost Nova,** then step away next turn.
-- **Ice Block is your last way out.** A big hit is coming at you that
-  could take you to 0, and you cannot Disrupt it or walk out of it? Ice
-  Block. Also when you are stunned, low, and an enemy is next to you.
-- **Out of mana and nobody needs you?** Evocation: stand still and get it
-  back. Not while an enemy is next to you, a blast is coming down on you,
-  a cast needs your Disrupt, or the boss is loose.
-- **You are the best at Disrupt:** yours reaches
-  10 squares. Break the shaman's mend and the boss's
-  big moves.
+- **Arcane Volley is your everyday spell.** You can move while it goes,
+  and you can stop it part-way and keep the hits that already landed. The
+  owner's words: "A mage can let the spell hit twice and then cancel the
+  cast to skip the third hit to kick off another, more urgent spell or
+  interrupt."
+- **Firebolt when you have time and mana to spare.** It does as much as a
+  whole Volley, one turn sooner, but it costs more and it is all or
+  nothing. Start one only when you can pay for it and still have a whole
+  Volley's mana left, and no enemy could walk up to you before your next
+  turn (an enemy held by the Guardian, or with Taunt cards on it, will not).
+  If something needs you in the middle, let the Firebolt go and do it.
+- **You are the best at Disrupt:** yours reaches 10
+  squares. Break the shaman's mend first, then the boss's big moves, even
+  in the middle of a Volley or a Firebolt.
+- **Something reached you?** Frost Nova an add next to you. If it is the
+  boss, Blink to a square it cannot reach.
+- **Ice Block is your last way out.** Use it when a big hit is coming at
+  you that could take you to 0 and you cannot Disrupt it or walk out of it.
+  Also when you are at half HP or less, the boss or an elite is next to you
+  and after you, and you cannot Blink away. It works even while stunned.
 - **Sheep the biggest add nobody is fighting** (an add is an extra enemy
   that fights alongside the boss), when there are at least two adds. Then
   leave it, and any sapped enemy, alone until nothing else is left: a hit
-  wakes it. Never aim a Meteor where it would. **Meteor** a spot with four or more
-  enemies and no heroes.
-- **Arcane Volley is your everyday spell.** A whole Volley does about as
-  much damage for its mana as a Firebolt. Its edge: you can move while it
-  goes, and you can stop it part-way and keep the hits that already
-  landed. The owner's words: "A mage can let the spell hit twice and then
-  cancel the cast to skip the third hit to kick off another, more urgent
-  spell or interrupt. Firebolt is more all-or-nothing." So when a cast
-  needs your Disrupt, or an enemy reaches you, stop the Volley and do it.
+  wakes it.
+- **Meteor** a spot that covers three or more enemies, where no sapped or
+  sheeped enemy stands, and that your allies can walk out of.
+- **Low on mana and nobody needs you?** With less than a whole Volley's
+  mana, use Evocation: stand still and get it back. Not while an enemy is
+  next to you, a blast is coming down on you, a cast needs your Disrupt,
+  or the boss has no Taunt cards.
 - **Who to hit:** the enemy casting a mend first, then the add with the
-  least HP, and the boss last. **Firebolt** instead of a Volley when one
-  Firebolt would finish that add.
+  least HP, and the boss last. Out of mana? Auto-attack: each hit gives
+  some back.

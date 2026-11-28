@@ -95,19 +95,26 @@ enemies fight him, and stands between them and everyone else.
   Taunt it. Without them it walks off to hit the Mage or the Druid.
 - **Watch the boss's announced moves.** If a heavy hit is coming at you
   and its biggest roll could take you to 0, use Last Stand. If a blast is
-  coming and allies are standing in it, use Shield Plant.
+  coming and allies are standing in it, stay put, plant your shield and
+  let them stand behind you.
 - **Disrupt** any enemy next to you that has announced a cast.
-- **Intercede** for an ally at half HP or less who is being chased by an
-  enemy with no Taunt cards.
+- **Intercede** for an ally at 60% HP or less who is being chased by an
+  enemy with no Taunt cards. While an ally is that low, keep enough grit
+  for it.
+- **Loose adds** (an add is an extra enemy that fights alongside the boss):
+  Challenging Shout when two or more near you are going for someone else.
+  Grip one that attacks from far away (like the shaman), or one on the Mage
+  or the Druid. Taunt any other loose add that is not coming for you
+  (not a goblin: any hit kills one).
 - **Don't spend grit on an enemy that is already next to you:** the hold
-  keeps it on you anyway. Taunt a loose enemy that is going for
-  someone else, Grip one that attacks from far away (like the
-  shaman), and otherwise auto-attack. Getting hit is how you earn grit.
-- **Shield Slam when nothing needs you.** The boss has plenty of Taunt
-  cards, nobody is hurt, and no enemy is loose? Then Shield Slam the boss
-  (or the enemy on you) instead of an auto-attack. It costs
-  {abilities.shield_slam.cost} grit and gives
-  you grit. If something needs you, that comes first.
-- **A Stomp is coming and you hold the boss?** You may stay and take it:
-  the Druid can Cleanse your stun before your act step, because she acts
-  before you. Everyone else should step away.
+  keeps it on you anyway. Getting hit is how you earn grit.
+- **Shield Slam when nothing needs you.** The boss has a Taunt card,
+  every ally is above 70% HP, and no add is loose? Then Shield Slam the
+  boss (or the enemy on you) instead of an auto-attack. It costs
+  {abilities.shield_slam.cost} grit and gives you grit. If something needs
+  you, that comes first.
+- **A Stomp is coming and you hold the boss?** If someone will Disrupt it,
+  stay next to the boss and keep hitting. If nobody will, you may still
+  stay and take it, as long as the Druid is up: she can Cleanse your stun
+  before your act step, because she acts before you. Everyone else should
+  step away.

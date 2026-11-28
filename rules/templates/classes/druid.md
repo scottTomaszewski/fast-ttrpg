@@ -100,15 +100,18 @@ Any heal gets a downed hero back up, on as much HP as the heal.
   squares of the Guardian and as far from the enemies as you can. If an
   enemy next to you, or one coming for you, could reach you this GM turn,
   Shadowmeld.
-- **Keep Rejuvenation on the Guardian all the time.** He takes the most
-  hits.
-- **Fix the worst first.** Swiftmend anyone at about a third of their HP.
-  Wild Growth when three hurt heroes stand close together. Regrowth
-  anyone at a little over half their HP or lower (but remember it is
-  Loud).
+- **Fix the worst first.** Swiftmend anyone at about a third of their HP
+  (35% or less).
 - **Cleanse a stun fast,** the Guardian's first: the boss is on him.
   Only if it still costs them something: a stun on a hero who has already
   acted this turn comes off at the end of the turn anyway, unless it has
   more than one card.
-- **Fill the gaps.** Cleanse poison, put Rejuvenation on anyone who is
-  hurt, and Nourish when there is nothing else to do: it costs nothing.
+- **Keep Rejuvenation on the Guardian all the time.** He takes the most
+  hits.
+- **Then heal by need.** Wild Growth when two or more heroes at 70% HP or
+  less stand close together. Regrowth the lowest hero at 60% HP or less
+  (but remember it is Loud).
+- **Fill the gaps.** Cleanse poison, put Rejuvenation on anyone at 80% HP
+  or less who has none (if you have 6 energy or more), and
+  Nourish the lowest hurt hero when there is nothing else to do: it costs
+  nothing.

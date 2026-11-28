@@ -95,7 +95,8 @@ the GM marked every square within {boss.ground_slam.radius} of him. The
 Ogre has no Taunt cards. The Guardian is next to the Ogre, inside the marked
 squares. The wolf went for the Mage last turn and bit her for
 {enemy.wolf.damage}, so she has {heroes.mage.hp - enemy.wolf.damage} of her
-{heroes.mage.hp} HP. The Mage started a Firebolt on the Ogre last turn. The
+{heroes.mage.hp} HP. The Mage started a Firebolt on the Ogre two turns ago, and
+kept casting it last turn. The
 Rogue is **not hidden**: she came out of hiding when she attacked earlier
 in the fight. The Guardian still has 2 Rejuvenation heal cards.
 
@@ -109,7 +110,7 @@ in the fight. The Guardian still has 2 Rejuvenation heal cards.
   (never more than {heroes.rogue.pool}). The Guardian's grit does not come
   back this way.
 - Casts: the Mage's Firebolt lands. She rolls {abilities.firebolt.dice}
-  and gets 15, so the Ogre loses 15 HP. She pays the
+  and gets 20, so the Ogre loses 20 HP. She pays the
   {abilities.firebolt.cost} mana for it now.
 
 **Move.** Everyone at once.
@@ -235,10 +236,10 @@ Your sheet says how long each ability takes:
   all its act steps.
 - It **lands at the top of the next party turn**, after cards and
   resource, before anyone moves.
-- So a 1-round cast (like Firebolt) is started this turn and lands at the
+- So a 1-round cast (like Polymorph) is started this turn and lands at the
   top of the next one, and you are free to act again in that turn. A
-  2-round cast (like Meteor) is started this turn, you keep casting next
-  turn, and it lands at the top of the turn after that.
+  2-round cast (like Firebolt or Meteor) is started this turn, you keep
+  casting next turn, and it lands at the top of the turn after that.
 - **Stand still** while a cast is going. You may move on the turn you
   start it, because you move before you act.
 - A cast lands on its target wherever the target is by then, even if it
@@ -264,7 +265,9 @@ Your sheet says how long each ability takes:
   channel). Doing anything else in your act step ends either one. A
   cancelled cast costs nothing: you only lose the time.
 - **What breaks a cast:** going down, or being stunned. Plain damage
-  never breaks a cast or a channel.
+  never breaks a cast or a channel. If its target dies before it lands, it
+  does nothing either. Whatever stops it, you lose the time but pay
+  nothing.
 
 Enemies cast too: see section 10.
 
