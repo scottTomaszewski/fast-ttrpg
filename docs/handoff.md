@@ -50,8 +50,9 @@ Delete or rewrite this file when the work below is done.
   one square away.
 
 ## Next
-1. The owner reads `rules/`. Refresh the copies in the owner's Obsidian
-   vault (`~/Documents/obsidian/main/fast-ttrpg/`) once it is pushed.
+1. The owner reads `rules/` (copies refreshed in the owner's Obsidian vault,
+   `~/Documents/obsidian/main/fast-ttrpg/`, on 2026-11-27; refresh them again
+   after the next change), and answers the open items above.
 
 ## Working notes
 - Briefs given to subagents live in `.superpowers/sdd/round3/` (git-ignored, this machine only).
