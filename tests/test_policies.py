@@ -500,12 +500,14 @@ def test_rogue_vanishes_from_the_boss_or_when_low_and_chased():
     r.hp = 14                                                       # 14 of 36: 40% or less
     assert act(s, "rogue").ability == "vanish"
 
-def test_rogue_kidney_shots_an_add_hurting_someone_and_eviscerates_an_elite():
+def test_rogue_kidney_shots_an_add_attacking_someone_and_eviscerates_an_elite():
     s = state(); r = s.heroes["rogue"]; r.hidden = False; r.combo = 5
     w = enemy(s, "wolf", (3, 4)); w.target = "druid"                # next to her, going for the Druid
-    b = elite(s, "brute", (2, 4)); b.target = "guardian"
+    b = elite(s, "brute", (2, 4))                                   # next to her, going for nobody yet
     a = act(s, "rogue"); assert (a.ability, a.target) == ("kidney_shot", "wolf1")
-    w.target = "guardian"                                           # now both are on the Guardian
+    w.target = "guardian"                                           # on the Guardian: still worth a stun
+    a = act(s, "rogue"); assert (a.ability, a.target) == ("kidney_shot", "wolf1")
+    w.target = None                                                 # neither is attacking anyone
     a = act(s, "rogue"); assert (a.ability, a.target) == ("eviscerate", "brute1")   # the elite, not the focus
 
 def test_rogue_cheap_shots_an_add_on_a_squishy_hero_who_is_hurt():
@@ -531,21 +533,44 @@ def test_druid_wild_growths_two_hurt_allies():
 
 def test_mage_volleys_her_focus_and_saves_mana_when_she_cannot_pay_for_all_of_it():
     s = state(); quiet_volley(s); enemy(s, "ogre", (11, 6))        # 10 from the Mage at (1, 5)
+    s.heroes["mage"].resource = 9                                   # no mana to spare for a Firebolt
     a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "ogre1")
     s.heroes["mage"].resource = 5                                   # three hits cost 6
     assert act(s, "mage") == Action("auto", target="ogre1")
 
 def test_a_loud_volley_goes_only_on_a_well_taunted_focus_and_firebolt_takes_the_rest():
     s = state(); o = enemy(s, "ogre", (11, 6))                      # the frozen copy's Volley is Loud
+    s.heroes["mage"].resource = 9                                   # no mana to spare: rule 11 is out
     a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "ogre1")
     add_stack(o, "taunt", 3)
     a = act(s, "mage"); assert (a.ability, a.target) == ("arcane_volley", "ogre1")
 
-def test_mage_firebolts_an_add_one_big_hit_would_finish():
-    s = state(); quiet_volley(s); w = enemy(s, "wolf", (9, 5))     # Volley hits for 7 on average, Firebolt for 14
-    w.hp = 14; a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "wolf1")
-    w.hp = 15; assert act(s, "mage").ability == "arcane_volley"
-    w.hp = 7; assert act(s, "mage").ability == "arcane_volley"
+def test_mage_firebolts_only_when_she_can_expect_to_finish_it():
+    s = state(); quiet_volley(s); m = s.heroes["mage"]              # at (1, 5)
+    w = enemy(s, "wolf", (10, 5))                                   # 9 away: its move 7 plus 1 is 8
+    a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "wolf1")
+    w.pos = (9, 5)                                                  # 8 away: it could be next to her
+    assert act(s, "mage").ability == "arcane_volley"
+    add_stack(w, "taunt", 1)                                        # it has to go for the Guardian
+    assert act(s, "mage").ability == "firebolt"
+    del w.stacks["taunt"]; add_stack(w, "stun", 1)                  # stunned: it is going nowhere
+    assert act(s, "mage").ability == "firebolt"
+    del w.stacks["stun"]; w.pos = (4, 6)                            # next to the Guardian at (3, 6): held
+    assert act(s, "mage").ability == "firebolt"
+    w.dead = True; enemy(s, "ogre", (12, 5)); enemy(s, "shaman", (6, 5))   # he hits from afar, never walks up
+    a = act(s, "mage"); assert (a.ability, a.target) == ("firebolt", "shaman1")
+    m.resource = 4 + 6 - 1                                          # a Firebolt and a whole Volley: 4 + 6
+    assert act(s, "mage").ability == "arcane_volley"
+
+def test_mage_lets_a_firebolt_go_to_disrupt_but_keeps_a_meteor_going():
+    s = state(); m = s.heroes["mage"]; enemy(s, "ogre", (11, 6))
+    enemy(s, "shaman", (9, 5)); s.round = 2; announce(s)            # a mend to break
+    m.cast = Cast("firebolt", "ogre1", None, 1, 0, False)           # in the middle of a Firebolt
+    a = act(s, "mage"); assert (a.ability, a.target) == ("disrupt", "shaman1")
+    m.cast = Cast("meteor", None, (11, 6), 1, 0, False)             # in the middle of a Meteor
+    assert act(s, "mage") == Action("continue")
+    m.cast = Cast("firebolt", "ogre1", None, 1, 0, False); add_stack(m, "cd:disrupt", 2)
+    assert act(s, "mage") == Action("continue")                     # nothing needs her: it goes on
 
 def test_mage_uses_frost_nova_on_an_add_and_blinks_away_from_a_boss_or_a_rooted_add():
     s = state(party=("mage",)); m = s.heroes["mage"]; m.pos = (5, 5)
@@ -717,7 +742,7 @@ def test_after_the_opening_round_1_is_a_sap():
     a = act(s, "rogue"); assert (a.ability, a.target) == ("sap", "brute1")
 
 def test_nobody_hits_a_sapped_or_sheeped_enemy_while_anything_else_is_left():
-    s = state(); quiet_volley(s)
+    s = state(); quiet_volley(s); s.heroes["mage"].resource = 9   # no mana to spare for a Firebolt
     b = enemy(s, "brute", (4, 7)); add_stack(b, "sap", 20)          # next to the Guardian at (3, 6)
     w = enemy(s, "wolf", (10, 9)); add_stack(w, "stun", 1)         # 9 from the Mage at (1, 5)
     assert act(s, "guardian").kind == "none"                        # nothing awake next to him
@@ -923,7 +948,9 @@ def test_mage_ice_blocks_when_low_with_the_boss_on_her_and_no_way_out():
     assert act(s, "mage") == Action("ability", "ice_block")
     m.resource = 30; stun_hero(s, m, 1)                             # stunned: no Blink
     assert act(s, "mage") == Action("ability", "ice_block")
-    del m.stacks["stun"]; m.cast = Cast("firebolt", "ogre1", None, 1, 0, False)   # in the middle of a cast
+    del m.stacks["stun"]; m.cast = Cast("firebolt", "ogre1", None, 1, 0, False)   # in the middle of a Firebolt
+    assert act(s, "mage").ability == "blink"                        # she lets it go and Blinks
+    m.cast = Cast("meteor", None, (8, 5), 1, 0, False)              # in the middle of a Meteor: she keeps it
     assert act(s, "mage") == Action("ability", "ice_block")
     add_stack(o, "taunt", 2)                                        # it is on the Guardian now
     assert act(s, "mage") != Action("ability", "ice_block")

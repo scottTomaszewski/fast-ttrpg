@@ -208,10 +208,10 @@ loud = false           # the everyday spell: Loud on every hit would keep pullin
 
 [abilities.firebolt]
 hero = "mage"
-cost = 4
-cast = 1
+cost = 9               # a whole Volley's damage, one act step sooner, for 3 more mana
+cast = 2               # the owner's (2026-11-27): all or nothing, with a turn in the middle
 range = 10
-dice = [4, 6]
+dice = [6, 6]
 
 [abilities.meteor]
 hero = "mage"

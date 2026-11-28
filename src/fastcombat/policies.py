@@ -98,7 +98,7 @@ SHOUT_ENEMIES = 2  # Guardian: Challenging Shout when this many loose adds near 
 # loses a card at the end of the GM turn, after it attacks, so with 1 card it still
 # attacks him in the coming GM turn...
 SLAM_TAUNT_CARDS = 1
-SLAM_ALLIES_ABOVE = 0.75  # ...and every ally is above 75% HP
+SLAM_ALLIES_ABOVE = 0.7  # ...and every ally is above 70% HP
 SWIFTMEND_AT = 0.35  # Druid: Swiftmend an ally at 35% HP or less
 WILD_GROWTH_AT = 0.70  # Druid: allies at 70% HP or less count for Wild Growth
 WILD_GROWTH_ALLIES = 2  # Druid: Wild Growth when it covers this many of them
@@ -245,7 +245,7 @@ class GuardianPolicy(_ClassPolicy):
     10. Nothing needs me: the boss has a Taunt card (or there is no boss),
         so it will still attack me in the coming GM turn (a boss loses its
         card at the end of the GM turn, after it attacks); every ally (not
-        a Guardian) is above 75% HP; and no add is loose. Then Shield Slam
+        a Guardian) is above 70% HP; and no add is loose. Then Shield Slam
         instead of an auto-attack: the boss if it is next to me, else the
         lowest-HP enemy next to me that is not fodder and not controlled.
         It is free, gives grit and has a cooldown, so it is the filler for
@@ -436,8 +436,9 @@ class RoguePolicy(_ClassPolicy):
        next to me: Vanish. (A goblin pulled onto me is not worth it.)
     5. Hidden: Backstab the focus.
     6. Full combo points, and an add next to me that is not fodder and not
-       controlled is going for someone who is not a Guardian: Kidney Shot
-       (the longer stun).
+       controlled is going for someone (the Guardian too): Kidney Shot (the
+       longer stun). A stunned add hits nobody for two GM turns. The boss
+       cannot be stunned, so it is the one that gets my Eviscerates.
     7. An add next to me that is not fodder and not controlled is going for
        a squishy hero at half HP or less: Cheap Shot.
     8. Full combo points: Eviscerate an enemy next to me that is not
@@ -569,12 +570,10 @@ class RoguePolicy(_ClassPolicy):
             if e.spec.tier not in ("boss", "fodder") and not e.controlled
         ]
 
-        # 6. Full combo points, and an add next to me is after someone who is
-        # not a Guardian: Kidney Shot.
+        # 6. Full combo points, and an add next to me is attacking someone:
+        # Kidney Shot.
         if full:
-            hunter = _first(
-                e for e in near if _target_class(state, e) not in (None, "guardian")
-            )
+            hunter = _first(e for e in near if _target_class(state, e) is not None)
             if hunter is not None:
                 if action := _ability(state, rogue, "kidney_shot", hunter.id):
                     return action
@@ -812,10 +811,14 @@ class MagePolicy(_ClassPolicy):
     or more from every enemy is just as good as another. While casting (not
     channelling), or in Evocation, stay still unless standing in danger.
 
-    Arcane Volley is her everyday damage spell; Firebolt is for a single
-    big hit that is worth a round of casting. "I have the mana" means she
-    can pay for all of the spell (every hit of Volley). Without it she is
-    saving mana: she auto-attacks, and each hit gives some back.
+    Arcane Volley is her everyday damage spell. Firebolt does as much as a
+    whole Volley, one act step sooner, for more mana, but it is all or
+    nothing: it takes this act step and the next, and if she does anything
+    else in the next one, it is gone and does nothing. So she starts one
+    only when she has mana to spare and nothing is likely to need her. "I
+    have the mana" means she can pay for all of the spell (every hit of
+    Volley). Without it she is saving mana: she auto-attacks, and each hit
+    gives some back.
 
     1. Ice Block, when (she may do this even while stunned):
        a. an enemy's announced cast lands this GM turn and hits me (a heavy
@@ -827,12 +830,14 @@ class MagePolicy(_ClassPolicy):
           me (it went for me on its last turn and has no Taunt cards, and
           is not controlled), and rule 4 will not take me out of its reach:
           I cannot Blink to a square it cannot reach this GM turn (stunned,
-          in the middle of a cast, no mana or no such square), or rule 4
+          in the middle of a Meteor, no mana or no such square), or rule 4
           would Frost Nova first (an add next to me that is not rooted). A
           rooted enemy next to me still hits me, so Frost Nova is never
           enough against one that is already next to me.
     2. Haul up.
-    3. In the middle of a cast (not a channel): continue.
+    3. In the middle of a cast that is not a Firebolt (a Meteor): continue.
+       (A Firebolt I let go if rule 4 or 5 needs me; else rule 6 keeps it
+       going.)
     4. An enemy that is not controlled is next to me:
        a. one of them is an add that is not rooted: Frost Nova (it cannot
           follow me when I walk away);
@@ -842,11 +847,11 @@ class MagePolicy(_ClassPolicy):
     5. An enemy in range has an announced cast that is not answered, and is
        not controlled: Disrupt, even in the middle of a channel. A mend
        first (it undoes our damage), then by id.
-    6. In the middle of a channel: continue, unless its enemy is sapped or
-       sheeped now (the next hit would wake it) and some other enemy is
-       left to hit: then the channel ends, and I read on. When every enemy
-       left is asleep, I keep channelling. (Evocation has no enemy: I keep
-       channelling it.)
+    6. In the middle of a Firebolt or a channel: continue, unless its enemy
+       is sapped or sheeped now (the hit would wake it) and some other enemy
+       is left to hit: then I let it go, and read on. When every enemy left
+       is asleep, I keep going. (Evocation has no enemy: I keep channelling
+       it.)
     7. No enemy is a sheep, no hero is in the middle of casting Polymorph
        (another Mage's sheep is on its way), and at least two enemies are
        alive that are not controlled, not a boss and not fodder: Polymorph
@@ -876,10 +881,12 @@ class MagePolicy(_ClassPolicy):
         coming down on my square, no announced cast in my Disrupt range is
         waiting for an interrupt, and the boss has Taunt cards (or there is
         no boss): Evocation.
-    11. The focus is an add whose HP is more than one Volley hit (on average)
-        and no more than one Firebolt (on average), and I have the mana:
-        Firebolt it. One big hit finishes it in one of my turns, where Volley
-        would need two.
+    11. I can expect to finish a Firebolt: I can pay for it and still have
+        a whole Volley's mana after it, and no enemy could walk up next to
+        me before my next act step (one that is not controlled, not held by
+        the Guardian, has no Taunt cards, attacks next to it, and is within
+        its move plus 1 of me). Then Firebolt the focus, the boss too. (Rule
+        5 comes first, so no cast that needs my Disrupt is waiting.)
     12. Arcane Volley the focus, if I have the mana. If Volley is Loud, only
         on a focus with three or more Taunt cards: on anything else, Loud
         would pull it off the Guardian, or strip his Taunt.
@@ -922,8 +929,8 @@ class MagePolicy(_ClassPolicy):
         if action := _haul_up(state, mage):
             return action
 
-        # 3. In the middle of a cast (not a channel): continue.
-        if _mid_cast(mage):
+        # 3. In the middle of a cast that is not a Firebolt (a Meteor): continue.
+        if _keeps_casting(mage):
             return Action("continue")
 
         # 4. An enemy is next to me: Frost Nova, else Blink, else Frost Nova.
@@ -947,8 +954,8 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "disrupt", casting.id):
                 return action
 
-        # 6. In the middle of a channel: continue, unless its enemy is asleep now
-        # and there is something else to hit.
+        # 6. In the middle of a Firebolt or a channel: continue, unless its enemy
+        # is asleep now and there is something else to hit.
         if mage.cast is not None:
             target = state.enemies.get(mage.cast.target) if mage.cast.target else None
             if target is None or not _asleep(target) or target in _to_hit(state):
@@ -995,15 +1002,9 @@ class MagePolicy(_ClassPolicy):
             if action := _ability(state, mage, "evocation"):
                 return action
 
-        # 11. An add one Firebolt would finish, and Volley would need two hits:
-        # Firebolt.
-        volley, firebolt = abilities["arcane_volley"], abilities["firebolt"]
-        if (
-            focus is not None
-            and focus.spec.tier != "boss"
-            and _average(volley) < focus.hp <= _average(firebolt)
-            and affords("firebolt")
-        ):
+        # 11. A Firebolt I can expect to finish, with mana to spare: Firebolt.
+        volley = abilities["arcane_volley"]
+        if focus is not None and _firebolt_finishes(state, mage):
             if action := _ability(state, mage, "firebolt", focus.id):
                 return action
 
@@ -1205,9 +1206,11 @@ def _stomp_disrupter(state: FightState) -> Hero | None:
     one counts only if they can Disrupt the boss from where they stand now
     (it is off cooldown and in their reach) and their list will get to that
     rule this turn: they are not stunned or in an Ice Block and have nobody
-    to haul up; the Mage is also not in the middle of a cast, has no enemy
-    next to her (her rule 4 would come first), and has no other cast to
-    Disrupt (a mend comes first for her). The Druid's list has no Disrupt.
+    to haul up; the Mage is also not in the middle of a cast she keeps
+    going (a Meteor; a Firebolt she lets go) and has no enemy next to her
+    (her rule 4 would come first). And their Disrupt rule must go for the
+    boss (`_disrupt_pick`), not for another enemy's cast first. The Druid's
+    list has no Disrupt.
     """
     stomp = _stomp_landing(state)
     boss = _boss(state)
@@ -1224,7 +1227,7 @@ def _stomp_disrupter(state: FightState) -> Hero | None:
         if _haul_up(state, hero) is not None:
             continue
         if hero.cls == "mage":
-            if _mid_cast(hero) or any(not e.controlled for e in _enemies_next_to(state, hero)):
+            if _keeps_casting(hero) or any(not e.controlled for e in _enemies_next_to(state, hero)):
                 continue
         # Their Disrupt rule goes for one cast: it has to be this one.
         if _disrupt_pick(state, hero) is not boss:
@@ -1442,12 +1445,48 @@ def _ice_block_now(state: FightState, mage: Hero) -> bool:
     return bool(big) and not _blinks_away(state, mage)
 
 
+def _firebolt_finishes(state: FightState, mage: Hero) -> bool:
+    """Mage rule 11: can she expect to finish a Firebolt?
+
+    It takes this act step and the next, and anything else she does in the
+    next one throws it away. So: she can pay for it and still have a whole
+    Arcane Volley's mana after it, and no enemy could be next to her when
+    her next act step comes (one that walks up to her would make her Frost
+    Nova or Blink, or Ice Block). An enemy could be next to her when it is
+    not stunned, sapped or sheeped, is not held by the Guardian, has no
+    Taunt cards, attacks next to it (the shaman hits from afar and does not
+    come close), and stands within its move plus 1 of her (a rooted one:
+    within 1). Her rule 5 comes before this one, so no cast that needs her
+    Disrupt is waiting now.
+    """
+    abilities = state.numbers.abilities
+    volley = abilities["arcane_volley"]
+    if mage.resource < abilities["firebolt"].cost + volley.cost * volley.hits:
+        return False
+    for enemy in state.living_enemies():
+        if enemy.controlled or held(state, enemy) or "taunt" in enemy.stacks:
+            continue
+        if enemy.spec.range > 1:
+            continue
+        move = 0 if "rooted" in enemy.stacks else enemy.spec.move
+        if distance(enemy.pos, mage.pos) <= move + 1:
+            return False
+    return True
+
+
+def _keeps_casting(mage: Hero) -> bool:
+    """True while the Mage is in the middle of a cast her rule 3 keeps going:
+    any cast but a Firebolt (Meteor). A Firebolt she lets go when her rule
+    4 or 5 needs her."""
+    return _mid_cast(mage) and mage.cast.ability != "firebolt"
+
+
 def _blinks_away(state: FightState, mage: Hero) -> bool:
     """True when the Mage's rule 4 will Blink her out of reach this turn:
-    she can act (not stunned, not in the middle of a cast), no add next to
+    she can act (not stunned, not in the middle of a Meteor), no add next to
     her makes her Frost Nova first, and Blink can take her to a square none
     of the enemies next to her can reach this GM turn."""
-    if mage.stunned or _mid_cast(mage):
+    if mage.stunned or _keeps_casting(mage):
         return False
     threats = [e for e in _enemies_next_to(state, mage) if not e.controlled]
     if any(e.spec.tier != "boss" and "rooted" not in e.stacks for e in threats):

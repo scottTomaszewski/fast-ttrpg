@@ -30,9 +30,9 @@ freeze herself in a block of ice, and call her mana back.
 
 ### Firebolt
 
-- 4 mana · Cast, 1 round · range
+- 9 mana · Cast, 2 rounds · range
   10
-- When it lands, hit one enemy for **4d6**.
+- When it lands, hit one enemy for **6d6**.
 
 ### Meteor
 

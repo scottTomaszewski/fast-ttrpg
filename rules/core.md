@@ -102,9 +102,9 @@ in the fight. The Guardian still has 2 Rejuvenation heal cards.
   than 30), and the Rogue 3 energy
   (never more than 10). The Guardian's grit does not come
   back this way.
-- Casts: the Mage's Firebolt lands. She rolls 4d6
+- Casts: the Mage's Firebolt lands. She rolls 6d6
   and gets 15, so the Ogre loses 15 HP. She pays the
-  4 mana for it now.
+  9 mana for it now.
 
 **Move.** Everyone at once.
 
