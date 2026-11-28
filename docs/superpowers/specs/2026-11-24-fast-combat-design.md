@@ -111,7 +111,8 @@ her opening (see the Rogue).
 - A hero can cancel their own cast or channel in any act step and do
   something else that turn instead. **(call)** The cost is paid when a cast
   lands (per hit for a channel), so a cancelled or broken cast loses only
-  the time.
+  the time. A cast whose target dies before it lands does nothing, and
+  costs nothing too.
 - Enemies get the GM turns in between to stop a cast or a channel.
 - **(call)** A hero's cast is broken by a stun, by forced movement, or by an
   enemy ability that says it interrupts. Plain damage does not break it.
@@ -120,9 +121,10 @@ her opening (see the Rogue).
 
 - **Mana:** pool of 30, +1 per round. (Mage.)
 - **Energy:** pool of 10, +3 per round. (Rogue, Druid.)
-- **Grit (call):** the Guardian starts at 0 and gains 1 each time an enemy
-  attacks them, up to 10. **Changed (owner, 2026-11-27):** he starts with 4
-  grit, enough for two Taunts, so he can hold the boss from round 1. With
+- **Grit:** the Guardian gains grit each time an enemy attacks him, up to
+  10. It was proposed as starting at 0 with 1 for each attack. **The
+  owner's decision (2026-11-27):** he starts with 4 grit, enough for two
+  Taunts, so he can hold the boss from round 1. With
   none, nothing hit him early and he could never pay to Taunt (tuning log,
   "D4"). The grit for each attack is now a game number too (2 since D4). If the owner prefers only two resource types, the
   Guardian becomes an energy class.
@@ -238,7 +240,8 @@ Numbers are deliberately missing here. See "Numbers".
    bigger than his auto-attack, on a cooldown, that gives grit (in WoW it
    builds the tank's resource). It is his filler for when nothing needs
    him: "Shield Slam should only fit in when everything is going super
-   well." The owner's target: 2 to 3 uses a fight.
+   well." The owner's target: 0.5 to 1.5 uses a fight (it was 2 to 3;
+   the owner lowered it on 2026-11-27).
 
 ### Rogue. d6. Energy and combo points.
 
@@ -251,7 +254,8 @@ owner on 2026-11-27, see the tuning log, "D4").
 3. **Kidney Shot:** finisher. Spend combo points to stun; 2 rounds at full.
 4. **Cheap Shot:** small stun. Instant, low energy, 1 round.
 5. **Sap:** takes one enemy out for most of the fight (20 cards: the owner
-   asked to try 10, 15 or 20, and the simulator picked 20 on 2026-11-27); breaks on
+   asked to try 10, 15 or 20, and the simulator picked 20 on 2026-11-27;
+   the owner accepts 20 until it is tried at the table); breaks on
    damage. Only from hiding (start of a fight, or right after Vanish), and
    next to the enemy. It does not need Shadowstep.
 6. **Shadowstep:** appear next to an enemy within range. Does not end hiding.
@@ -302,10 +306,14 @@ flash bang and so on) to keep the class simple.
    the third hit to kick off another, more urgent spell or interrupt.
    Firebolt is more all-or-nothing. If the mage needs to interrupt in the
    middle of a Firebolt cast, they lose the entire cast with no damage
-   dealt." So a whole Volley does about as much damage for its mana as a
-   Firebolt does, and its edge is that she can move, and can stop part-way
-   and keep the hits that already landed.
-2. **Firebolt:** 1-round cast, big single-target hit.
+   dealt." Its edge is that she can move, and can stop part-way and keep
+   the hits that already landed.
+2. **Firebolt:** 2-round cast (the owner's decision, 2026-11-27; it was 1
+   round), big single-target hit. It is all or nothing: the cast takes the
+   act step she starts it in and her next one, and anything else she does
+   in that next one (Disrupt, Blink, Ice Block...) throws it away with no
+   damage. So a Firebolt does as much as a whole Volley, one act step
+   sooner, for more mana (tuning log, "D4c").
 3. **Meteor:** 2-round cast. The area is marked when you start. Biggest
    damage in the game. Hits allies still standing there.
 4. **Frost Nova:** instant. Enemies next to you cannot move for 2 rounds.
@@ -330,6 +338,15 @@ skipped for now: "I don't want to overwhelm the player too much."
 **How many buttons (owner's rule, 2026-11-27).** No class has more than 1.5
 times as many buttons as another. The Mage has 8 (fine, the owner said);
 the others have 7. Disrupt, which everyone has, is not counted.
+
+**One of each is not the game (owner, 2026-11-27).** "Having one of each
+of these classes is not required. I plan on making many more classes. I
+don't think we can really weigh one class ability against another class
+ability." So a class's use targets are met with that class's own numbers
+and play. The fight's numbers move only for targets about the whole fight
+(wins, length, danger), never to trade one class's button against
+another's. Where a class's target cannot be met in the one test fight, it
+is a property of that fight and party, not of the class.
 
 ### Shared
 
@@ -358,6 +375,15 @@ Tuning targets for the test fight, with heroes played sensibly:
 **All numbers live in one data file.** The simulator reads it, and the class
 sheets and cards are made from it, so a tuning change cannot leave the
 printed rules out of step. **(call)**
+
+## An idea, not planned: reactions
+
+The owner, 2026-11-27: "I don't think we have reactions and I'm a bit
+concerned about how slow they make the game, but if we add them, Ice Block
+may fit in better. Generally, abilities that happen outside of Global
+Cooldown in MMOs are likely reactions." Today every button takes the
+hero's one action for the turn. If reactions ever come in, the candidates
+are Ice Block, interrupts like Disrupt, and maybe Last Stand and Intercede.
 
 ## Party size
 

@@ -28,6 +28,8 @@ work stands right now), `docs/superpowers/specs/2026-11-24-fast-combat-design.md
 - After changing a number, run `uv run fastcombat rules` (the rules pages are made from the
   numbers; a test fails if they are stale).
 - Heroes act in name order (Druid, Guardian, Mage, Rogue). Renaming a hero changes results.
+- Never trade one class's use band against another's (owner): reach a class's bands with its own
+  numbers and play; move fight numbers only for wins, length and danger. See the tuning log, "D4c".
 
 ## Commands
     uv run pytest -q -W error          # all quick tests

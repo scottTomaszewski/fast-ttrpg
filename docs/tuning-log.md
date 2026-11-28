@@ -548,7 +548,8 @@ fights: 15 cards 74.8% wins, 44.8% in 18 to 22; 20 cards 77.2%, 46.9%.
 **Picked: 20 cards.** It wins the most, has the best length, and keeps
 the sapped elite out for 19 rounds a fight on the mean: the whole fight,
 as the owner wanted. A third of the time the Sap is still on when every
-other enemy is dead, and then the party wakes it and kills it.
+other enemy is dead, and then the party wakes it and kills it. The owner
+accepts 20 cards until it has been tried at the table (2026-11-27).
 
 ### The Polymorph length (Sap at 20, 2000 fights)
 
@@ -889,8 +890,9 @@ met".
 The owner looked at D4 and decided six things. A review of D4 also found
 numbers that were tuned to pass a check rather than to play well. This
 step applies the decisions and undoes those numbers. Tuning runs used
-seeds below 100000 (2000 fights from `--seed 0` unless it says so); the
-confirm runs are under "Final".
+seeds below 100000 (2000 fights from `--seed 0` unless it says so). (The
+"Final" section now shows D4c. D4b's confirm runs: everything passed but
+Shield Slam, 0.49, 0.53 and 0.49, and Kidney Shot, 0.53, 0.52 and 0.49.)
 
 ### The owner's decisions (2026-11-27)
 
@@ -938,6 +940,9 @@ Does the Mage really use Volley's edge? Measured at the final numbers
   the hits that landed.
 - Firebolt, for comparison: 0.67 started, 0.65 landed. The 0.025 that did
   not (a stun or going down in the GM turn between) did no damage at all.
+  (A Firebolt whose target died before it landed did nothing either; those
+  were counted as landed here. With a 2-round cast, D4c, they are about
+  0.06 a fight.)
 
 So no policy change was needed. Her rules 1, 2, 4 and 5 (Ice Block, haul
 up, Frost Nova or Blink, Disrupt) come before rule 6 (keep channelling),
@@ -948,7 +953,8 @@ One thing the owner should know: in the simulator a Firebolt has no turn
 "in the middle". Its cast is 1 round: she starts it in the act step and it
 lands at the top of her next party turn, before she moves. So she never
 has to choose between a Firebolt and a Disrupt mid-cast; only a stun or
-going down in between can lose it. Per act step a Firebolt does twice what
+going down in between can lose it (or its target dying first, which
+wastes it too). Per act step a Firebolt does twice what
 a Volley does (14 against 7). The Mage still Volleys by default because
 her rules say so. See "Needs a decision", item 17.
 
@@ -996,8 +1002,10 @@ Disrupt 2.20 → 2.14 a fight. Noise.
 
 ### Shield Slam and Kidney Shot pull against each other
 
-After the changes above, these two were the thin ones, and every number
-that moved one moved the other the wrong way. Shield Slam needs every ally
+After the changes above, these two were the thin ones, and no number
+tried got both over the line without breaking another check (a 2d4
+boulder with the ogre at +10 got both over, but then Intercede or Vanish
+failed). Shield Slam needs every ally
 above 75% HP and no add loose. Kidney Shot needs full combo points and an
 add next to the Rogue going for someone who is not the Guardian: about half
 are on the brute when it wakes late in a long fight, half on a wolf (0.27
@@ -1038,6 +1046,180 @@ Backstab 5 and Blink 6; most also with Shout 4 and Ice Block at half HP):
 - Rogue HP 32 (with a 2d4 boulder): Vanish 0.38, Kidney Shot 0.41.
 - Shield Slam cooldown 1, only to see if the cooldown holds it back: 0.57
   (from 0.50). Not a candidate: a free button needs some limit.
+
+## D4c: a 2-round Firebolt, 2026-11-27
+
+The owner made Firebolt a 2-round cast and set a principle for tuning
+classes. This step applies both, retunes, and brings the rules pages up to
+date. Tuning runs used seeds below 100000 (2000 fights from `--seed 0`
+unless it says so); the confirm runs are under "Final".
+
+### The owner's decisions (2026-11-27)
+
+1. **Firebolt is a 2-round cast** (`cast = 2`). The owner: "The advantage
+   of Arcane Volley is channelling ... it can be partially used. A mage can
+   let the spell hit twice and then cancel the cast ... to kick off
+   another, more urgent spell or interrupt. Firebolt is more
+   all-or-nothing. If the mage needs to interrupt in the middle of a
+   Firebolt cast, they lose the entire cast with no damage dealt." With a
+   1-round cast there was no middle. Now the cast takes her next act step
+   too, and anything else she does then throws it away.
+2. **Evocation's band, 0.3 to 2, is the owner's** (it was only proposed).
+3. **One of each is not the game.** The owner, asked about Shield Slam
+   (Guardian) and Kidney Shot (Rogue) pulling against each other: "Having
+   one of each of these classes is not required. I plan on making many
+   more classes. I don't think we can really weigh one class ability
+   against another class ability." So, from now on:
+   - A class's use bands are reached with that class's own numbers and
+     play (its costs, dice, and the thresholds in its own rules).
+   - Fight numbers (the boss's HP, the adds, the boulder...) move only for
+     targets about the whole fight: wins, length, danger. Never to trade
+     one class's band against another's.
+   - Where a class's band still cannot be met in this one fight with that
+     class's own levers, it goes under "Not met", as a property of this
+     test fight and party, not of the class. The bands are not changed.
+4. **20 Sap cards are accepted** until a table test.
+5. **Reactions** are an idea, not planned ("Needs a decision", item 19).
+
+### What the 2-round cast did on its own
+
+Firebolt per fight, at the D4b numbers and play (the Mage's old rule 11:
+Firebolt an add one Firebolt would finish):
+
+| | wins | 18 to 22 rounds | started | landed | target died first | stepped out of a blast | she went down | Volley |
+|---|---|---|---|---|---|---|---|---|
+| 1-round (D4b) | 84.7% | 67.2% | 0.67 | 0.60 | 0.05 | 0 | 0.02 | 4.37 |
+| 2-round, same play | 75.4% | 58.5% | 0.67 | 0.39 | 0.13 | 0.08 | 0.04 | 3.96 |
+| no Firebolt at all | 77.4% | 59.6% | 0 | 0 | 0 | 0 | 0 | 4.45 |
+
+So the 1-round Firebolt was worth about 7 points of wins: 14 damage in
+one act step, twice what a Volley does in one. The 2-round one on the old
+rule was worse than none: the adds it went for were low, so another hero
+often killed them first, and 0.30 times a fight she kept casting with an
+enemy next to her (her rule 3 came before Frost Nova and Blink).
+
+### Firebolt's numbers: a whole Volley, one act step sooner, for more mana
+
+| | dice | damage on the mean | mana | damage for each mana | act steps | damage for each act step |
+|---|---|---|---|---|---|---|
+| Arcane Volley | 2d6 a hit, 3 hits | 21 | 6 | 3.5 | 3 | 7 |
+| Firebolt, D4b | 4d6 | 14 | 4 | 3.5 | 1 | 14 |
+| **Firebolt, now** | **6d6** | **21** | **9** | **2.3** | **2** | **10.5** |
+
+Now the trade is real both ways. Firebolt is the quicker damage, for more
+mana, and all or nothing. Volley is cheaper, slower, lets her move, and
+can be stopped part-way with the hits kept.
+
+| Firebolt (everything else at the final numbers) | wins | 18 to 22 rounds | Firebolt | Volley |
+|---|---|---|---|---|
+| **6d6, 9 mana (kept)** | **87.1%** | **68.3%** | **1.26** | **4.22** |
+| 6d6, 8 mana | 87.5% | 66.7% | 1.51 | 4.01 (just on the line; 3.99 on seeds 20000 to 21999) |
+| 6d6, 4 mana | 80.0% | 65.8% | 3.14 | 2.02 (fails) |
+| 4d6, 9 mana | 82.8% | 63.5% | 1.23 | 4.29 |
+| 7d6, 9 mana | 88.8% | 67.3% | 1.27 | 4.15 |
+
+### How the Mage plays it (`policies.py`, her rules 3, 6 and 11)
+
+- **Rule 11, the new Firebolt rule.** She starts a Firebolt only when she
+  can expect to finish it: she can pay for it and still have a whole
+  Volley's mana after it (9 + 6 = 15 today), and no enemy could walk up
+  next to her before her next act step (one that is not stunned, sapped
+  or sheeped, not held by the Guardian, has no Taunt cards, attacks next
+  to it, and stands within its move plus 1 of her). Then she Firebolts
+  her focus, the boss too. No new threshold: "a whole Volley" and "move
+  plus 1" come from the game files. Her rule 5 (Disrupt) comes first, so
+  no cast that needs her Disrupt is waiting when she starts one.
+- **Rules 3 and 6.** In the middle of a Firebolt her rules 4 (an enemy
+  next to her: Frost Nova or Blink) and 5 (Disrupt) come before keeping
+  it going, so she throws it away when she has to, as the owner
+  describes. A Meteor she still keeps going (rule 3, unchanged).
+
+What a Firebolt does now, per fight (final numbers): started 1.26, landed
+1.11. Thrown away: its target died first 0.06, she Disrupted instead 0.03,
+she went down 0.03, she stepped out of a blast 0.01, she Frost Novaed
+0.001. None of those cost her any mana.
+
+Each part taken back out, alone (final numbers):
+
+| Taken out | wins | 18 to 22 rounds | Firebolt | Volley | Notes |
+|---|---|---|---|---|---|
+| nothing (kept) | 87.1% | 68.3% | 1.26 | 4.22 | |
+| all of it: the old rule 11, and rule 3 keeps a Firebolt going | 70.7% | 56.9% | 1.23 | 3.20 | 0.57 times a fight she kept casting with an enemy next to her |
+| the "could an enemy walk up" check | 73.4% | 55.0% | 1.97 | 3.30 | 0.42 a fight thrown away for a Frost Nova, 0.29 lost to the target dying |
+| "a whole Volley's mana after it" (only its cost) | 79.2% | 62.2% | 3.05 | 1.99 | Volley fails |
+| letting a Firebolt go for rules 4 and 5 | 87.5% | 69.0% | 1.23 | 4.26 | noise; kept, because it is how the owner says a Firebolt plays |
+
+Tried and not kept:
+
+- No Firebolt at half HP or less: at 8 mana it cost about 3 points of
+  wins. The walk-up check already covers what would make her Ice Block or
+  Blink.
+- No Firebolt while a casting enemy is in her Disrupt range and nobody
+  else is next to it: no difference at all, to the last fight.
+- The old target rule (an add one Firebolt finishes) with the new checks:
+  at the D4b dice and cost, 0.11 Firebolts a fight, about half of them
+  wasted on an add that died first.
+- A Firebolt only on the boss: at 4 mana, Volley 3.2 to 3.3 a fight.
+- Letting a Meteor go for rules 4 and 5 too: no difference, and Meteor's
+  play was not part of this step.
+
+### Shield Slam and Kidney Shot, each with its own class's levers
+
+Under the owner's principle, Shield Slam is reached with the Guardian's own
+play and Kidney Shot with the Rogue's.
+
+**Shield Slam: every ally above 70% HP, not 75%** (`SLAM_ALLIES_ABOVE`, the
+Guardian's rule 10). It is still the "everything is going very well"
+filler: 70% is the Druid's own line for "hurt" (her Wild Growth counts
+allies at 70% or less, and she Regrowths at 60%), so an ally above it is
+one the Druid is not busy with.
+
+| Shield Slam when every ally is above | Shield Slam a fight | auto-attacks | wins |
+|---|---|---|---|
+| 75% (D4b) | 0.50 | 16.1% | 86.5% |
+| 72% | 0.74 | 15.6% | 87.0% |
+| **70% (kept)** | **0.82** | **15.4%** | **87.0%** |
+| 65% | 1.03 | 14.9% (fails) | 87.2% |
+| 60% | 1.33 | 14.2% (fails) | 87.6% |
+
+Each Slam takes an auto-attack's place, so the line cannot go much lower
+without the auto-attack share falling under 15%.
+
+**Kidney Shot: on an add attacking anyone** (the Rogue's rule 6). Before,
+only on an add going for someone who is not the Guardian. A stunned add
+hits nobody for two GM turns, the Guardian included, and the boss cannot be
+stunned, so the boss gets her Eviscerates.
+
+| Rogue rule 6, with full combo points | Kidney Shot | Eviscerate |
+|---|---|---|
+| an add going for someone who is not the Guardian (D4b) | 0.43 | 2.11 |
+| **an add attacking anyone (kept)** | **0.53** | **2.01** |
+| ... or an elite on anyone | 0.47 to 0.50 | |
+| ... an add on anyone at 80% HP or less | 0.50 to 0.52 | 2.0 |
+| ... an add on anyone at 60% HP or less | 0.48 to 0.50 | 2.1 |
+| ... but not one an Eviscerate would kill | 0.26 | 2.3 |
+
+(Some rows measured at a Firebolt of 8 mana, or on 2000 fights from seeds
+0, 20000 and 40000; the Rogue's numbers barely move with the Mage's.)
+
+Her own numbers did not help: Eviscerate at 2 energy (Eviscerate 1.98,
+auto-attacks 14.6%), Kidney Shot at 2 as well (the same), Backstab at 4
+(Eviscerate 1.96, auto-attacks 12.8%). The Rogue gets full combo points
+about 2.5 times a fight, and Kidney Shot and Eviscerate share them: their
+floors (0.5 and 2) add up to 2.5. So in this fight both sit on their lines
+whatever her rule says. That is a property of this test fight (how often
+she gets to 3 combo points), not of the Rogue.
+
+**No fight numbers changed.** With the new Firebolt, wins and length are in
+band at the D4b fight (ogre HP 130). Ogre HP 135 was tried for a lower win
+rate: 84.3% wins, but 63.5% in 18 to 22 rounds and auto-attacks at 15.1%.
+
+### The rules pages
+
+Every class's "How to play" tips were rewritten from the priority lists in
+`policies.py`, as advice for players. The Firebolt on the Mage's sheet says
+it is all or nothing. The core rules' example round and the cast timing use
+a 2-round Firebolt. See the handoff for the list.
 
 ## Needs a decision
 
@@ -1185,26 +1367,64 @@ to a rule or to how a hero plays, so it is for the owner to decide.
     kill it. That made a rare stalemate with the brute (D4, the brute's
     shield). The numbers end it today (the shield stops hits below 3,
     not 5); the rule could also skip Kidney Shot on the last enemy.
+    Since D4c she Kidney Shots an add attacking anyone, the Guardian too,
+    so this comes up a little more often; no fight ran out of rounds on
+    the confirm runs.
 15. (Settled 2026-11-27: the owner let the auto-attack floor go down to 15%.
     It is about 16% now, with honest Volley and Backstab numbers; D4b.)
-16. **Shield Slam and Kidney Shot cannot both clear their lines** (D4b).
-    Shield Slam needs every ally above 75% and no add loose; Kidney Shot
-    needs an add on someone who is not the Guardian. Every number that
-    raised one lowered the other, and both sit at 0.47 to 0.53 a fight,
-    against 0.5. Choices: a slightly lower floor for one of them (say 0.4),
-    or a Shield Slam rule that does not need every ally above 75% (say, the
-    allies the Druid is already healing count as fine). Both are the
-    owner's call.
-17. **Firebolt has no turn "in the middle"** (D4b). Its cast is 1 round: it
-    starts in the act step and lands at the top of the next party turn,
-    before the move step. So the owner's "interrupt in the middle of a
-    Firebolt cast" never comes up in the simulator; only a stun or going
-    down in the GM turn between can lose it (0.025 of 0.67 a fight). Per
-    act step a Firebolt does twice a Volley's damage (14 against 7); per
-    mana they are the same. The Mage Volleys by default only because her
-    rules say so. If the owner wants the trade to be real, a Firebolt cast
-    could take her next move step too, or Volley could cost less mana; cast
-    times are frozen for the tuner.
+16. (Settled 2026-11-27 by the owner's principle, D4c: one class's band is
+    never traded against another's. Shield Slam and Kidney Shot each got
+    there with their own class's play: the Guardian Shield Slams with every
+    ally above 70% HP, and the Rogue Kidney Shots an add attacking anyone.
+    See D4c.)
+17. (Settled 2026-11-27: the owner made Firebolt a 2-round cast, so it has
+    a turn in the middle, and the Mage throws it away if she has to do
+    something else then. See D4c.)
+18. **What the `needed:` check really asks.** Today's check is a man
+    down: it plays the fight with one hero left out, three heroes against
+    a fight built for four. That says little about whether a class is
+    required. The swapped parties below (four heroes, one class replaced by
+    a second copy of another) are what answer "is a healer (or a tank)
+    required". The owner said early on "I also don't want a healer to be 100% required",
+    and with more classes and parties coming, the owner may want a
+    different check (for example: a party missing any one role can still
+    win some fights). Nothing is changed; the check stays as it is.
+
+    A man down (the check, `check --n 3000 --seed 100000`, D4c numbers):
+
+    | Hero left out | wins without them |
+    |---|---|
+    | Guardian | 0.2% |
+    | Rogue | 0.1% |
+    | Druid | 0.4% |
+    | Mage | 0.0% |
+
+    Four heroes, with one class swapped for a second copy of another
+    (`run --n 1000 --seed 0 --party ...`, D4c numbers):
+
+    | Class taken out | Second Guardian | Second Rogue | Second Druid | Second Mage |
+    |---|---|---|---|---|
+    | Guardian | - | 15.9% (30.2%) | 74.5% (6.9%) | 84.9% (54.7%) |
+    | Rogue | 23.0% (54.5%) | - | 65.2% (3.5%) | 56.9% (52.9%) |
+    | Druid | 58.3% (24.1%) | 54.1% (22.1%) | - | 85.0% (47.1%) |
+    | Mage | 2.4% (54.6%) | 3.0% (35.3%) | 4.5% (53.4%) | - |
+
+    Wins, with the share of fights lasting 18 to 22 rounds in brackets. The
+    full party wins 87.9% on these seeds (68.0% in 18 to 22 rounds). So in
+    this fight no healer and no tank are needed: with a second Mage in
+    their place the party wins nearly as often as the full party (85%),
+    and fights run a little short (median 18 or 19 rounds). Two Druids win
+    too, but slowly (median 31 to 34 rounds). What this fight cannot do without is
+    the Mage: every party without one wins 5% or less. That is a property
+    of this one test fight (about half of all damage is hers, and Meteor is
+    the answer to the goblin wave), not of the Mage.
+19. **Reactions** (owner, 2026-11-27, an idea, not planned): "I don't think
+    we have reactions and I'm a bit concerned about how slow they make the
+    game, but if we add them, Ice Block may fit in better. Generally,
+    abilities that happen outside of Global Cooldown in MMOs are likely
+    reactions." Today every button takes the hero's one action. If
+    reactions came in, the candidates are Ice Block, interrupts like
+    Disrupt, and maybe Last Stand and Intercede. Nothing is built.
 
 ## Rules the simulator had to decide
 
@@ -1390,161 +1610,168 @@ The Rogue's opening (D3b), rules the owner left open:
 - The enemies' tally: a sapped, sheeped or stunned enemy "loses" each GM
   turn it spends with those cards (`rounds_out` in the summary).
 
-## Final (D4b, 2026-11-27)
+## Final (D4c, 2026-11-27)
 
-These are the numbers after D4b: the full kit, the D4 play fixes, the D4
-numbers with D4b's changes (Arcane Volley 2d6, Backstab 5, Blink 6,
-Challenging Shout radius 4, ogre HP 130), the Mage's Ice Block at half
-HP, the Stomp's Disrupter fix, the owner's bands for Shield Slam (0.5 to
-1.5) and Ice Block (0.1 to 1.5), and the auto-attack floor at 15%.
+These are the numbers after D4c: the D4b numbers and play, with Firebolt a
+2-round cast of 6d6 for 9 mana, the Mage's new Firebolt rule, the
+Guardian's Shield Slam at every ally above 70% HP, and the Rogue's Kidney
+Shot on an add attacking anyone. No fight number changed.
 
 Command: `uv run fastcombat check --n 3000 --seed 100000` (seeds never
 used while tuning). The simulator gives up after 60 rounds.
 
 ```
 Fights played:          3000
-Wins:                   85%
+Wins:                   86%
 Ran out of rounds:      0%
-Rounds:                 median 20, most between 18 and 26
-Lasted 18 to 22 rounds: 68%
-A hero in danger:       92% (down to 25% HP, or went down)
+Rounds:                 median 20, most between 17 and 25
+Lasted 18 to 22 rounds: 66%
+A hero in danger:       90% (down to 25% HP, or went down)
 Auto-attack damage:     16% of all damage
 
 hero        damage  healing  starved  up and full  went down  lowest HP
-guardian       10%       0%       2%          42%        52%         9%
-rogue          35%       0%      14%          32%        15%        51%
-druid           1%     100%       1%          33%        15%        46%
-mage           54%       0%       0%           0%        42%        16%
+guardian       11%       0%       2%          39%        54%         8%
+rogue          33%       0%      14%          38%        14%        52%
+druid           1%     100%       1%          38%        14%        48%
+mage           55%       0%       1%           0%        38%        19%
 
 Uses per fight (all heroes of a class together):
 guardian
-  taunt                4.4
+  taunt                4.3
   challenging_shout    0.6
-  intercede            1.4
+  intercede            1.1
   grip                 1.0
   shield_plant         1.5
   last_stand           0.8
-  shield_slam          0.5
+  shield_slam          0.8
 rogue
-  backstab             6.4
-  eviscerate           2.2
+  backstab             6.1
+  eviscerate           2.0
   kidney_shot          0.5
-  cheap_shot           0.5
+  cheap_shot           0.4
   sap                  1.0
-  shadowstep           1.1
+  shadowstep           1.2
   vanish               0.2
 druid
-  rejuvenation         4.5
-  regrowth             4.4
-  swiftmend            2.2
-  wild_growth          2.2
+  rejuvenation         4.4
+  regrowth             4.2
+  swiftmend            2.1
+  wild_growth          2.0
   cleanse              0.5
-  shadowmeld           0.9
+  shadowmeld           1.0
   nourish              3.5
 mage
-  arcane_volley        4.4
-  firebolt             0.7
-  meteor               1.9
-  frost_nova           0.4
+  arcane_volley        4.2
+  firebolt             1.3
+  meteor               1.4
+  frost_nova           0.3
   blink                0.2
-  polymorph            0.9
-  ice_block            0.2
-  evocation            0.5
+  polymorph            0.8
+  ice_block            0.1
+  evocation            0.3
 anyone
-  disrupt              2.1
+  disrupt              2.0
   haul_up              0.1
 
 Rogue opening (per fight, all Rogues together):
   sneak 0.00, shadowstep in 1.00, none 0.00
   stealth checks that worked: -
-  rounds an enemy spent sapped: 17.9 (still sapped at the end of 11% of fights)
-  rounds an enemy spent as a sheep: 9.8 (still a sheep at the end of 0% of fights)
+  rounds an enemy spent sapped: 17.8 (still sapped at the end of 11% of fights)
+  rounds an enemy spent as a sheep: 9.7 (still a sheep at the end of 0% of fights)
 
-PASS  length                 67.7% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
-PASS  win_rate               85.1%  (wanted: 70.0% to 90.0%)
+PASS  length                 66.4% of fights  (wanted: at least 60.0% last 18 to 22 rounds)
+PASS  win_rate               86.4%  (wanted: 70.0% to 90.0%)
 PASS  no_timeouts            0.0%  (wanted: none)
-PASS  danger                 91.9% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
-PASS  auto_share             16.2% of damage  (wanted: 15.0% to 50.0%)
-PASS  resource:guardian      starved 1.8% of rounds, ended up and full 42.4% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:rogue         starved 14.5% of rounds, ended up and full 31.5% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:druid         starved 1.4% of rounds, ended up and full 33.4% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  resource:mage          starved 0.4% of rounds, ended up and full 0.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
-PASS  needed:guardian        wins 85.1% with, 0.3% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:rogue           wins 85.1% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:druid           wins 85.1% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
-PASS  needed:mage            wins 85.1% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
-PASS  kit:guardian           wins 85.1% with the kit, 42.4% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:rogue              wins 85.1% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:druid              wins 85.1% with the kit, 19.1% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  kit:mage               wins 85.1% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
-PASS  taunt:boss             wins 85.1% with, 45.6% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
-PASS  use:taunt              4.40 per fight  (wanted: 3 to 10 per fight)
-PASS  use:challenging_shout  0.57 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:intercede          1.38 per fight  (wanted: 1 to 4 per fight)
-PASS  use:grip               1.02 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:shield_plant       1.50 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:last_stand         0.80 per fight  (wanted: 0.2 to 2 per fight)
-FAIL  use:shield_slam        0.49 per fight  (wanted: 0.5 to 1.5 per fight)
-PASS  use:backstab           6.35 per fight  (wanted: at least 4 per fight)
-PASS  use:eviscerate         2.18 per fight  (wanted: at least 2 per fight)
-PASS  use:kidney_shot        0.53 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:cheap_shot         0.49 per fight  (wanted: 0.3 to 3 per fight)
-PASS  use:sap                1.03 per fight  (wanted: 0.7 to 2 per fight)
-PASS  use:shadowstep         1.11 per fight  (wanted: 0.5 to 4 per fight)
+PASS  danger                 89.7% of fights  (wanted: at least 50.0% have a hero at 25.0% HP or down)
+PASS  auto_share             15.5% of damage  (wanted: 15.0% to 50.0%)
+PASS  resource:guardian      starved 1.9% of rounds, ended up and full 39.1% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:rogue         starved 14.1% of rounds, ended up and full 37.8% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:druid         starved 1.2% of rounds, ended up and full 37.7% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  resource:mage          starved 0.6% of rounds, ended up and full 0.0% of fights  (wanted: starved under 20.0%, ended up and full under 50.0%)
+PASS  needed:guardian        wins 86.4% with, 0.2% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:rogue           wins 86.4% with, 0.1% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:druid           wins 86.4% with, 0.4% without  (wanted: at least 20.0% fewer wins without them)
+PASS  needed:mage            wins 86.4% with, 0.0% without  (wanted: at least 20.0% fewer wins without them)
+PASS  kit:guardian           wins 86.4% with the kit, 43.6% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:rogue              wins 86.4% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:druid              wins 86.4% with the kit, 20.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  kit:mage               wins 86.4% with the kit, 0.0% on auto  (wanted: at least 10.0% fewer wins when they only auto-attack)
+PASS  taunt:boss             wins 86.4% with, 43.6% when the Guardian never Taunts the boss  (wanted: at least 10.0% fewer wins without Taunting the boss)
+PASS  use:taunt              4.29 per fight  (wanted: 3 to 10 per fight)
+PASS  use:challenging_shout  0.60 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:intercede          1.05 per fight  (wanted: 1 to 4 per fight)
+PASS  use:grip               1.01 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:shield_plant       1.51 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:last_stand         0.79 per fight  (wanted: 0.2 to 2 per fight)
+PASS  use:shield_slam        0.79 per fight  (wanted: 0.5 to 1.5 per fight)
+PASS  use:backstab           6.08 per fight  (wanted: at least 4 per fight)
+PASS  use:eviscerate         2.02 per fight  (wanted: at least 2 per fight)
+PASS  use:kidney_shot        0.54 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:cheap_shot         0.43 per fight  (wanted: 0.3 to 3 per fight)
+PASS  use:sap                1.04 per fight  (wanted: 0.7 to 2 per fight)
+PASS  use:shadowstep         1.23 per fight  (wanted: 0.5 to 4 per fight)
 PASS  use:vanish             0.24 per fight  (wanted: 0.2 to 2 per fight)
-PASS  use:rejuvenation       4.48 per fight  (wanted: at least 4 per fight)
-PASS  use:regrowth           4.40 per fight  (wanted: 1 to 6 per fight)
-PASS  use:swiftmend          2.21 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:wild_growth        2.24 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:rejuvenation       4.43 per fight  (wanted: at least 4 per fight)
+PASS  use:regrowth           4.20 per fight  (wanted: 1 to 6 per fight)
+PASS  use:swiftmend          2.10 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:wild_growth        2.03 per fight  (wanted: 0.5 to 4 per fight)
 PASS  use:cleanse            0.50 per fight  (wanted: 0.3 to 4 per fight)
-PASS  use:shadowmeld         0.85 per fight  (wanted: 0.1 to 2 per fight)
-PASS  use:nourish            3.51 per fight  (wanted: at least 2 per fight)
-PASS  use:arcane_volley      4.41 per fight  (wanted: at least 4 per fight)
-PASS  use:firebolt           0.71 per fight  (wanted: 0.5 to 4 per fight)
-PASS  use:meteor             1.86 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:frost_nova         0.38 per fight  (wanted: 0.2 to 3 per fight)
-PASS  use:blink              0.22 per fight  (wanted: 0.1 to 3 per fight)
-PASS  use:polymorph          0.86 per fight  (wanted: 0.5 to 3 per fight)
-PASS  use:ice_block          0.16 per fight  (wanted: 0.1 to 1.5 per fight)
-PASS  use:evocation          0.52 per fight  (wanted: 0.3 to 2 per fight)
-PASS  use:disrupt            2.11 per fight  (wanted: at least 1 per fight)
-PASS  use:haul_up            0.08 per fight  (wanted: at least 0 per fight)
+PASS  use:shadowmeld         0.96 per fight  (wanted: 0.1 to 2 per fight)
+PASS  use:nourish            3.53 per fight  (wanted: at least 2 per fight)
+PASS  use:arcane_volley      4.22 per fight  (wanted: at least 4 per fight)
+PASS  use:firebolt           1.27 per fight  (wanted: 0.5 to 4 per fight)
+PASS  use:meteor             1.42 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:frost_nova         0.27 per fight  (wanted: 0.2 to 3 per fight)
+PASS  use:blink              0.17 per fight  (wanted: 0.1 to 3 per fight)
+PASS  use:polymorph          0.85 per fight  (wanted: 0.5 to 3 per fight)
+PASS  use:ice_block          0.15 per fight  (wanted: 0.1 to 1.5 per fight)
+PASS  use:evocation          0.34 per fight  (wanted: 0.3 to 2 per fight)
+PASS  use:disrupt            2.03 per fight  (wanted: at least 1 per fight)
+PASS  use:haul_up            0.06 per fight  (wanted: at least 0 per fight)
 ```
 
-The other two confirm ranges (`check --n 1000`):
+Every check passes. The other two confirm ranges (`check --n 1000`):
 
-- `--seed 400000`: every check passes (wins 86.2%, length 66.9%, auto
-  share 16.4%, Shield Slam 0.53, Kidney Shot 0.52).
-- `--seed 700000`: two fail, `use:shield_slam` 0.49 and `use:kidney_shot`
-  0.49 (wins 85.1%, length 69.4%, auto share 16.4%).
+- `--seed 400000`: one fails, `use:kidney_shot` 0.48 (wins 86.4%, length
+  66.6%, auto share 15.5%, Shield Slam 0.81, Eviscerate 2.03).
+- `--seed 700000`: one fails, `use:kidney_shot` 0.49 (wins 85.4%, length
+  66.6%, auto share 15.3%, Shield Slam 0.80, Eviscerate 2.04).
 
-The pinned test seeds (`check --n 600 --seed 500000`): only Shield Slam
-fails (0.47), so the slow test stays xfail (strict).
+No fight ran out of rounds on any of the three.
+
+The pinned test seeds (`check --n 600 --seed 500000`): every check passes
+(Kidney Shot passes there; auto share is 15.0%, right on its line). So the
+slow targets test is no longer xfail.
 
 Things to keep an eye on (thin margins on the confirm runs):
 
-- Shield Slam 0.47 to 0.53 and Kidney Shot 0.49 to 0.53 (line 0.5): see
-  "Not met".
-- Challenging Shout 0.57 to 0.61 (line 0.5), Vanish 0.22 to 0.24 (0.2),
-  Eviscerate 2.13 to 2.18 (2), auto share 16.2% to 16.4% (15%), Ice Block
-  0.16 (0.1), Firebolt 0.67 to 0.71 (0.5).
-- The Mage does more than half of all damage (54%), and the Guardian goes
+- Kidney Shot 0.48 to 0.54 (line 0.5) and Eviscerate 2.02 to 2.04 (line 2):
+  they share the Rogue's full combo points; see "Not met".
+- Auto share 15.0% to 15.5% (line 15%): every Shield Slam takes an
+  auto-attack's place.
+- Evocation 0.34 (0.3), Ice Block 0.15 (0.1), Blink 0.17 (0.1), Frost Nova
+  0.27 (0.2), Vanish 0.24 to 0.26 (0.2), Challenging Shout 0.60 to 0.63
+  (0.5), Intercede 1.05 (1), Arcane Volley 4.19 to 4.25 (4).
+- The Mage does more than half of all damage (55%), and the Guardian goes
   down in about half the fights.
-- Taunting the boss is worth about 40 points of wins (85.1% against 45.6%).
+- Taunting the boss is worth about 43 points of wins (86.4% against 43.6%).
 
 ## Not met
 
-After D4b, on the three confirm ranges (`check --n 3000 --seed 100000`,
+After D4c, on the three confirm ranges (`check --n 3000 --seed 100000`,
 `--n 1000 --seed 400000`, `--n 1000 --seed 700000`):
 
-- **`use:shield_slam`: 0.49, 0.53 and 0.49 a fight, wanted 0.5 to 1.5.**
-  It fails on two of the three (and at 0.47 on the pinned test seeds).
-- **`use:kidney_shot`: 0.53, 0.52 and 0.49 a fight, wanted 0.5 to 3.** It
-  fails on one of the three.
+- **`use:kidney_shot`: 0.54, 0.48 and 0.49 a fight, wanted 0.5 to 3.** It
+  fails on two of the three.
 
-The two pull against each other: Shield Slam wants a calm fight with every
-ally above 75% HP and no add loose, Kidney Shot wants an add on someone who
-is not the Guardian (D4b, "Shield Slam and Kidney Shot pull against each
-other"). No number tried got both over 0.5 on every range. The checks are
-not loosened. The slow targets test stays xfail (strict) with this reason.
-See "Needs a decision", item 16.
+Under the owner's principle (D4c) only the Rogue's own numbers and play
+were used for it. The Rogue reaches full combo points about 2.5 times a
+fight in this fight, and Kidney Shot and Eviscerate share those moments;
+their floors (0.5 and 2) add up to 2.5. A wider Kidney Shot rule takes its
+uses from Eviscerate (D4c, "Shield Slam and Kidney Shot, each with its own class's levers"). So this is a
+property of this one test fight and party (how often the Rogue gets to 3
+combo points here), not of the Rogue. The band is not changed and the
+check is not loosened. The slow targets test passes on its own seeds, so
+it is not marked xfail; this entry is the record.
+
+Shield Slam, Not met after D4b, now passes on all three (0.79 to 0.81).

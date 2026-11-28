@@ -18,8 +18,26 @@ FAIL for each target:
 
     uv run fastcombat check --n 1000
 
+The checks about the whole fight:
+
+- `length`: at least 60% of fights last 18 to 22 rounds.
+- `win_rate`: the party wins 70% to 90% of fights.
+- `no_timeouts`: no fight runs out of rounds (the simulator stops at
+  round 60 and counts it as a loss).
+- `danger`: in at least half the fights some hero drops to 25% HP or goes
+  down.
+- `auto_share`: auto-attacks do 15% to 50% of all the heroes' damage.
+
+The tuning is confirmed on seeds never used while tuning:
+
+    uv run fastcombat check --n 3000 --seed 100000
+    uv run fastcombat check --n 1000 --seed 400000
+    uv run fastcombat check --n 1000 --seed 700000
+
 Two checks are there for each hero. `needed:` plays the fight without
-that hero, and wants at least 20 points fewer wins. `kit:` keeps the hero
+that hero, and wants at least 20 points fewer wins. That is a man down
+(three heroes in a fight made for four), not a party without that class;
+the tuning log, "Needs a decision", has both. `kit:` keeps the hero
 in the fight but has them only auto-attack (the `auto` policy), and wants
 at least 10 points fewer wins. Taking a hero out also takes away their HP,
 so a hero whose abilities make the party weaker could still pass
@@ -66,6 +84,14 @@ usage file again).
 `uv run fastcombat run --help` lists every option: which fight, which
 party (`--party guardian,rogue,rogue`), the first seed, and `--json PATH` to
 save the results to a file.
+
+## Tests
+
+    uv run pytest -q -W error     # the quick tests, a few seconds
+    uv run pytest -m slow -v      # plays `check --n 600 --seed 500000`, about a minute
+
+The tests read a frozen copy of the numbers in `tests/data/`, so retuning
+`game/` does not change them. The slow test reads the real numbers.
 
 ## The rules
 
