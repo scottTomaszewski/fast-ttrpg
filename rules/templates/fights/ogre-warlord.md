@@ -18,7 +18,7 @@ walls. The heroes start on the left, the enemies on the right.
 | Enemy | How many | HP | Attack | Reach | Move | Goes for |
 |---|---|---|---|---|---|---|
 | Ogre Warlord (boss) | {spawns.ogre.count} | {enemy.ogre.hp} | {enemy.ogre.dice} | {enemy.ogre.range} (next to it) | {enemy.ogre.move} | the back line |
-| Brute (shielded {enemy.brute.shielded}) | {spawns.brute.count} | {enemy.brute.hp} | {enemy.brute.damage} | {enemy.brute.range} (next to it) | {enemy.brute.move} | the nearest hero |
+| Brute (elite, shielded {enemy.brute.shielded}) | {spawns.brute.count} | {enemy.brute.hp} | {enemy.brute.damage} | {enemy.brute.range} (next to it) | {enemy.brute.move} | the nearest hero |
 | Shaman | {spawns.shaman.count} | {enemy.shaman.hp} | {enemy.shaman.damage}, and poison | {enemy.shaman.range} squares | {enemy.shaman.move} | a random hero |
 | Wolf | {spawns.wolf.count} | {enemy.wolf.hp} | {enemy.wolf.damage} | {enemy.wolf.range} (next to it) | {enemy.wolf.move} | the back line |
 | Goblin (fodder) | {spawns.goblin.count}, in round {spawns.goblin.round} | {enemy.goblin.hp} | {enemy.goblin.damage} | {enemy.goblin.range} (next to it) | {enemy.goblin.move} | the back line |
@@ -36,7 +36,7 @@ it likes.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
   sheeped or Gripped, but a stun still breaks the move he announced,
   and Frost Nova can root him. His big moves are below.
-- **Brute.** Big and slow. Shielded {enemy.brute.shielded}: any single hit
+- **Brute.** An elite: big and slow. Shielded {enemy.brute.shielded}: any single hit
   under {enemy.brute.shielded} does nothing to him. He walks to the nearest
   hero, so he often ends up held by the Guardian.
 - **Shaman.** Stands back and hits from {enemy.shaman.range} squares away.

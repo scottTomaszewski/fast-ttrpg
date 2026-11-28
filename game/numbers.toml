@@ -203,7 +203,7 @@ hero = "mage"
 cost = 2               # per hit
 hits = 3
 range = 10
-dice = [2, 6]          # a whole Volley (21 for 6 mana) does as much for its mana as a Firebolt (14 for 4)
+dice = [2, 6]          # a whole Volley (21 for 6 mana) does what a Firebolt does (21 for 9), for less mana
 loud = false           # the everyday spell: Loud on every hit would keep pulling enemies off the Guardian
 
 [abilities.firebolt]

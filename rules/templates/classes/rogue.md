@@ -136,7 +136,7 @@ the one whose name comes first picks first.
   you. A goblin is not worth it.
 - **At {rules.combo_max} combo points,** Kidney Shot an add (an extra
   enemy that fights alongside the boss) next to you that is attacking
-  someone: it hits nobody for two turns. Otherwise Eviscerate an elite, or
+  someone: it hits nobody for {abilities.kidney_shot.alt} turns. Otherwise Eviscerate an elite, or
   the boss while it has Taunt cards. Eviscerate is Loud, so the boss then
   loses {rules.boss_loud_cards} of its Taunt cards instead of being pulled
   onto you.

@@ -8,7 +8,8 @@ Delete or rewrite this file when the work below is done.
   Ogre Warlord fight, retuned in D4, D4b and D4c. Details: `docs/tuning-log.md`.
 - D4c (2026-11-27), the owner's decisions:
   - **Firebolt is a 2-round cast**, all or nothing. It is now 6d6 for 9
-    mana: a whole Volley's damage, one act step sooner, for more mana. The
+    mana: a whole Volley's damage in two of her act steps instead of three, for
+    more mana. The
     Mage starts one only with a whole Volley's mana to spare and no enemy
     able to walk up to her, and lets it go to Disrupt or get away.
   - **Evocation's band 0.3 to 2** is the owner's.
@@ -42,6 +43,11 @@ Delete or rewrite this file when the work below is done.
   and only the Guardian gives Taunt cards, the old cause of stalemates
   (item 3).
 - Printable card sheets are a later step.
+- Small known thing: `_firebolt_finishes` (`policies.py`) ignores a
+  controlled enemy at any distance; one already next to her whose stun ends
+  first can make her drop the Firebolt for Frost Nova. Very rare (about
+  0.001 a fight). Fix: ignore a controlled enemy only when it is more than
+  one square away.
 
 ## Next
 1. The owner reads `rules/`. Refresh the copies in the owner's Obsidian

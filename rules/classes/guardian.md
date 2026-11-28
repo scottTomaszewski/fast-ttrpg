@@ -112,8 +112,8 @@ enemies fight him, and stands between them and everyone else.
   keeps it on you anyway. Getting hit is how you earn grit.
 - **Shield Slam when nothing needs you.** The boss has a Taunt card,
   every ally is above 70% HP, and no add is loose? Then Shield Slam the
-  boss (or the enemy on you) instead of an auto-attack. It costs
-  0 grit and gives you grit. If something needs
+  boss (or the enemy on you) instead of an auto-attack. It is free
+  and gives you 1 grit. If something needs
   you, that comes first.
 - **A Stomp is coming and you hold the boss?** If someone will Disrupt it,
   stay next to the boss and keep hitting. If nobody will, you may still

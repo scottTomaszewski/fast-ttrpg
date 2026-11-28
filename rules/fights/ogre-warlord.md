@@ -42,7 +42,7 @@ g goblin (fodder, comes in round 10)
 | Enemy | How many | HP | Attack | Reach | Move | Goes for |
 |---|---|---|---|---|---|---|
 | Ogre Warlord (boss) | 1 | 130 | 2d6+9 | 1 (next to it) | 4 | the back line |
-| Brute (shielded 3) | 1 | 30 | 4 | 1 (next to it) | 4 | the nearest hero |
+| Brute (elite, shielded 3) | 1 | 30 | 4 | 1 (next to it) | 4 | the nearest hero |
 | Shaman | 1 | 24 | 2, and poison | 8 squares | 4 | a random hero |
 | Wolf | 2 | 20 | 3 | 1 (next to it) | 7 | the back line |
 | Goblin (fodder) | 5, in round 10 | 1 | 3 | 1 (next to it) | 3 | the back line |
@@ -60,7 +60,7 @@ it likes.
   With no Taunt cards he goes after the Mage. He cannot be stunned, sapped,
   sheeped or Gripped, but a stun still breaks the move he announced,
   and Frost Nova can root him. His big moves are below.
-- **Brute.** Big and slow. Shielded 3: any single hit
+- **Brute.** An elite: big and slow. Shielded 3: any single hit
   under 3 does nothing to him. He walks to the nearest
   hero, so he often ends up held by the Guardian.
 - **Shaman.** Stands back and hits from 8 squares away.

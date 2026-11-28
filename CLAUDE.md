@@ -24,7 +24,8 @@ work stands right now), `docs/superpowers/specs/2026-11-24-fast-combat-design.md
   `tests/data/`.
 - The owner's per-ability use targets are in `game/usage_targets.toml`. Only the owner changes them.
 - Never loosen a check in `src/fastcombat/report.py` to make tuning pass. A check that cannot be met
-  goes under "Not met" in the tuning log, and the slow test is marked xfail with that reason.
+  goes under "Not met" in the tuning log, and, if it fails on the slow test's pinned seeds, the slow
+  test is marked xfail with that reason.
 - After changing a number, run `uv run fastcombat rules` (the rules pages are made from the
   numbers; a test fails if they are stale).
 - Heroes act in name order (Druid, Guardian, Mage, Rogue). Renaming a hero changes results.

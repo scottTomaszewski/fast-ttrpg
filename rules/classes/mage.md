@@ -119,8 +119,8 @@ freeze herself in a block of ice, and call her mana back.
   cast to skip the third hit to kick off another, more urgent spell or
   interrupt."
 - **Firebolt when you have time and mana to spare.** It does as much as a
-  whole Volley, one turn sooner, but it costs more and it is all or
-  nothing. Start one only when you can pay for it and still have a whole
+  whole Volley in two of your act steps instead of three, but it costs
+  more and it is all or nothing. Start one only when you can pay for it and still have a whole
   Volley's mana left, and no enemy could walk up to you before your next
   turn (an enemy held by the Guardian, or with Taunt cards on it, will not).
   If something needs you in the middle, let the Firebolt go and do it.
